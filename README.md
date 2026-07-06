@@ -1,4 +1,4 @@
-# SIAPPS — Sistem Absensi
+# Sistem Absensi
 
 Aplikasi absensi berbasis web dengan validasi GPS dan foto selfie.
 
