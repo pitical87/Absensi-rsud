@@ -22,11 +22,11 @@ Aplikasi absensi berbasis web dengan validasi GPS dan foto selfie.
 
 ## Route
 
-| Path | Halaman |
-|------|---------|
-| `/` | Beranda (sapaan, status absen hari ini, statistik, riwayat) |
-| `/present/masuk` | Flow absen masuk |
-| `/present/pulang` | Flow absen pulang |
+| Path              | Halaman                                                     |
+| ----------------- | ----------------------------------------------------------- |
+| `/`               | Beranda (sapaan, status absen hari ini, statistik, riwayat) |
+| `/present/masuk`  | Flow absen masuk                                            |
+| `/present/pulang` | Flow absen pulang                                           |
 
 ## Cara Menjalankan
 
@@ -40,7 +40,7 @@ npm run dev
 Target koordinat dan jarak maksimum ada di `src/utils/GeoLocation.ts`:
 
 ```ts
-TARGET_LAT = -8.507868816179423
-TARGET_LNG = 140.40432736389988
-MAX_DISTANCE = 100  // meter
+TARGET_LAT = -8.507868816179423;
+TARGET_LNG = 140.40432736389988;
+MAX_DISTANCE = 100; // meter
 ```
