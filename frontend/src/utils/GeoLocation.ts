@@ -1,6 +1,6 @@
 // Target coordinate — ganti sesuai lokasi RSUD
-export const TARGET_LAT = -8.507868816179423;
-export const TARGET_LNG = 140.40432736389988;
+export const TARGET_LAT = -8.481854592633615;
+export const TARGET_LNG = 140.38878299611167;
 export const MAX_DISTANCE = 100;
 
 export function getDistance(
