@@ -9,13 +9,13 @@ type props = {
 export default function Absensi({ hasMasuk, hasPulang }: props) {
   const navigate = useNavigate();
   return (
-    <div>
+    <>
       <section className="flex flex-col items-center px-6 py-2 gap-2">
         <h1 className="text-lg w-full font-bold">Absensi Hari Ini</h1>
         <div
           className="bg-white border border-gray-300 flex font-semibold
-            items-center gap-3 w-full rounded-xl p-3 text-gray-500 text-sm">
-          <CiLock className="text-lg font-semibold" />
+            items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-xs">
+          <CiLock className="text-sm font-semibold" />
           <span>Absen pulang hanya tersedia sesudah absen masuk.</span>
         </div>
         <div className="flex items-center justify-between gap-5 w-full">
@@ -65,7 +65,7 @@ export default function Absensi({ hasMasuk, hasPulang }: props) {
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
                   ">
-                  Klik untuk absen masuk
+                  {hasMasuk ? "Sudah Masuk" : "Untuk absen Masuk"}
                 </span>
               </div>
             </div>
@@ -116,13 +116,13 @@ export default function Absensi({ hasMasuk, hasPulang }: props) {
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
                   ">
-                  Absen masuk dulu
+                  {hasPulang ? "Sudah pulang" : "Absen masuk dulu"}
                 </span>
               </div>
             </div>
           </button>
         </div>
       </section>
-    </div>
+    </>
   );
 }
