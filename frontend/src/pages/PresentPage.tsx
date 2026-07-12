@@ -4,6 +4,7 @@ import StepWizard from "../components/Present Page/StepWizard";
 import ValidateLocation from "../components/Present Page/ValidateLocation";
 import ValidateSelfie from "../components/Present Page/ValidateSelfie";
 import ConfirmPresent from "../components/Present Page/ConfirmPresent";
+import TopNavbar from "../components/Client Page/TopNavbar";
 
 type PendingData = {
   latitude: number;
@@ -26,6 +27,7 @@ export default function PresentPage() {
 
   return (
     <div>
+      <TopNavbar />
       {/* steps wizard */}
       <section className="bg-white border-b border-gray-300 px-4 py-1 flex flex-col gap-3">
         <h1 className="text-lg font-bold">Absen {type}</h1>
