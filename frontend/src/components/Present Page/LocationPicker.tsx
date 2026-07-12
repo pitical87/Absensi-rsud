@@ -6,13 +6,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { useEffect, useRef, useState } from "react";
 import { CiLocationOn } from "react-icons/ci";
 import { MdLocationOff } from "react-icons/md";
-import {
-  formatDistance,
-  getDistance,
-  MAX_DISTANCE,
-  TARGET_LAT,
-  TARGET_LNG,
-} from "../../utils/GeoLocation";
+import { formatDistance, getDistance } from "../../utils/GeoLocation";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -28,9 +22,10 @@ type LocationData = {
 
 type Props = {
   onLocationReady: (loc: LocationData) => void;
+  lokasi: { lat: number; lng: number; radius: number };
 };
 
-export default function LocationPicker({ onLocationReady }: Props) {
+export default function LocationPicker({ onLocationReady, lokasi }: Props) {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
@@ -39,7 +34,7 @@ export default function LocationPicker({ onLocationReady }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const distance = location
-    ? getDistance(TARGET_LAT, TARGET_LNG, location!.lat, location!.lng)
+    ? getDistance(lokasi.lat, lokasi.lng, location!.lat, location!.lng)
     : Infinity;
 
   useEffect(() => {
@@ -95,7 +90,7 @@ export default function LocationPicker({ onLocationReady }: Props) {
         className={`rounded-xl border flex gap-2 items-center p-4 mb-4 ${
           status === "loading"
             ? "bg-blue-100 border-blue-300"
-            : status === "success" && distance <= MAX_DISTANCE
+            : status === "success" && distance <= lokasi.radius
               ? "bg-green-100 border-green-300"
               : "bg-red-100 border-red-300"
         }`}>
@@ -104,7 +99,7 @@ export default function LocationPicker({ onLocationReady }: Props) {
             className={`text-2xl ${
               status === "loading"
                 ? "text-blue-300"
-                : status === "success" && distance <= MAX_DISTANCE
+                : status === "success" && distance <= lokasi.radius
                   ? "text-green-500"
                   : "text-red-400"
             }`}
@@ -118,7 +113,7 @@ export default function LocationPicker({ onLocationReady }: Props) {
                 Mengakses GPS perangkat anda
               </span>
             </>
-          ) : status === "success" && distance <= MAX_DISTANCE ? (
+          ) : status === "success" && distance <= lokasi.radius ? (
             <>
               Lokasi ditemukan
               <span className="text-gray-500 text-sm">
@@ -130,7 +125,7 @@ export default function LocationPicker({ onLocationReady }: Props) {
               <span className="text-sm">
                 Lokasi anda ({formatDistance(distance)}) diluar jangkauan!!
                 <br />
-                <b>(Jarak Maks: {MAX_DISTANCE} m)</b>
+                <b>(Jarak Maks: {lokasi.radius} m)</b>
               </span>
             </>
           )}

@@ -1,12 +1,8 @@
 import { useNavigate } from "react-router";
 import LocationPicker from "./LocationPicker";
-import {
-  getDistance,
-  MAX_DISTANCE,
-  TARGET_LAT,
-  TARGET_LNG,
-} from "../../utils/GeoLocation";
+import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
+import { getDistance } from "../../utils/GeoLocation";
 
 type props = {
   setCurrentStep: (step: number) => void;
@@ -14,19 +10,27 @@ type props = {
 };
 
 export default function ValidateLocation({ setCurrentStep, onNext }: props) {
+  const { lokasi } = useAuth(); //office location from backend
   const navigate = useNavigate();
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-  const distance = location
-    ? getDistance(TARGET_LAT, TARGET_LNG, location.lat, location.lng)
-    : Infinity;
+  const distance =
+    location && lokasi
+      ? getDistance(lokasi.lat, lokasi.lng, location.lat, location.lng)
+      : Infinity;
+
   return (
     <div className="bg-white w-full rounded-2xl p-4">
       <h1 className="text-lg mb-3 font-medium">Validasi GPS</h1>
 
       {/* show map */}
-      <LocationPicker onLocationReady={(loc) => setLocation(loc)} />
+      {lokasi && (
+        <LocationPicker
+          onLocationReady={(loc) => setLocation(loc)}
+          lokasi={lokasi}
+        />
+      )}
 
       {/* Next button — enable only if location is ready */}
       <div className="flex items-center gap-3 mt-4">
@@ -38,7 +42,7 @@ export default function ValidateLocation({ setCurrentStep, onNext }: props) {
         </button>
 
         <button
-          disabled={!location || distance > MAX_DISTANCE}
+          disabled={!location || distance > (lokasi?.radius ?? 100)}
           onClick={() => {
             if (!location) return;
             onNext(location?.lat, location?.lng, distance);

@@ -1,8 +1,9 @@
 import { useNavigate, useParams } from "react-router";
 import { GetCurrentDateString, GetCurrentTime } from "../../utils/DateUtils";
-import { formatDistance, MAX_DISTANCE } from "../../utils/GeoLocation";
-import { saveAttendance } from "../../utils/Storage";
+import { formatDistance } from "../../utils/GeoLocation";
 import { useState } from "react";
+import { absen } from "../../utils/api/Attendence";
+import { useAuth } from "../../context/AuthContext";
 type Props = {
   setCurrentStep: (step: number) => void;
   data: {
@@ -18,35 +19,34 @@ export default function ConfirmPresent({ setCurrentStep, data }: Props) {
   const navigate = useNavigate();
   const date = GetCurrentDateString();
   const time = GetCurrentTime();
+  const { lokasi } = useAuth();
   const distanceString = formatDistance(data.distance);
   const [submitting, setSubmitting] = useState(false);
 
+  const radius = lokasi?.radius ?? 0;
+  const isWithinRadius = data.distance <= radius;
+
   async function handleSubmit() {
     setSubmitting(true);
-
-    const record = {
-      id: Date.now().toString(),
-      type: type ?? "",
-      date,
-      time,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      distance: data.distance,
-      image: data.image ?? "",
-    };
-
-    // Simulasi latency
-    await new Promise((r) => setTimeout(r, 1500));
-
-    saveAttendance(record);
-
-    console.log("📤 Data absensi tersimpan:", record);
-
-    setSubmitting(false);
-
-    setCurrentStep(3);
-    // Redirect setelah 2 detik
-    setTimeout(() => navigate("/"), 2000);
+    try {
+      const res = await absen({
+        tipe: type === "masuk" ? "datang" : "pulang",
+        lat: data.latitude,
+        lng: data.longitude,
+        foto: data.image ?? undefined,
+      });
+      if (res.sukses) {
+        setCurrentStep(3);
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        alert(res.pesan);
+      }
+    } catch (err: any) {
+      console.log(err.response?.data?.pesan);
+      alert(err.response?.data?.pesan || "Gagal mengirim data");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -81,12 +81,12 @@ export default function ConfirmPresent({ setCurrentStep, data }: Props) {
           <span className=" text-gray-500">Status</span>
           <span
             className={`${
-              data.distance <= MAX_DISTANCE
+              isWithinRadius
                 ? "text-green-600 bg-green-100"
                 : "text-red-600 bg-red-100"
             } px-2 py-1 rounded-xl`}>
             {" "}
-            {data.distance <= MAX_DISTANCE ? "Dalam Radius" : "Diluar Radius"}
+            {isWithinRadius ? "Dalam Radius" : "Diluar Radius"}
           </span>
         </li>
       </ul>
@@ -111,7 +111,7 @@ export default function ConfirmPresent({ setCurrentStep, data }: Props) {
           onClick={handleSubmit}
           className="flex-1 rounded-xl bg-blue-600 py-3 text-white font-semibold cursor-pointer hover:bg-blue-700 transition-colors">
           {submitting ? (
-            <>
+            <div className="flex items-center gap-1">
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
@@ -129,7 +129,7 @@ export default function ConfirmPresent({ setCurrentStep, data }: Props) {
                 />
               </svg>
               Menyimpan...
-            </>
+            </div>
           ) : (
             "Konfirmasi Absensi"
           )}
