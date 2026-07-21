@@ -16,11 +16,17 @@ type User = {
   nama_lengkap: string;
   email: string;
   role: string;
-  unit_kerja: { nama: string } | null;
-  sub_unit: { nama_sub_unit: string } | null;
-  profesi: { nama_profesi: string } | null;
-  shift: { nama_shift: string } | null;
-  jabatan: { nama_jabatan: string } | null;
+  unit_kerja: { id: number; nama: string } | null;
+  sub_unit: { id: number; nama: string } | null;
+  profesi: { id: number; nama: string } | null;
+  shift: {
+    id: number;
+    kategori: string;
+    jam_masuk: string;
+    jam_pulang: string;
+  } | null;
+  jabatan: { id: number; nama: string } | null;
+  status_pegawai: string;
 };
 
 type Lokasi = {
@@ -49,6 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (window.location.pathname === "/login") {
+      setLoading(false);
+      return;
+    }
     fetchMe()
       .then((res) => {
         if (res.sukses) {

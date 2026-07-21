@@ -6,10 +6,13 @@ import TopNavbar from "../components/Client Page/TopNavbar";
 import SifSection from "../components/Client Page/SifSection";
 import { useEffect, useState } from "react";
 import { getStatus } from "../utils/api/Attendence";
+import { getLeaves, getTodayLeave } from "../utils/api/Leave";
 
 export default function ClientPage() {
   const [hasMasuk, setHasMasuk] = useState(false);
   const [hasPulang, setHasPulang] = useState(false);
+  const [hasLeave, setHasLeave] = useState(false);
+  const [todayLeave, setTodayLeave] = useState(null);
   const [masuk, setMasuk] = useState<{ waktu: string; status: string } | null>(
     null,
   );
@@ -26,6 +29,10 @@ export default function ClientPage() {
         }
       })
       .catch(() => {});
+    getTodayLeave().then((res) => {
+      setHasLeave(res.hasLeave);
+      setTodayLeave(res.izin);
+    });
   }, []);
   return (
     <div>
@@ -35,7 +42,12 @@ export default function ClientPage() {
       {/* sif & absensi section */}
       <SifSection />
       {/* present section */}
-      <Absensi hasMasuk={hasMasuk} hasPulang={hasPulang} />
+      <Absensi
+        hasMasuk={hasMasuk}
+        hasPulang={hasPulang}
+        hasLeave={hasLeave}
+        todayLeave={todayLeave}
+      />
       {/* statistic section */}
       <PresentStatistic />
       {/* history section */}
