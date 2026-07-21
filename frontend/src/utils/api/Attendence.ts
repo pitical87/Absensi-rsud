@@ -25,3 +25,8 @@ export const getStatistic = async () => {
   const res = await api.get("/statistik");
   return res.data;
 };
+
+export const getJadwal = async () => {
+  const res = await api.get("/jadwal");
+  return res.data;
+};
