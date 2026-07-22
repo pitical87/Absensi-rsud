@@ -21,3 +21,13 @@ export const getTodayLeave = async () => {
   const res = await api.get("/izin/today");
   return res.data;
 };
+
+export const getPendingLeavesCount = async () => {
+  const res = await api.get("/izin/total");
+  return res.data;
+};
+
+export const getPendingLeaveDetails = async () => {
+  const res = await api.get("/izin/detail");
+  return res.data;
+};

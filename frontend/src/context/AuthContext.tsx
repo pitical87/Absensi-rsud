@@ -26,6 +26,7 @@ type User = {
     jam_pulang: string;
   } | null;
   jabatan: { id: number; nama: string } | null;
+  posisi: string;
   status_pegawai: string;
 };
 

@@ -7,6 +7,8 @@ import { PiBuildingOfficeFill } from "react-icons/pi";
 import { getJadwal } from "../../utils/api/Attendence";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router";
+import { FaFileCircleCheck } from "react-icons/fa6";
+import { getPendingLeavesCount } from "../../utils/api/Leave";
 
 interface ShiftInfo {
   id: number;
@@ -20,6 +22,17 @@ export default function SifSection() {
   const { user } = useAuth();
   const [shift, setShift] = useState<ShiftInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [totalPending, setTotalPending] = useState(0);
+
+  useEffect(() => {
+    getPendingLeavesCount()
+      .then((res) => {
+        if (res.sukses) {
+          setTotalPending(res.total);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchJadwal = async () => {
@@ -144,6 +157,24 @@ export default function SifSection() {
           </button>
         </div>
       </section>
+      {user?.posisi !== "Staf" && totalPending > 0 && (
+        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">
+                Ada {totalPending} izin yang menunggu !
+              </h3>
+            </div>
+
+            <button
+              onClick={() => navigate("/persetujuan")}
+              className="flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
+              <FaFileCircleCheck size={20} />
+              Persetujuan
+            </button>
+          </div>
+        </section>
+      )}
     </section>
   );
 }
