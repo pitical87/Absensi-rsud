@@ -31,3 +31,17 @@ export const getPendingLeaveDetails = async () => {
   const res = await api.get("/izin/detail");
   return res.data;
 };
+
+export const prosesIzin = async (data: {
+  id: number;
+  putusan: "setuju" | "tolak";
+  catatan?: string;
+}) => {
+  const res = await api.post("/izin/proses", data);
+  return res.data;
+};
+
+export const getRiwayatPersetujuan = async () => {
+  const res = await api.get("/izin/riwayat-persetujuan");
+  return res.data;
+};

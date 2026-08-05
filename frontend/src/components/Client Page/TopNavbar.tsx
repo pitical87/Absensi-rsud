@@ -22,7 +22,7 @@ export default function TopNavbar() {
     <div className="relative">
       <section className="b-white flex items-center justify-between border-b border-gray-200 px-5 py-4 bg-white">
         <div className="flex flex-col cursor-default">
-          <h1 className="text-xl font-bold">SIMARA</h1>
+          <h1 className="text-xl font-bold">MARO</h1>
           <span className="text-sm text-gray-500">
             {GetCurrentDateString()}
           </span>

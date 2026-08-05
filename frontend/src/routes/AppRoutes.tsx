@@ -6,12 +6,14 @@ import GuestRoute from "../components/GuestRoute";
 import ProtectedRoutes from "../components/ProtectedRoutes";
 import IzinPage from "../pages/IzinPage";
 import PendingLeave from "../pages/PendingLeave";
+import RegisterPage from "../pages/RegisterPage";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
       </Route>
 
       <Route element={<ProtectedRoutes />}>

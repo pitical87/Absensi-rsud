@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FaHospitalUser } from "react-icons/fa";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { login, me } from "../utils/api/Authentication";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
@@ -37,9 +37,9 @@ export default function LoginPage() {
         <div className="p-4 bg-blue-50/50 rounded-2xl">
           <FaHospitalUser className="text-6xl" />
         </div>
-        <h1 className="font-bold text-2xl">SIMARA</h1>
-        <span className="text-xs text-gray-300 w-64 text-center">
-          Sistem Absensi RSUD Merauke
+        <h1 className="font-bold text-2xl">SIMARO</h1>
+        <span className="text-xs text-gray-300 max-w-80 text-center">
+          Sistem Informasi Monitoring Absensi RSUD Online
         </span>
       </div>
       <div className="w-full p-6">
@@ -105,6 +105,15 @@ export default function LoginPage() {
             font-bold text-md">
             {loading ? "Masuk..." : "Masuk"}
           </button>
+        </div>
+        <div className="mt-4 w-full">
+          <Link to="/register">
+            <button
+              type="button"
+              className="w-full rounded-2xl border border-blue-500 py-3 font-bold text-blue-600 transition hover:bg-blue-50">
+              Daftar Akun
+            </button>
+          </Link>
         </div>
       </form>
 

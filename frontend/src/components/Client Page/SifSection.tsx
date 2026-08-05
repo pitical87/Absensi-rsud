@@ -145,7 +145,7 @@ export default function SifSection() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
-              Tidak bisa hadir hari ini?
+              Tidak bisa hadir ?
             </h3>
           </div>
 
@@ -157,12 +157,14 @@ export default function SifSection() {
           </button>
         </div>
       </section>
-      {user?.posisi !== "Staf" && totalPending > 0 && (
+      {user?.posisi !== "Staf" && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
-                Ada {totalPending} izin yang menunggu !
+                {totalPending > 0
+                  ? `Ada ${totalPending} pengajuan yang menunggu!`
+                  : "tidak ada pengajuan"}
               </h3>
             </div>
 

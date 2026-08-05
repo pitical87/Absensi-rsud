@@ -37,10 +37,6 @@ export default function ClientPage() {
   return (
     <div>
       <TopNavbar />
-      {/* second top part */}
-      <HeroCard masuk={masuk} pulang={pulang} />
-      {/* sif & absensi section */}
-      <SifSection />
       {/* present section */}
       <Absensi
         hasMasuk={hasMasuk}
@@ -48,6 +44,10 @@ export default function ClientPage() {
         hasLeave={hasLeave}
         todayLeave={todayLeave}
       />
+      {/* second top part */}
+      <HeroCard masuk={masuk} pulang={pulang} />
+      {/* sif & absensi section */}
+      <SifSection />
       {/* statistic section */}
       <PresentStatistic />
       {/* history section */}
