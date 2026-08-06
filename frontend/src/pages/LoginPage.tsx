@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaHospitalUser } from "react-icons/fa";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
-import { login, me } from "../utils/api/Authentication";
+import { login } from "../utils/api/Authentication";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 

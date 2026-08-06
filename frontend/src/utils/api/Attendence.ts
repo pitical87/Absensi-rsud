@@ -26,6 +26,14 @@ export const getStatistic = async () => {
   return res.data;
 };
 
+export const getPerformaBulan = async (params?: {
+  bulan?: number;
+  tahun?: number;
+}) => {
+  const res = await api.get("/performa/bulan", { params });
+  return res.data;
+};
+
 export const getJadwal = async () => {
   const res = await api.get("/jadwal");
   return res.data;

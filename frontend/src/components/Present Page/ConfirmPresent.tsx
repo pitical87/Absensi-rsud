@@ -4,8 +4,18 @@ import { formatDistance } from "../../utils/GeoLocation";
 import { useState } from "react";
 import { absen } from "../../utils/api/Attendence";
 import { useAuth } from "../../context/AuthContext";
+type HasilAbsen = {
+  sukses: boolean;
+  pesan: string;
+  jenis?: string;
+  status?: string;
+  menit?: number;
+  bintang?: number;
+};
+
 type Props = {
   setCurrentStep: (step: number) => void;
+  onSuccess?: (result: HasilAbsen) => void;
   data: {
     latitude: number;
     longitude: number;
@@ -14,7 +24,7 @@ type Props = {
   };
 };
 
-export default function ConfirmPresent({ setCurrentStep, data }: Props) {
+export default function ConfirmPresent({ setCurrentStep, onSuccess, data }: Props) {
   const { type } = useParams();
   const navigate = useNavigate();
   const date = GetCurrentDateString();
@@ -36,14 +46,17 @@ export default function ConfirmPresent({ setCurrentStep, data }: Props) {
         foto: data.image ?? undefined,
       });
       if (res.sukses) {
+        onSuccess?.(res);
         setCurrentStep(3);
-        setTimeout(() => navigate("/"), 2000);
+        setTimeout(() => navigate("/"), 3000);
       } else {
         alert(res.pesan);
       }
-    } catch (err: any) {
-      console.log(err.response?.data?.pesan);
-      alert(err.response?.data?.pesan || "Gagal mengirim data");
+    } catch (err: unknown) {
+      const pesan = (
+        err as { response?: { data?: { pesan?: string } } }
+      )?.response?.data?.pesan;
+      alert(pesan || "Gagal mengirim data");
     } finally {
       setSubmitting(false);
     }

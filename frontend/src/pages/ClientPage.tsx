@@ -4,9 +4,10 @@ import PresentStatistic from "../components/Client Page/PresentStatistic";
 import RecentPresents from "../components/Client Page/RecentPresents";
 import TopNavbar from "../components/Client Page/TopNavbar";
 import SifSection from "../components/Client Page/SifSection";
+import PerformaBanner from "../components/Client Page/PerformaBanner";
 import { useEffect, useState } from "react";
 import { getStatus } from "../utils/api/Attendence";
-import { getLeaves, getTodayLeave } from "../utils/api/Leave";
+import { getTodayLeave } from "../utils/api/Leave";
 
 export default function ClientPage() {
   const [hasMasuk, setHasMasuk] = useState(false);
@@ -37,6 +38,7 @@ export default function ClientPage() {
   return (
     <div>
       <TopNavbar />
+      <PerformaBanner />
       {/* present section */}
       <Absensi
         hasMasuk={hasMasuk}

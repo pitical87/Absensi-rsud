@@ -5,6 +5,7 @@ import ValidateLocation from "../components/Present Page/ValidateLocation";
 import ValidateSelfie from "../components/Present Page/ValidateSelfie";
 import ConfirmPresent from "../components/Present Page/ConfirmPresent";
 import TopNavbar from "../components/Client Page/TopNavbar";
+import { FaStar, FaRegStar, FaTriangleExclamation, FaCircleInfo } from "react-icons/fa6";
 
 type PendingData = {
   latitude: number;
@@ -13,11 +14,33 @@ type PendingData = {
   image: string | null;
 };
 
+type HasilAbsen = {
+  sukses: boolean;
+  pesan: string;
+  jenis?: string;
+  status?: string;
+  menit?: number;
+  bintang?: number;
+};
+
 const steps: string[] = ["Lokasi", "Selfie", "Konfirmasi"];
+
+function BintangSukses({ nilai }: { nilai?: number }) {
+  if (nilai === undefined) return null;
+  const bulat = Math.round(nilai);
+  return (
+    <span className="flex gap-1 text-amber-400 text-2xl">
+      {[1, 2, 3, 4, 5].map((i) =>
+        i <= bulat ? <FaStar key={i} /> : <FaRegStar key={i} />,
+      )}
+    </span>
+  );
+}
 
 export default function PresentPage() {
   const { type } = useParams();
   const [currentStep, setCurrentStep] = useState(0);
+  const [hasil, setHasil] = useState<HasilAbsen | null>(null);
   const [pendingData, setPendingData] = useState<PendingData>({
     latitude: 0,
     longitude: 0,
@@ -58,7 +81,11 @@ export default function PresentPage() {
           />
         )}
         {currentStep === 2 && (
-          <ConfirmPresent setCurrentStep={setCurrentStep} data={pendingData} />
+          <ConfirmPresent
+            setCurrentStep={setCurrentStep}
+            onSuccess={(res) => setHasil(res)}
+            data={pendingData}
+          />
         )}
         {currentStep === 3 && (
           <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-8">
@@ -79,6 +106,31 @@ export default function PresentPage() {
             <h2 className="text-xl font-bold text-green-700">
               Absen Berhasil!
             </h2>
+            {hasil?.jenis === "telat" && (
+              <div className="flex w-full items-center gap-3 rounded-xl bg-amber-100 px-4 py-3 text-sm font-medium text-amber-800">
+                <FaTriangleExclamation className="shrink-0 text-amber-600" />
+                <span>
+                  Anda terlambat <strong>{hasil.menit}</strong> menit
+                </span>
+              </div>
+            )}
+            {hasil?.jenis === "awal" && (
+              <div className="flex w-full items-center gap-3 rounded-xl bg-blue-100 px-4 py-3 text-sm font-medium text-blue-800">
+                <FaCircleInfo className="shrink-0 text-blue-600" />
+                <span>
+                  Anda pulang lebih awal <strong>{hasil.menit}</strong> menit
+                </span>
+              </div>
+            )}
+            {hasil?.pesan && (
+              <p className="text-sm text-gray-600 text-center">{hasil.pesan}</p>
+            )}
+            <BintangSukses nilai={hasil?.bintang} />
+            <p className="text-xs text-gray-400">
+              {hasil?.bintang !== undefined
+                ? `Bintang ketepatan hari ini: ${hasil.bintang}/5`
+                : "Bintang ketepatan dihitung dari ketepatan waktu masuk & pulang."}
+            </p>
             <p className="text-sm text-gray-500">
               Mengalihkan ke halaman utama...
             </p>

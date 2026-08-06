@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BiCalendar } from "react-icons/bi";
 import { HiOutlineDocumentText } from "react-icons/hi";
 import { IoPersonOutline, IoSunny } from "react-icons/io5";
