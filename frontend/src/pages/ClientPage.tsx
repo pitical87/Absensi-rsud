@@ -8,21 +8,21 @@ import PerformaBanner from "../components/Client Page/PerformaBanner";
 import { useEffect, useState } from "react";
 import { getStatus } from "../utils/api/Attendence";
 import { getTodayLeave } from "../utils/api/Leave";
+import LogBookSection from "../components/Client Page/LogBookSection";
 
 export default function ClientPage() {
   const [hasMasuk, setHasMasuk] = useState(false);
   const [hasPulang, setHasPulang] = useState(false);
   const [hasLeave, setHasLeave] = useState(false);
   const [todayLeave, setTodayLeave] = useState(null);
-  const [masuk, setMasuk] = useState<{ waktu: string; status: string } | null>(
-    null,
-  );
+  const [masuk, setMasuk] = useState<{ waktu: string; status: string } | null>(null);
   const [pulang, setPulang] = useState<{ waktu: string } | null>(null);
 
   useEffect(() => {
     getStatus()
       .then((res) => {
         if (res.sukses) {
+          console.log(res);
           setHasMasuk(!!res.absen_masuk);
           setHasPulang(!!res.absen_pulang);
           setMasuk(res.absen_masuk);
@@ -40,14 +40,11 @@ export default function ClientPage() {
       <TopNavbar />
       <PerformaBanner />
       {/* present section */}
-      <Absensi
-        hasMasuk={hasMasuk}
-        hasPulang={hasPulang}
-        hasLeave={hasLeave}
-        todayLeave={todayLeave}
-      />
+      <Absensi hasMasuk={hasMasuk} hasPulang={hasPulang} hasLeave={hasLeave} todayLeave={todayLeave} />
       {/* second top part */}
       <HeroCard masuk={masuk} pulang={pulang} />
+      {/* logbook section */}
+      <LogBookSection />
       {/* sif & absensi section */}
       <SifSection />
       {/* statistic section */}

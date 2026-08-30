@@ -7,6 +7,7 @@ import ProtectedRoutes from "../components/ProtectedRoutes";
 import IzinPage from "../pages/IzinPage";
 import PendingLeave from "../pages/PendingLeave";
 import RegisterPage from "../pages/RegisterPage";
+import LogbookPage from "../pages/LogbookPage";
 
 export default function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function AppRoutes() {
         <Route path="/present/:type" element={<PresentPage />} />
         <Route path="/izin/" element={<IzinPage />} />
         <Route path="/persetujuan" element={<PendingLeave />} />
+        <Route path="/logbook" element={<LogbookPage />} />
       </Route>
     </Routes>
   );
