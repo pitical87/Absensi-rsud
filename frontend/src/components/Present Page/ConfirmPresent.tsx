@@ -4,6 +4,7 @@ import { formatDistance } from "../../utils/GeoLocation";
 import { useState } from "react";
 import { absen } from "../../utils/api/Attendence";
 import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 type HasilAbsen = {
   sukses: boolean;
   pesan: string;
@@ -24,7 +25,11 @@ type Props = {
   };
 };
 
-export default function ConfirmPresent({ setCurrentStep, onSuccess, data }: Props) {
+export default function ConfirmPresent({
+  setCurrentStep,
+  onSuccess,
+  data,
+}: Props) {
   const { type } = useParams();
   const navigate = useNavigate();
   const date = GetCurrentDateString();
@@ -46,17 +51,17 @@ export default function ConfirmPresent({ setCurrentStep, onSuccess, data }: Prop
         foto: data.image ?? undefined,
       });
       if (res.sukses) {
+        toast.success(res.pesan);
         onSuccess?.(res);
         setCurrentStep(3);
         setTimeout(() => navigate("/"), 3000);
       } else {
-        alert(res.pesan);
+        toast.error(res.pesan);
       }
     } catch (err: unknown) {
-      const pesan = (
-        err as { response?: { data?: { pesan?: string } } }
-      )?.response?.data?.pesan;
-      alert(pesan || "Gagal mengirim data");
+      const pesan = (err as { response?: { data?: { pesan?: string } } })
+        ?.response?.data?.pesan;
+      toast.error(pesan || "Gagal mengirim data");
     } finally {
       setSubmitting(false);
     }
