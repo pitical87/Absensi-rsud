@@ -95,7 +95,7 @@ export default function PresentStatistic() {
         </div>
 
         {/* Bintang ketepatan bulan ini */}
-        <div className="mt-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+        <div className="mt-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-amber-800 flex items-center gap-1">
               <FaRegStar /> Bintang Ketepatan {hasPulang ? "Hari ini" : "Masuk"}

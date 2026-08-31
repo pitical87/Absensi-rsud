@@ -44,7 +44,7 @@ export default function ClientPage() {
       {/* second top part */}
       <HeroCard masuk={masuk} pulang={pulang} />
       {/* logbook section */}
-      <LogBookSection />
+      <LogBookSection hasMasuk={hasMasuk} hasPulang={hasPulang} hasLeave={hasLeave} />
       {/* sif & absensi section */}
       <SifSection />
       {/* statistic section */}

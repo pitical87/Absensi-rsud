@@ -1,4 +1,11 @@
 // types
+export type LogEntry = {
+  id: number;
+  tanggal: string;
+  jam: string;
+  isi: string;
+};
+
 export type LogbookEntry = {
   id: number;
   tanggal: string;
