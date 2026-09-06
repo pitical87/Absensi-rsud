@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BiCalendar } from "react-icons/bi";
+import { BiCalendar, BiTimeFive } from "react-icons/bi";
 import { HiOutlineDocumentText } from "react-icons/hi";
 import { IoPersonOutline, IoSunny } from "react-icons/io5";
 import { LuInfo } from "react-icons/lu";
@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router";
 import { FaFileCircleCheck } from "react-icons/fa6";
 import { getPendingLeavesCount } from "../../utils/api/Leave";
+import { getLemburMenungguTotal } from "../../utils/api/Lembur";
 
 interface ShiftInfo {
   id: number;
@@ -23,12 +24,23 @@ export default function SifSection() {
   const [shift, setShift] = useState<ShiftInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalPending, setTotalPending] = useState(0);
+  const [totalLemburPending, setTotalLemburPending] = useState(0);
 
   useEffect(() => {
     getPendingLeavesCount()
       .then((res) => {
         if (res.sukses) {
           setTotalPending(res.total);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getLemburMenungguTotal()
+      .then((res) => {
+        if (res.sukses) {
+          setTotalLemburPending(res.total);
         }
       })
       .catch(() => {});
@@ -157,6 +169,23 @@ export default function SifSection() {
           </button>
         </div>
       </section>
+      {/* lembur */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">
+              Lembur di luar jam kerja ?
+            </h3>
+          </div>
+
+          <button
+            onClick={() => navigate("/lembur")}
+            className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
+            <BiTimeFive size={20} />
+            Ajukan Lembur
+          </button>
+        </div>
+      </section>
       {user?.posisi !== "Staf" && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex items-center justify-between">
@@ -173,6 +202,26 @@ export default function SifSection() {
               className="flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
               <FaFileCircleCheck size={20} />
               Persetujuan
+            </button>
+          </div>
+        </section>
+      )}
+      {user?.posisi !== "Staf" && (
+        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">
+                {totalLemburPending > 0
+                  ? `Ada ${totalLemburPending} lembur yang menunggu!`
+                  : "tidak ada pengajuan lembur"}
+              </h3>
+            </div>
+
+            <button
+              onClick={() => navigate("/persetujuan-lembur")}
+              className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
+              <FaFileCircleCheck size={20} />
+              Persetujuan Lembur
             </button>
           </div>
         </section>

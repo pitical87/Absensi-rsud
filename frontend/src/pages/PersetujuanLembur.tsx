@@ -65,23 +65,20 @@ export default function PersetujuanLembur() {
     putusan: "setuju" | "tolak";
   }>({ open: false, id: 0, putusan: "setuju" });
 
-  const fetchData = async () => {
-    try {
-      const [menungguRes, riwayatRes] = await Promise.all([
-        getLemburMenunggu(),
-        getRiwayatPersetujuanLembur(),
-      ]);
-      if (menungguRes.sukses) setDaftar(menungguRes.data ?? []);
-      if (riwayatRes.sukses) setRiwayat(riwayatRes.riwayat ?? []);
-    } catch {
-      toast.error("Gagal memuat data persetujuan.");
-    } finally {
-      setLoading(false);
-    }
+  const refetch = () => {
+    Promise.all([getLemburMenunggu(), getRiwayatPersetujuanLembur()])
+      .then(([menungguRes, riwayatRes]) => {
+        if (menungguRes.sukses) setDaftar(menungguRes.data ?? []);
+        if (riwayatRes.sukses) setRiwayat(riwayatRes.riwayat ?? []);
+      })
+      .catch(() => {
+        toast.error("Gagal memuat data persetujuan.");
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    fetchData();
+    refetch();
   }, []);
 
   const handleProses = async () => {
@@ -101,9 +98,12 @@ export default function PersetujuanLembur() {
         return next;
       });
       setDaftar((prev) => prev.filter((i) => i.id !== id));
-      fetchData();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.pesan || "Gagal memproses pengajuan.");
+      refetch();
+    } catch (err: unknown) {
+      const pesan = (err as {
+        response?: { data?: { pesan?: string } };
+      })?.response?.data?.pesan;
+      toast.error(pesan || "Gagal memproses pengajuan.");
     } finally {
       setSubmittingId(null);
     }
