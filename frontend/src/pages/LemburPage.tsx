@@ -12,8 +12,12 @@ import {
   ajukanLembur,
   batalLembur,
   getLemburList,
+  getStatusLembur,
 } from "../utils/api/Lembur";
-import type { PengajuanLembur } from "../types/LemburType";
+import type {
+  PengajuanLembur,
+  StatusLemburResponse,
+} from "../types/LemburType";
 
 type FormValues = {
   tanggal: string;
@@ -79,6 +83,11 @@ export default function LemburPage() {
   const navigate = useNavigate();
   const [konfig, setKonfig] = useState<Konfig | null>(null);
   const [riwayat, setRiwayat] = useState<PengajuanLembur[]>([]);
+  const [disetujui, setDisetujui] = useState<PengajuanLembur[]>([]);
+  const [tanggalAbsen, setTanggalAbsen] = useState("");
+  const [statusAbsen, setStatusAbsen] = useState<StatusLemburResponse | null>(
+    null,
+  );
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const {
@@ -108,6 +117,13 @@ export default function LemburPage() {
           hari_ke_depan: res.hari_ke_depan,
         });
         setRiwayat(res.riwayat);
+        setDisetujui(res.disetujui);
+        setTanggalAbsen((sebelum) => {
+          const tersedia = res.disetujui.map((d) => d.tanggal);
+          if (tersedia.includes(sebelum)) return sebelum;
+          if (tersedia.includes(ymd(new Date()))) return ymd(new Date());
+          return tersedia[0] ?? "";
+        });
       }
     });
   };
@@ -115,6 +131,16 @@ export default function LemburPage() {
   useEffect(() => {
     refetch();
   }, []);
+
+  useEffect(() => {
+    if (!tanggalAbsen) {
+      setStatusAbsen(null);
+      return;
+    }
+    getStatusLembur({ tanggal: tanggalAbsen })
+      .then((res) => setStatusAbsen(res))
+      .catch(() => setStatusAbsen(null));
+  }, [tanggalAbsen]);
 
   const minTanggal = ymd(new Date());
   const maxTanggal =
@@ -355,6 +381,117 @@ export default function LemburPage() {
             </button>
           </div>
         </form>
+
+        {/* Pengajuan Disetujui — Absen Lembur */}
+        {disetujui.length > 0 && (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
+            <h1 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
+              <div className="w-11 h-11 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-xl">
+                <FaRegCheckCircle />
+              </div>
+              Pengajuan Disetujui
+            </h1>
+            <p className="text-sm text-gray-500">
+              Pilih tanggal pengajuan yang disetujui untuk melakukan absen
+              lembur.
+            </p>
+
+            {Array.from(new Set(disetujui.map((d) => d.tanggal))).length >
+              0 && (
+              <div className="relative">
+                <select
+                  value={tanggalAbsen}
+                  onChange={(e) => setTanggalAbsen(e.target.value)}
+                  className="appearance-none w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                  {Array.from(new Set(disetujui.map((d) => d.tanggal)))
+                    .sort()
+                    .map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {disetujui
+              .filter((d) => d.tanggal === tanggalAbsen)
+              .map((p) => (
+                <div
+                  key={p.id}
+                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+                  <p className="text-gray-700">
+                    {p.hari}, {p.tanggal} —{" "}
+                    <span className="font-semibold text-blue-600">
+                      {p.jam_mulai} - {p.jam_selesai}
+                    </span>{" "}
+                    ({p.durasi_jam} jam)
+                  </p>
+                  <p className="mt-1 text-gray-500">{p.keterangan}</p>
+                </div>
+              ))}
+
+            {!statusAbsen && (
+              <p className="text-sm text-gray-400">Memuat status absen...</p>
+            )}
+
+            {statusAbsen && statusAbsen.absen_masuk === null && (
+              <button
+                onClick={() =>
+                  navigate(`/absen-lembur/masuk?tanggal=${tanggalAbsen}`)
+                }
+                className="w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-700 hover:shadow-md active:scale-[0.98]">
+                Absen Masuk Lembur
+              </button>
+            )}
+
+            {statusAbsen &&
+              statusAbsen.absen_masuk !== null &&
+              statusAbsen.absen_pulang === null && (
+                <div className="flex flex-col gap-3">
+                  <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    Sudah absen masuk{" "}
+                    <span className="font-semibold">
+                      {statusAbsen.absen_masuk}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      navigate(`/absen-lembur/pulang?tanggal=${tanggalAbsen}`)
+                    }
+                    className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md active:scale-[0.98]">
+                    Absen Pulang Lembur
+                  </button>
+                </div>
+              )}
+
+            {statusAbsen &&
+              statusAbsen.absen_masuk !== null &&
+              statusAbsen.absen_pulang !== null && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex flex-col gap-1 text-sm">
+                  <p className="text-gray-700">
+                    Masuk{" "}
+                    <span className="font-semibold">
+                      {statusAbsen.absen_masuk}
+                    </span>{" "}
+                    · Pulang{" "}
+                    <span className="font-semibold">
+                      {statusAbsen.absen_pulang}
+                    </span>
+                  </p>
+                  {statusAbsen.durasi_menit !== null && (
+                    <p className="text-gray-600">
+                      Durasi: {durasiTeks(statusAbsen.durasi_menit)}
+                    </p>
+                  )}
+                  <p className="flex items-center gap-2 text-gray-600">
+                    Bintang:
+                    <Bintang nilai={statusAbsen.bintang} />
+                  </p>
+                </div>
+              )}
+          </div>
+        )}
 
         {/* Riwayat */}
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">

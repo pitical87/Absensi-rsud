@@ -9,6 +9,7 @@ import PendingLeave from "../pages/PendingLeave";
 import RegisterPage from "../pages/RegisterPage";
 import LogbookPage from "../pages/LogbookPage";
 import LemburPage from "../pages/LemburPage";
+import AbsenLemburPage from "../pages/AbsenLemburPage";
 
 export default function AppRoutes() {
   return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
         <Route path="/izin/" element={<IzinPage />} />
         <Route path="/persetujuan" element={<PendingLeave />} />
         <Route path="/lembur" element={<LemburPage />} />
+        <Route path="/absen-lembur/:tipe" element={<AbsenLemburPage />} />
         <Route path="/logbook" element={<LogbookPage />} />
       </Route>
     </Routes>
