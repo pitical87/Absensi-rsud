@@ -2,6 +2,7 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 import { GetCurrentDateString } from "../../utils/DateUtils";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import Logo from "../../assets/logo_white.svg?react";
 
 export default function TopNavbar() {
   const { user, logout } = useAuth();
@@ -22,17 +23,16 @@ export default function TopNavbar() {
     <div className="relative">
       <section className="b-white flex items-center justify-between border-b border-gray-200 px-5 py-4 bg-white">
         <div className="flex flex-col cursor-default">
-          <h1 className="text-xl font-bold">MARO</h1>
-          <span className="text-sm text-gray-500">
-            {GetCurrentDateString()}
-          </span>
+          <Logo className="h-12 w-fit text-blue-600" />
+          <span className="text-sm text-gray-500">{GetCurrentDateString()}</span>
         </div>
         <div className="flex items-center gap-2">
           <IoIosNotificationsOutline className="text-2xl text-gray-700 cursor-pointer" />
           <button
             onClick={() => setShowMenu(true)}
             className="flex h-8 w-8 items-center text-sm justify-center rounded-full cursor-pointer
-                bg-blue-100 font-semibold text-blue-600">
+                bg-blue-100 font-semibold text-blue-600"
+          >
             {userInitials}
           </button>
         </div>
@@ -41,21 +41,14 @@ export default function TopNavbar() {
       {showMenu && (
         <>
           {/* Overlay */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowMenu(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
 
           {/* Dropdown */}
           <div className="absolute right-4 top-16 z-50 w-72 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
             {/* Header */}
             <div className="border-b border-gray-200 px-5 py-3">
-              <h2 className="text-xl font-bold text-gray-900">
-                {user?.nama_lengkap}
-              </h2>
-              <p className="mt-1 text-gray-500 text-sm">
-                {user?.unit_kerja?.nama}
-              </p>
+              <h2 className="text-xl font-bold text-gray-900">{user?.nama_lengkap}</h2>
+              <p className="mt-1 text-gray-500 text-sm">{user?.unit_kerja?.nama}</p>
             </div>
 
             {/* Menu */}
@@ -64,7 +57,8 @@ export default function TopNavbar() {
               onClick={() => {
                 setShowMenu(false);
                 // navigate("/history")
-              }}>
+              }}
+            >
               Rekap Kehadiran
             </button>
 
@@ -73,7 +67,8 @@ export default function TopNavbar() {
               onClick={() => {
                 setShowMenu(false);
                 handleLogout();
-              }}>
+              }}
+            >
               Keluar
             </button>
           </div>
