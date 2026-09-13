@@ -28,3 +28,20 @@ export type LogTemplate = {
   id: number;
   isi: string;
 };
+
+export type SimrsEntry = {
+  tanggal: string;
+  jam: string;
+  isi: string;
+  pesan?: string;
+};
+
+export type SimrsLogbookResponse = {
+  sukses: boolean;
+  pesan?: string;
+  peringatan?: string[];
+  jenis?: string;
+  total_tindakan?: number;
+  total_lab?: number;
+  data: SimrsEntry[];
+};

@@ -1,4 +1,4 @@
-import type { LogbookResponse } from "../../types/LogBookType";
+import type { LogbookResponse, SimrsLogbookResponse } from "../../types/LogBookType";
 import api from "./client";
 
 export const saveLogBulk = async (data: { entri: { tanggal: string; jam: string; isi: string }[] }) => {
@@ -45,5 +45,11 @@ export const updateTemplate = async (data: { id: number; isi: string }) => {
 
 export const deleteTemplate = async (id: number) => {
   const res = await api.delete(`/logbook/template/${id}`);
+  return res.data;
+};
+
+export const getLogbookSimrs = async (dari: string, sampai: string, jenis?: string): Promise<SimrsLogbookResponse> => {
+  const path = jenis ? `/logbook/simrs/${jenis}` : "/logbook/simrs";
+  const res = await api.get(`${path}?dari=${dari}&sampai=${sampai}`);
   return res.data;
 };
