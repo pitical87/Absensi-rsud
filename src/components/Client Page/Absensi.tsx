@@ -13,10 +13,14 @@ type props = {
     tanggal_mulai: string;
     tanggal_selesai: string;
   } | null;
+  isDokter?: boolean;
 };
 
-export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave }: props) {
+export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isDokter }: props) {
   const navigate = useNavigate();
+  const sesiTerbuka = !!isDokter && hasMasuk && !hasPulang;
+  const masukDisabled = hasLeave || (isDokter ? sesiTerbuka : hasMasuk);
+  const pulangDisabled = hasLeave || (isDokter ? !sesiTerbuka : !hasMasuk || hasPulang);
   return (
     <>
       <section className="flex flex-col items-center px-6 py-2 gap-2">
@@ -42,11 +46,15 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave }: p
             items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-xs"
         >
           <CiLock className="text-sm font-semibold" />
-          <span>Absen pulang hanya tersedia sesudah absen masuk.</span>
+          <span>
+            {isDokter
+              ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari."
+              : "Absen pulang hanya tersedia sesudah absen masuk."}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-5 w-full">
           <button
-            disabled={hasMasuk || hasLeave}
+            disabled={masukDisabled}
             onClick={() => navigate("/present/masuk")}
             className="
                 group w-full rounded-xl border border-blue-200 bg-white p-4
@@ -95,13 +103,21 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave }: p
                     group-disabled:text-gray-500
                   "
                 >
-                  {hasMasuk ? "Sudah Masuk" : "Untuk absen Masuk"}
+                  {isDokter
+                    ? sesiTerbuka
+                      ? "Selesaikan sesi berjalan dulu"
+                      : hasPulang
+                        ? "Absen sesi berikutnya"
+                        : "Untuk absen Masuk"
+                    : hasMasuk
+                      ? "Sudah Masuk"
+                      : "Untuk absen Masuk"}
                 </span>
               </div>
             </div>
           </button>
           <button
-            disabled={!hasMasuk || hasPulang || hasLeave}
+            disabled={pulangDisabled}
             onClick={() => navigate("/present/pulang")}
             className="
                 group w-full rounded-xl border border-blue-200 bg-white p-4
@@ -150,7 +166,13 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave }: p
                     group-disabled:text-gray-500
                   "
                 >
-                  {hasPulang ? "Sudah pulang" : "Absen masuk dulu"}
+                  {isDokter
+                    ? sesiTerbuka
+                      ? "Selesaikan sesi berjalan"
+                      : "Absen masuk dulu"
+                    : hasPulang
+                      ? "Sudah pulang"
+                      : "Absen masuk dulu"}
                 </span>
               </div>
             </div>

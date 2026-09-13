@@ -1,14 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  me as fetchMe,
-  logout as apiLogout,
-} from "../utils/api/Authentication";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { me as fetchMe, logout as apiLogout } from "../utils/api/Authentication";
 import { useNavigate } from "react-router";
 
 type User = {
@@ -41,6 +32,7 @@ type AuthContextType = {
   lokasi: Lokasi | null;
   isAuthenticated: boolean;
   loading: boolean;
+  isDokter: boolean;
   setLokasi: (lokasi: Lokasi | null) => void;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
@@ -52,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [lokasi, setLokasi] = useState<Lokasi | null>(null);
   const [loading, setLoading] = useState(true);
+  const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
 
   const navigate = useNavigate();
 
@@ -83,11 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         lokasi,
         isAuthenticated: !!user,
+        isDokter,
         loading,
         setLokasi,
         setUser,
         logout,
-      }}>
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

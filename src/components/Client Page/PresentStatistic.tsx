@@ -5,6 +5,7 @@ import { FaRegStar, FaStar } from "react-icons/fa6";
 import { getStatistic, getStatus } from "../../utils/api/Attendence";
 import { FaStarHalfAlt } from "react-icons/fa";
 import { IoIosStats } from "react-icons/io";
+import { useAuth } from "../../context/AuthContext";
 
 type Statistic = {
   kehadiran: { persen: number; hadir: number; target: number };
@@ -30,6 +31,9 @@ export default function PresentStatistic() {
   const [stat, setStat] = useState<Statistic | null>(null);
   const [bintang, setBintang] = useState(0);
   const [hasPulang, setHasPulang] = useState(false);
+  const { user } = useAuth();
+  const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
+
   useEffect(() => {
     getStatistic()
       .then((res) => {
@@ -77,33 +81,47 @@ export default function PresentStatistic() {
               <LuClock3 />
               Jam Kerja
             </span>
-            <span className="text-2xl font-bold w-full">{stat ? `${stat.jam_kerja.total_jam} jam` : "-"}</span>
-            <span className="text-md text-gray-500 flex items-center gap-1 w-full">{stat ? `target ${stat.jam_kerja.target_jam} jam` : "Memuat..."}</span>
+            <span className="text-2xl font-bold w-full">{isDokter ? "-" : stat ? `${stat.jam_kerja.total_jam} jam` : "-"}</span>
+            <span className="text-md text-gray-500 flex items-center gap-1 w-full">{isDokter ? "Jam kerja fleksibel" : stat ? `target ${stat.jam_kerja.target_jam} jam` : "Memuat..."}</span>
           </div>
         </div>
 
-        {/* Ketepatan waktu masuk & pulang */}
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="bg-white border border-gray-300 rounded-xl p-4">
-            <p className="text-sm text-gray-500">Tepat Masuk</p>
-            <p className="mt-1 text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_masuk}%` : "-"}</p>
-          </div>
-          <div className="bg-white border border-gray-300 rounded-xl p-4">
-            <p className="text-sm text-gray-500">Tepat Pulang</p>
-            <p className="mt-1 text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_pulang}%` : "-"}</p>
-          </div>
-        </div>
-
-        {/* Bintang ketepatan bulan ini */}
-        <div className="mt-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-amber-800 flex items-center gap-1">
-              <FaRegStar /> Bintang Ketepatan {hasPulang ? "Hari ini" : "Masuk"}
+        {isDokter && (
+          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-800">
+              Dokter memiliki jam kerja fleksibel dan dapat melakukan absensi
+              beberapa kali dalam sehari (multi-sesi). Penilaian ketepatan &
+              bintang tidak berlaku.
             </p>
-            <p className="text-xs text-amber-600 mt-1">{bintang === null ? "Belum ada penilaian hari ini" : `Rata-rata ${bintang} dari 5 bintang`}</p>
           </div>
-          {bintang !== null && <Bintang nilai={bintang} />}
-        </div>
+        )}
+
+        {!isDokter && (
+          <>
+            {/* Ketepatan waktu masuk & pulang */}
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="bg-white border border-gray-300 rounded-xl p-4">
+                <p className="text-sm text-gray-500">Tepat Masuk</p>
+                <p className="mt-1 text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_masuk}%` : "-"}</p>
+              </div>
+              <div className="bg-white border border-gray-300 rounded-xl p-4">
+                <p className="text-sm text-gray-500">Tepat Pulang</p>
+                <p className="mt-1 text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_pulang}%` : "-"}</p>
+              </div>
+            </div>
+
+            {/* Bintang ketepatan bulan ini */}
+            <div className="mt-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-amber-800 flex items-center gap-1">
+                  <FaRegStar /> Bintang Ketepatan {hasPulang ? "Hari ini" : "Masuk"}
+                </p>
+                <p className="text-xs text-amber-600 mt-1">{bintang === null ? "Belum ada penilaian hari ini" : `Rata-rata ${bintang} dari 5 bintang`}</p>
+              </div>
+              {bintang !== null && <Bintang nilai={bintang} />}
+            </div>
+          </>
+        )}
       </section>
     </>
   );

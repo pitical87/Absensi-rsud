@@ -46,15 +46,19 @@ export default function ConfirmPresent({ setCurrentStep, onSuccess, data }: Prop
         lng: data.longitude,
         foto: data.image ?? undefined,
       });
-      if (res.sukses) {
-        toast.success(res.pesan);
-        if (type === "masuk") {
-          localStorage.setItem("keterlambatan_telat", String(res.keterlambatan?.menit_telat ?? 0));
-          localStorage.setItem("bintang_masuk", String(res.keterlambatan?.bintang_masuk ?? 0));
-        } else {
-          localStorage.setItem("menit_pulang_awal", String(res.keterlambatan?.menit_pulang_awal ?? 0));
-          localStorage.setItem("bintang_pulang", String(res.keterlambatan?.bintang_pulang ?? 0));
-        }
+if (res.sukses) {
+          toast.success(res.pesan);
+          if (type === "masuk") {
+            if (res.keterlambatan) {
+              localStorage.setItem("keterlambatan_telat", String(res.keterlambatan.menit_telat ?? 0));
+              localStorage.setItem("bintang_masuk", String(res.keterlambatan.bintang_masuk ?? 0));
+            }
+          } else {
+            if (res.keterlambatan) {
+              localStorage.setItem("menit_pulang_awal", String(res.keterlambatan.menit_pulang_awal ?? 0));
+              localStorage.setItem("bintang_pulang", String(res.keterlambatan.bintang_pulang ?? 0));
+            }
+          }
         onSuccess?.(res);
         setCurrentStep(3);
         setTimeout(() => navigate("/"), 3000);

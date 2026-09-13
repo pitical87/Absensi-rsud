@@ -6,6 +6,7 @@ import ValidateSelfie from "../components/Present Page/ValidateSelfie";
 import ConfirmPresent from "../components/Present Page/ConfirmPresent";
 import TopNavbar from "../components/Client Page/TopNavbar";
 import { FaStar, FaRegStar, FaTriangleExclamation, FaCircleInfo } from "react-icons/fa6";
+import { useAuth } from "../context/AuthContext";
 
 type PendingData = {
   latitude: number;
@@ -47,6 +48,7 @@ export default function PresentPage() {
     distance: 0,
     image: null,
   });
+  const { isDokter } = useAuth();
 
   return (
     <div>
@@ -125,12 +127,25 @@ export default function PresentPage() {
             {hasil?.pesan && (
               <p className="text-sm text-gray-600 text-center">{hasil.pesan}</p>
             )}
-            <BintangSukses nilai={hasil?.bintang} />
-            <p className="text-xs text-gray-400">
-              {hasil?.bintang !== undefined
-                ? `Bintang ketepatan hari ini: ${hasil.bintang}/5`
-                : "Bintang ketepatan dihitung dari ketepatan waktu masuk & pulang."}
-            </p>
+            {!isDokter && (
+              <>
+                <BintangSukses nilai={hasil?.bintang} />
+                <p className="text-xs text-gray-400">
+                  {hasil?.bintang !== undefined
+                    ? `Bintang ketepatan hari ini: ${hasil.bintang}/5`
+                    : "Bintang ketepatan dihitung dari ketepatan waktu masuk & pulang."}
+                </p>
+              </>
+            )}
+            {isDokter && (
+              <div className="flex items-center gap-3 rounded-xl bg-blue-100 px-4 py-3 text-sm font-medium text-blue-800">
+                <FaCircleInfo className="shrink-0 text-blue-600" />
+                <span>
+                  Anda dapat absen masuk & pulang kembali dalam hari yang sama
+                  (absen multi-sesi).
+                </span>
+              </div>
+            )}
             <p className="text-sm text-gray-500">
               Mengalihkan ke halaman utama...
             </p>

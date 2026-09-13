@@ -4,19 +4,28 @@ import { GetGreeting, GetRandomGreeting } from "../../utils/DateUtils";
 type props = {
   masuk: { waktu: string; status: string } | null;
   pulang: { waktu: string } | null;
+  isDokter?: boolean;
+  sesi?: number;
 };
 
-export default function HeroCard({ masuk, pulang }: props) {
+export default function HeroCard({ masuk, pulang, isDokter, sesi }: props) {
   const { user } = useAuth();
   return (
     <>
       <section className="px-6 pt-4 pb-2">
         <div className="flex flex-col rounded-2xl bg-blue-600 p-6">
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              {GetGreeting()}, {user?.nama_lengkap}
-            </h1>
-            <p className="mt-1 text-sm text-blue-200">{GetRandomGreeting()}</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white">
+                {GetGreeting()}, {user?.nama_lengkap}
+              </h1>
+              <p className="mt-1 text-sm text-blue-200">{GetRandomGreeting()}</p>
+            </div>
+            {isDokter && (sesi ?? 0) > 0 && (
+              <span className="rounded-full bg-blue-800/40 px-3 py-1 text-xs font-medium text-blue-100">
+                Sesi {sesi} hari ini
+              </span>
+            )}
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 rounded-2xl bg-blue-300/40 p-5">
             <div>
