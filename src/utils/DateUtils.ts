@@ -104,3 +104,27 @@ export function GetTodayKey(): string {
   const tanggal = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${bulan}-${tanggal}`;
 }
+
+export type WeekDay = {
+  tanggal: string;
+  hari: string;
+  label: string;
+};
+
+export function GetWeekDays(): WeekDay[] {
+  const days: WeekDay[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const tanggal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+    const hari = new Intl.DateTimeFormat("id-ID", { weekday: "short" }).format(d);
+    const label = new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+    }).format(d);
+    days.push({ tanggal, hari, label });
+  }
+  return days;
+}

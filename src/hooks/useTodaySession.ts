@@ -28,7 +28,12 @@ export default function useTodaySession(isDokter: boolean) {
       .then((res) => {
         if (!aktif || !res.sukses) return;
         const hariIni = (res.riwayat as SessionRecord[]).filter(
-          (r) => r.tanggal == GetTodayKey(),
+          (r) => r.tanggal == GetTodayKey() || r.jam_pulang == null,
+        );
+        hariIni.sort((a, b) =>
+          a.tanggal == b.tanggal
+            ? a.jam_masuk.localeCompare(b.jam_masuk)
+            : a.tanggal.localeCompare(b.tanggal),
         );
         setSessions(hariIni);
       })

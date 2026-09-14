@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { GetCurrentDateString, GetCurrentTime } from "../../utils/DateUtils";
 import { formatDistance } from "../../utils/GeoLocation";
 import { useState } from "react";
@@ -28,11 +28,21 @@ type Props = {
 export default function ConfirmPresent({ setCurrentStep, onSuccess, data }: Props) {
   const { type } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const date = GetCurrentDateString();
   const time = GetCurrentTime();
   const { lokasi } = useAuth();
   const distanceString = formatDistance(data.distance);
   const [submitting, setSubmitting] = useState(false);
+
+  const tanggalShift = (location.state as { tanggal?: string } | null)?.tanggal;
+  const tanggalShiftLabel = tanggalShift
+    ? new Date(`${tanggalShift}T00:00:00`).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   const radius = lokasi?.radius ?? 0;
   const isWithinRadius = data.distance <= radius;
@@ -89,6 +99,12 @@ if (res.sukses) {
           <span className=" text-gray-500">Waktu</span>
           <span className=" text-gray-900">{time} WIT</span>
         </li>
+        {tanggalShiftLabel && (
+          <li className="flex items-center justify-between border-b border-gray-300 py-3">
+            <span className=" text-gray-500">Tanggal Shift</span>
+            <span className=" text-gray-900">{tanggalShiftLabel}</span>
+          </li>
+        )}
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
           <span className=" text-gray-500">Jarak</span>
           <span className=" text-gray-900">{distanceString}</span>

@@ -14,13 +14,24 @@ type props = {
     tanggal_selesai: string;
   } | null;
   isDokter?: boolean;
+  openSession?: { tanggal: string; tanggal_label: string } | null;
+  selectedTanggal?: string;
 };
 
-export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isDokter }: props) {
+export default function Absensi({
+  hasMasuk,
+  hasPulang,
+  hasLeave,
+  todayLeave,
+  isDokter,
+  openSession,
+  selectedTanggal,
+}: props) {
   const navigate = useNavigate();
-  const sesiTerbuka = !!isDokter && hasMasuk && !hasPulang;
-  const masukDisabled = hasLeave || (isDokter ? sesiTerbuka : hasMasuk);
-  const pulangDisabled = hasLeave || (isDokter ? !sesiTerbuka : !hasMasuk || hasPulang);
+  const adaSesiTerbuka = !!openSession;
+  const pulangTerpilih = adaSesiTerbuka && selectedTanggal === openSession.tanggal;
+  const masukDisabled = hasLeave || adaSesiTerbuka || (!isDokter && hasMasuk);
+  const pulangDisabled = hasLeave || !pulangTerpilih;
   return (
     <>
       <section className="flex flex-col items-center px-6 py-2 gap-2">
@@ -49,7 +60,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
           <span>
             {isDokter
               ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari."
-              : "Absen pulang hanya tersedia sesudah absen masuk."}
+              : "Absen pulang hanya tersedia sesudah absen masuk. Bila shift melewati tengah malam, pilih tanggal shift di jadwal."}
           </span>
         </div>
         <div className="flex items-center justify-between gap-5 w-full">
@@ -103,22 +114,30 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     group-disabled:text-gray-500
                   "
                 >
-                  {isDokter
-                    ? sesiTerbuka
-                      ? "Selesaikan sesi berjalan dulu"
-                      : hasPulang
-                        ? "Absen sesi berikutnya"
-                        : "Untuk absen Masuk"
-                    : hasMasuk
-                      ? "Sudah Masuk"
-                      : "Untuk absen Masuk"}
+                  {hasLeave
+                    ? "Sedang izin/cuti"
+                    : adaSesiTerbuka
+                      ? isDokter
+                        ? "Selesaikan sesi berjalan dulu"
+                        : "Selesaikan shift berjalan dulu"
+                      : isDokter
+                        ? hasPulang
+                          ? "Absen sesi berikutnya"
+                          : "Untuk absen Masuk"
+                        : hasMasuk
+                          ? "Sudah Masuk"
+                          : "Untuk absen Masuk"}
                 </span>
               </div>
             </div>
           </button>
           <button
             disabled={pulangDisabled}
-            onClick={() => navigate("/present/pulang")}
+            onClick={() =>
+              navigate("/present/pulang", {
+                state: { tanggal: adaSesiTerbuka ? openSession.tanggal : undefined },
+              })
+            }
             className="
                 group w-full rounded-xl border border-blue-200 bg-white p-4
                 transition-colors duration-200 cursor-pointer
@@ -166,12 +185,14 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     group-disabled:text-gray-500
                   "
                 >
-                  {isDokter
-                    ? sesiTerbuka
-                      ? "Selesaikan sesi berjalan"
-                      : "Absen masuk dulu"
-                    : hasPulang
-                      ? "Sudah pulang"
+                  {hasLeave
+                    ? "Sedang izin/cuti"
+                    : adaSesiTerbuka
+                      ? pulangTerpilih
+                        ? isDokter
+                          ? "Selesaikan sesi berjalan"
+                          : `Pulang shift ${openSession.tanggal_label}`
+                        : `Pilih ${openSession.tanggal_label} dulu`
                       : "Absen masuk dulu"}
                 </span>
               </div>
