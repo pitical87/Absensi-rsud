@@ -94,7 +94,7 @@ export default function SifSection() {
   };
 
   return (
-    <section className="flex flex-col w-full items-center gap-2 px-6 py-4">
+    <section className="flex flex-col w-full items-center gap-2 px-4 sm:px-6 py-4">
       <h1 className="flex gap-3 items-center w-text-lg w-full font-bold">
         <BiCalendar /> Shift hari ini
       </h1>
@@ -106,9 +106,9 @@ export default function SifSection() {
           Jadwal diambil dari sistem sesuai penugasan anda
         </span>
       </div>
-      <div className="flex w-full gap-3">
+      <div className="flex w-full flex-col gap-3 min-[400px]:flex-row">
         {/* Shift */}
-        <div className="flex w-1/2 items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
+        <div className="flex w-full min-[400px]:w-1/2 items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
           <div className="rounded-lg bg-amber-100 p-2">
             <IoSunny className="text-xl text-amber-500" />
           </div>
@@ -142,7 +142,7 @@ export default function SifSection() {
         </div>
 
         {/* Unit */}
-        <div className="flex w-1/2 flex-col justify-center gap-2 rounded-xl border border-gray-200 bg-white p-3">
+        <div className="flex w-full min-[400px]:w-1/2 flex-col justify-center gap-2 rounded-xl border border-gray-200 bg-white p-3">
           <div className="flex items-center gap-2">
             <PiBuildingOfficeFill className="text-lg text-sky-600" />
             <div>
@@ -166,7 +166,7 @@ export default function SifSection() {
       </div>
       {/* izin */}
       <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
               Tidak bisa hadir ?
@@ -175,7 +175,7 @@ export default function SifSection() {
 
           <button
             onClick={() => navigate("/izin")}
-            className="flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto">
             <HiOutlineDocumentText size={20} />
             Ajukan Izin
           </button>
@@ -183,7 +183,7 @@ export default function SifSection() {
       </section>
       {/* lembur */}
       <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
               Lembur di luar jam kerja ?
@@ -192,7 +192,7 @@ export default function SifSection() {
 
           <button
             onClick={() => navigate("/lembur")}
-            className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto">
             <BiTimeFive size={20} />
             Ajukan Lembur
           </button>
@@ -200,7 +200,7 @@ export default function SifSection() {
       </section>
       {/* ubah jadwal */}
       <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
               Perlu ubah / tukar shift ?
@@ -209,7 +209,7 @@ export default function SifSection() {
 
           <button
             onClick={() => navigate("/ubah-jadwal")}
-            className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100">
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto">
             <BiCalendarEdit size={20} />
             Ajukan Perubahan
           </button>
@@ -217,7 +217,7 @@ export default function SifSection() {
       </section>
       {user?.posisi !== "Staf" && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
                 {totalPending > 0
@@ -228,7 +228,7 @@ export default function SifSection() {
 
             <button
               onClick={() => navigate("/persetujuan")}
-              className="flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto">
               <FaFileCircleCheck size={20} />
               Persetujuan
             </button>
@@ -237,7 +237,7 @@ export default function SifSection() {
       )}
       {user?.posisi !== "Staf" && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
                 {totalLemburPending > 0
@@ -248,7 +248,7 @@ export default function SifSection() {
 
             <button
               onClick={() => navigate("/persetujuan-lembur")}
-              className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto">
               <FaFileCircleCheck size={20} />
               Persetujuan Lembur
             </button>
@@ -257,7 +257,7 @@ export default function SifSection() {
       )}
       {user?.posisi !== "Staf" && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
                 {totalJadwalPending > 0
@@ -268,7 +268,7 @@ export default function SifSection() {
 
             <button
               onClick={() => navigate("/persetujuan-jadwal")}
-              className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto">
               <FaFileCircleCheck size={20} />
               Persetujuan Jadwal
             </button>

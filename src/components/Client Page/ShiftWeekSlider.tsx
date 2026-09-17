@@ -18,7 +18,7 @@ type props = {
 
 export default function ShiftWeekSlider({ days, selected, onSelect, openSession, loading }: props) {
   return (
-    <section className="w-full px-6 pt-3">
+    <section className="w-full px-4 sm:px-6 pt-3">
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">

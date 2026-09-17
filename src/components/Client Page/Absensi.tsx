@@ -34,7 +34,7 @@ export default function Absensi({
   const pulangDisabled = hasLeave || !pulangTerpilih;
   return (
     <>
-      <section className="flex flex-col items-center px-6 py-2 gap-2">
+      <section className="flex flex-col items-center px-4 sm:px-6 py-2 gap-2">
         <h1 className="flex items-center gap-3 text-lg w-full font-bold">
           <FaCalendarCheck /> Absensi Hari Ini
         </h1>
@@ -63,22 +63,22 @@ export default function Absensi({
               : "Absen pulang hanya tersedia sesudah absen masuk. Bila shift melewati tengah malam, pilih tanggal shift di jadwal."}
           </span>
         </div>
-        <div className="flex items-center justify-between gap-5 w-full">
+        <div className="flex items-center justify-between gap-3 sm:gap-5 w-full">
           <button
             disabled={masukDisabled}
             onClick={() => navigate("/present/masuk")}
             className="
-                group w-full rounded-xl border border-blue-200 bg-white p-4
+                group min-w-0 w-full rounded-xl border border-blue-200 bg-white p-3 sm:p-4
                 transition-colors duration-200 cursor-pointer
                 hover:bg-blue-100 hover:border-blue-400
                 disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-blue-200
                 disabled:cursor-not-allowed
               "
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span
                 className="
-                  flex h-8 w-8 items-center justify-center rounded-lg
+                  flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
                   bg-blue-100 transition-colors duration-200
                   group-hover:bg-blue-600
                   group-disabled:bg-blue-100
@@ -94,7 +94,7 @@ export default function Absensi({
                 />
               </span>
 
-              <div className="flex flex-1 flex-col text-left">
+              <div className="flex min-w-0 flex-1 flex-col text-left">
                 <span
                   className="
                     font-medium text-gray-800
@@ -108,7 +108,7 @@ export default function Absensi({
 
                 <span
                   className="
-                    text-xs text-gray-500
+                    text-xs text-gray-500 leading-snug
                     transition-colors duration-200
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
@@ -139,17 +139,17 @@ export default function Absensi({
               })
             }
             className="
-                group w-full rounded-xl border border-blue-200 bg-white p-4
+                group min-w-0 w-full rounded-xl border border-blue-200 bg-white p-3 sm:p-4
                 transition-colors duration-200 cursor-pointer
                 hover:bg-blue-100 hover:border-blue-400
                 disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-blue-200
                 disabled:cursor-not-allowed
               "
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span
                 className="
-                  flex h-8 w-8 items-center justify-center rounded-lg
+                  flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
                   bg-blue-100 transition-colors duration-200
                   group-hover:bg-blue-600
                   group-disabled:bg-blue-100
@@ -165,7 +165,7 @@ export default function Absensi({
                 />
               </span>
 
-              <div className="flex flex-1 flex-col text-left">
+              <div className="flex min-w-0 flex-1 flex-col text-left">
                 <span
                   className="
                     font-medium text-gray-800
@@ -179,7 +179,7 @@ export default function Absensi({
 
                 <span
                   className="
-                    text-xs text-gray-500
+                    text-xs text-gray-500 leading-snug
                     transition-colors duration-200
                     group-hover:text-gray-600
                     group-disabled:text-gray-500

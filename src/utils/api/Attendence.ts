@@ -38,3 +38,8 @@ export const getJadwal = async () => {
   const res = await api.get("/jadwal");
   return res.data;
 };
+
+export const rekapAbsensi = async (bulan: number, tahun: number) => {
+  const res = await api.get(`rekap?bulan=${bulan}&tahun=${tahun}`);
+  return res.data;
+};

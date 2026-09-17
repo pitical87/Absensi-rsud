@@ -39,7 +39,7 @@ export default function PerformaBanner() {
   const lumayan = bulat === 4;
 
   return (
-    <section className="px-6 pt-2 w-full">
+    <section className="px-4 sm:px-6 pt-2 w-full">
       <div
         className={`rounded-2xl border p-4 flex gap-3 ${
           baik

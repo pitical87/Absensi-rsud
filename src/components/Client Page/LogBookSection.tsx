@@ -12,7 +12,7 @@ export default function LogBookSection({ hasMasuk, hasPulang, hasLeave }: props)
   const navigate = useNavigate();
   const aktif = hasMasuk && !hasPulang && !hasLeave;
   return (
-    <section className="w-full px-6 pt-3">
+    <section className="w-full px-4 sm:px-6 pt-3">
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">

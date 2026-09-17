@@ -1,155 +1,262 @@
-import { useState, useMemo } from 'react';
-import { TbLogin, TbLogout } from 'react-icons/tb';
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
+import { useAuth } from "../context/AuthContext";
+import { rekapAbsensi } from "../utils/api/Attendence";
 
-interface DayData {
-  d: string;
-  i: string;
-  o: string;
-  s: 'hadir' | 'telat' | 'izin' | 'sakit' | 'alpha';
-}
-
-interface MonthData {
-  hadir: number;
-  telat: number;
-  izin: number;
-  sakit: number;
-  alpha: number;
-  weeks: number[];
-  days: DayData[];
-}
-
-const REKAP_DATA: Record<number, MonthData> = {
-  6: {
-    hadir: 19, telat: 1, izin: 0, sakit: 0, alpha: 0,
-    weeks: [38, 40, 38, 38, 0],
-    days: [
-      { d: 'Senin, 1 Jun', i: '08:02', o: '16:10', s: 'hadir' },
-      { d: 'Selasa, 2 Jun', i: '08:15', o: '16:05', s: 'hadir' },
-      { d: 'Rabu, 3 Jun', i: '08:17', o: '16:08', s: 'telat' },
-      { d: 'Kamis, 4 Jun', i: '08:01', o: '16:12', s: 'hadir' },
-      { d: 'Jumat, 5 Jun', i: '07:58', o: '16:30', s: 'hadir' },
-      { d: 'Senin, 8 Jun', i: '08:05', o: '16:10', s: 'hadir' },
-      { d: 'Selasa, 9 Jun', i: '08:03', o: '16:07', s: 'hadir' },
-    ],
-  },
-  5: {
-    hadir: 20, telat: 2, izin: 1, sakit: 0, alpha: 0,
-    weeks: [40, 38, 40, 36, 6],
-    days: [
-      { d: 'Senin, 4 Mei', i: '08:20', o: '16:05', s: 'telat' },
-      { d: 'Selasa, 5 Mei', i: '08:01', o: '16:11', s: 'hadir' },
-      { d: 'Rabu, 6 Mei', i: '—', o: '—', s: 'izin' },
-      { d: 'Kamis, 7 Mei', i: '07:55', o: '16:09', s: 'hadir' },
-    ],
-  },
-  4: {
-    hadir: 21, telat: 0, izin: 0, sakit: 1, alpha: 0,
-    weeks: [40, 40, 40, 40, 0],
-    days: [
-      { d: 'Senin, 7 Apr', i: '07:55', o: '16:15', s: 'hadir' },
-      { d: 'Selasa, 8 Apr', i: '07:58', o: '16:10', s: 'hadir' },
-      { d: 'Rabu, 9 Apr', i: '—', o: '—', s: 'sakit' },
-    ],
-  },
+type RekapResponse = {
+  sukses: boolean;
+  pesan?: string;
+  periode: {
+    bulan: number;
+    tahun: number;
+    label: string;
+    hari_dalam_bulan: number;
+    hari_berjalan: number;
+    hari_efektif: number;
+  };
+  ringkasan: {
+    hadir: number;
+    tepat_masuk: number;
+    terlambat: number;
+    total_menit_telat: number;
+    tepat_pulang: number;
+    pulang_awal: number;
+    total_menit_pulang_awal: number;
+    izin: number;
+    sakit: number;
+    cuti: number;
+    dinas_luar: number;
+    libur: number;
+    alpa: number;
+    anomali: number;
+    persen_kehadiran: number;
+    total_jam_kerja: number;
+    bintang_bulanan: number | null;
+  };
+  detail: {
+    tanggal: string;
+    hari: string;
+    status: string;
+    keterangan: string | null;
+    jam_masuk: string | null;
+    jam_pulang: string | null;
+    menit_telat: number;
+    menit_pulang_awal: number;
+    total_jam_kerja: number | null;
+    bintang_masuk: number | null;
+    bintang_pulang: number | null;
+    bintang_harian: number | null;
+  }[];
 };
 
-const STATUS_MAP: Record<string, { cls: string; lbl: string }> = {
-  hadir: { cls: 'bg-green-50 text-green-700', lbl: 'Hadir' },
-  telat: { cls: 'bg-amber-50 text-amber-800', lbl: 'Terlambat' },
-  izin: { cls: 'bg-blue-50 text-blue-700', lbl: 'Izin' },
-  sakit: { cls: 'bg-blue-50 text-blue-700', lbl: 'Sakit' },
-  alpha: { cls: 'bg-red-50 text-red-700', lbl: 'Alpha' },
+const STATUS_BADGE: Record<string, { cls: string; lbl: string }> = {
+  "Tepat Waktu": { cls: "bg-green-50 text-green-700", lbl: "Tepat" },
+  Terlambat: { cls: "bg-amber-50 text-amber-700", lbl: "Terlambat" },
+  "Belum Pulang": { cls: "bg-slate-100 text-slate-600", lbl: "Belum Pulang" },
+  Hadir: { cls: "bg-green-50 text-green-700", lbl: "Hadir" },
+  Izin: { cls: "bg-blue-50 text-blue-700", lbl: "Izin" },
+  Sakit: { cls: "bg-purple-50 text-purple-700", lbl: "Sakit" },
+  Cuti: { cls: "bg-teal-50 text-teal-700", lbl: "Cuti" },
+  "Dinas Luar": { cls: "bg-cyan-50 text-cyan-700", lbl: "Dinas Luar" },
+  Libur: { cls: "bg-slate-100 text-slate-500", lbl: "Libur" },
+  Alpa: { cls: "bg-red-50 text-red-700", lbl: "Alpa" },
 };
 
-const MONTH_NAMES: Record<number, string> = {
-  6: 'Juni 2026',
-  5: 'Mei 2026',
-  4: 'April 2026',
+const BULAN_ID = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+
+const fmtTanggal = (t: string) => {
+  const d = new Date(t + "T00:00:00");
+  return `${d.getDate()} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}`;
 };
 
 export default function Rekap() {
-  const [bulan, setBulan] = useState(6);
-  const data = REKAP_DATA[bulan];
-  const maxW = useMemo(() => Math.max(...data.weeks, 1), [data.weeks]);
-  const wkLabels = ['Mg 1', 'Mg 2', 'Mg 3', 'Mg 4', 'Mg 5'];
+  const [params] = useSearchParams();
+  const { user } = useAuth();
+
+  const bulan = Number(params.get("bulan")) || new Date().getMonth() + 1;
+  const tahun = Number(params.get("tahun")) || new Date().getFullYear();
+
+  const [data, setData] = useState<RekapResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const printed = useRef(false);
+
+  useEffect(() => {
+    rekapAbsensi(bulan, tahun)
+      .then((res) => {
+        if (res.sukses) setData(res);
+        else setError(res.pesan || "Gagal mengambil data rekap.");
+      })
+      .catch(() => setError("Terjadi kesalahan saat mengambil data."))
+      .finally(() => setLoading(false));
+  }, [bulan, tahun]);
+
+  useEffect(() => {
+    if (!loading && data && !printed.current) {
+      printed.current = true;
+      const t = setTimeout(() => window.print(), 300);
+      return () => clearTimeout(t);
+    }
+  }, [loading, data]);
 
   return (
-    <>
-      <div className="mb-5">
-        <h2 className="text-base font-medium text-[var(--text-primary)]">Rekap kehadiran</h2>
-        <p className="text-[13px] text-[var(--text-muted)] mt-0.5">Ringkasan kehadiran bulanan Anda</p>
-      </div>
+    <div>
+      {loading && (
+        <div className="p-8 text-center text-sm text-gray-500">
+          Memuat data rekap...
+        </div>
+      )}
 
-      <div className="flex gap-2 mb-5">
-        <select
-          value={bulan}
-          onChange={(e) => setBulan(Number(e.target.value))}
-          className="text-[13px] px-2.5 py-1.5 border border-[var(--border-strong)] rounded-lg bg-[var(--surface-2)] text-[var(--text-primary)] cursor-pointer"
-        >
-          {Object.entries(MONTH_NAMES).map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
-          ))}
-        </select>
-      </div>
+      {error && (
+        <div className="p-8 text-center text-sm text-red-600">{error}</div>
+      )}
 
-      <div className="grid grid-cols-5 gap-2 mb-5">
-        {([
-          { val: data.hadir, lbl: 'Hadir', color: '' },
-          { val: data.telat, lbl: 'Terlambat', color: 'text-amber-700' },
-          { val: data.izin, lbl: 'Izin', color: 'text-blue-700' },
-          { val: data.sakit, lbl: 'Sakit', color: 'text-blue-700' },
-          { val: data.alpha, lbl: 'Alpha', color: 'text-red-700' },
-        ]).map((item) => (
-          <div key={item.lbl} className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-2.5 py-3 text-center">
-            <div className={`text-lg font-medium text-[var(--text-primary)] mb-0.5 ${item.color}`}>{item.val}</div>
-            <div className="text-[11px] text-[var(--text-muted)]">{item.lbl}</div>
+      {data && (
+        <div className="p-4 print:p-0">
+          <div className="print-break-avoid text-center border-b-2 border-gray-800 pb-3 mb-4">
+            <h1 className="text-lg font-bold">
+              PEMERINTAH DAERAH KABUPATEN MERAUKE
+            </h1>
+            <h2 className="text-xl font-bold">RSUD MERAUKE</h2>
+            <p className="text-xs text-gray-600">
+              {user?.unit_kerja?.nama} • {user?.jabatan?.nama ?? user?.posisi}
+            </p>
           </div>
-        ))}
-      </div>
 
-      <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-4">
-        <div className="text-[13px] font-medium text-[var(--text-primary)] mb-3.5">Jam kerja per minggu (jam)</div>
-        <div className="flex items-end gap-1 h-[100px]">
-          {data.weeks.map((h, i) => (
-            <div key={i} className="flex flex-col items-center flex-1 gap-1">
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 3 }}>{h || ''}</div>
+          <div className="print-break-avoid mb-4">
+            <p className="font-semibold text-sm">{user?.nama_lengkap}</p>
+            <p className="text-sm">
+              Rekap Kehadiran <strong>{data.periode.label}</strong>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 mb-4 print:grid-cols-8">
+            {[
+              { val: data.ringkasan.hadir, lbl: "Hadir" },
+              { val: data.ringkasan.terlambat, lbl: "Terlambat" },
+              { val: data.ringkasan.izin, lbl: "Izin" },
+              { val: data.ringkasan.sakit, lbl: "Sakit" },
+              { val: data.ringkasan.cuti, lbl: "Cuti" },
+              { val: data.ringkasan.dinas_luar, lbl: "Dinas" },
+              { val: data.ringkasan.libur, lbl: "Libur" },
+              { val: data.ringkasan.alpa, lbl: "Alpa" },
+            ].map((s) => (
               <div
-                className="w-full rounded-t-sm transition-opacity hover:opacity-80"
-                style={{
-                  height: Math.round((h / maxW) * 80) + 4,
-                  background: h > 0 ? '#2563EB' : 'var(--border)',
-                }}
-              />
-              <div className="text-[10px] text-[var(--text-muted)]">{wkLabels[i]}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl overflow-hidden">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-[var(--border)]">
-          <span className="text-[13px] font-medium text-[var(--text-primary)]">Detail harian</span>
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-[7px] py-[2px] rounded-[5px] bg-[var(--surface-1)] text-[var(--text-secondary)]">
-            {MONTH_NAMES[bulan]}
-          </span>
-        </div>
-        {data.days.map((r, i) => {
-          const st = STATUS_MAP[r.s];
-          return (
-            <div key={i} className="flex justify-between items-center px-4 py-2.5 border-b border-[var(--border)] last:border-none text-[13px]">
-              <div>
-                <div className="text-[13px] font-medium text-[var(--text-primary)]">{r.d}</div>
-                <div className="text-xs text-[var(--text-secondary)]">
-                  <TbLogin size={11} className="inline" /> {r.i} &nbsp; <TbLogout size={11} className="inline" /> {r.o}
+                key={s.lbl}
+                className="border border-gray-200 rounded-lg px-2 py-2 text-center print-break-avoid">
+                <div className="text-lg font-semibold leading-none">
+                  {s.val}
                 </div>
+                <div className="text-[11px] text-gray-500 mt-1">{s.lbl}</div>
               </div>
-              <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-[7px] py-[2px] rounded-[5px] ${st.cls}`}>
-                {st.lbl}
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 mb-4">
+            <span>
+              Kehadiran: <strong>{data.ringkasan.persen_kehadiran}%</strong>
+            </span>
+            <span>
+              Target: <strong>{data.periode.hari_efektif} hari</strong>
+            </span>
+            <span>
+              Total jam kerja:{" "}
+              <strong>{data.ringkasan.total_jam_kerja} jam</strong>
+            </span>
+            {data.ringkasan.bintang_bulanan !== null && (
+              <span>
+                Bintang bulanan:{" "}
+                <strong>{data.ringkasan.bintang_bulanan}</strong>
               </span>
-            </div>
-          );
-        })}
-      </div>
-    </>
+            )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
+                    Tanggal
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
+                    Hari
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
+                    Masuk
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
+                    Pulang
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">
+                    Telat (mnt)
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">
+                    Jam Kerja
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">
+                    Bintang
+                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-center font-medium">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.detail.map((r) => {
+                  const badge = STATUS_BADGE[r.status] ?? {
+                    cls: "bg-gray-100 text-gray-600",
+                    lbl: r.status,
+                  };
+                  return (
+                    <tr key={r.tanggal} className="print-break-avoid">
+                      <td className="border border-gray-200 px-2 py-1.5">
+                        {fmtTanggal(r.tanggal)}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5">
+                        {r.hari}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5">
+                        {r.jam_masuk ?? "—"}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5">
+                        {r.jam_pulang ?? "—"}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-right">
+                        {r.menit_telat > 0 ? r.menit_telat : "0"}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-right">
+                        {r.total_jam_kerja ?? "—"}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-right">
+                        {r.bintang_harian ?? "—"}
+                      </td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-center">
+                        <span
+                          className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${badge.cls}`}>
+                          {badge.lbl}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

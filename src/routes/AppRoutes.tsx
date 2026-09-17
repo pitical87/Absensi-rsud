@@ -13,6 +13,7 @@ import AbsenLemburPage from "../pages/AbsenLemburPage";
 import PersetujuanLembur from "../pages/PersetujuanLembur";
 import PerubahanJadwalPage from "../pages/PerubahanJadwalPage";
 import PersetujuanPerubahanJadwal from "../pages/PersetujuanPerubahanJadwal";
+import Rekap from "../components/Rekap";
 
 export default function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ export default function AppRoutes() {
           element={<PersetujuanPerubahanJadwal />}
         />
         <Route path="/logbook" element={<LogbookPage />} />
+        <Route path="/rekap" element={<Rekap />} />
       </Route>
     </Routes>
   );

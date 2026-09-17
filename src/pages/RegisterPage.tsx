@@ -220,7 +220,7 @@ export default function RegisterPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Tempat Lahir">
               <input
                 className={inputCls}
@@ -244,7 +244,7 @@ export default function RegisterPage() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Jenis Kelamin" required>
               <select
                 className={selectCls}
@@ -292,7 +292,7 @@ export default function RegisterPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="No. HP">
               <input
                 className={inputCls}

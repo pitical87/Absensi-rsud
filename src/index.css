@@ -32,3 +32,19 @@ body {
 .animate-pulse-custom {
   animation: pulse-custom 1.5s ease-in-out infinite;
 }
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .md\:w-md {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .print-break-avoid {
+    break-inside: avoid;
+  }
+}

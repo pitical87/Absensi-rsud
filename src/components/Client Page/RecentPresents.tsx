@@ -71,7 +71,7 @@ export default function RecentPresents() {
 
   return (
     <>
-      <section className="px-6 py-4 w-full">
+      <section className="px-4 sm:px-6 py-4 w-full">
         <h1 className="text-lg w-full font-bold flex items-center gap-3">
           <MdWorkHistory />
           Riwayat Terakhir
@@ -86,8 +86,8 @@ export default function RecentPresents() {
               rows.map((r) => (
                 <li
                   key={r.key}
-                  className="p-4 flex items-center justify-between border-b border-gray-300">
-                  <div className="flex flex-col">
+                  className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
+                  <div className="flex min-w-0 flex-col">
                     <span className="text-md font-medium ">{r.hari}</span>
                     <span className="text-sm text-gray-500">
                       {r.tanggal_label}
@@ -99,18 +99,18 @@ export default function RecentPresents() {
                     )}
                     <BintangMini nilai={r.bintang_harian} />
                   </div>
-                  <div className="flex flex-col items-end">
+                  <div className="flex shrink-0 flex-col items-end">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-400 flex items-center gap-1">
+                      <span className="text-xs sm:text-sm text-gray-400 flex items-center gap-1 whitespace-nowrap">
                         <CiLogin />
                         {r.jam_masuk}
                       </span>
-                      <span className="text-xsm text-gray-400 flex items-center gap-1">
+                      <span className="text-xs sm:text-sm text-gray-400 flex items-center gap-1 whitespace-nowrap">
                         <CiLogout /> {r.jam_pulang}
                       </span>
                     </div>
                     <span
-                      className={`text-sm ${
+                      className={`text-xs sm:text-sm ${
                         r.status === "Tepat Waktu" || r.status === "Hadir"
                           ? "text-green-500 bg-green-100"
                           : "text-orange-500 bg-orange-100"

@@ -57,32 +57,32 @@ export default function PresentStatistic() {
 
   return (
     <>
-      <section className="px-6 py-2 w-full">
+      <section className="px-4 sm:px-6 py-2 w-full">
         <h1 className="text-lg w-full font-bold flex items-center gap-3">
           <IoIosStats />
           Statistik Bulan Ini
         </h1>
-        <div className="mt-4 flex justify-between items-center gap-5">
+        <div className="mt-4 flex justify-between items-center gap-3 sm:gap-5">
           <div
-            className="flex flex-col items-center bg-white border 
-                  border-gray-300 rounded-xl p-4 gap-1 w-full"
+            className="flex flex-col items-start bg-white border 
+                  border-gray-300 rounded-xl p-3 sm:p-4 gap-1 w-full min-w-0"
           >
-            <span className="text-md text-gray-500 flex items-center gap-1 w-full">
+            <span className="text-sm sm:text-md text-gray-500 flex items-center gap-1 w-full">
               <HiOutlineChartPie /> Kehadiran
             </span>
-            <span className="text-2xl font-bold w-full">{stat ? `${stat.kehadiran.persen}%` : "-"}</span>
-            <span className="text-md text-gray-500 flex items-center gap-1 w-full">{stat ? `${stat.kehadiran.hadir}/${stat.kehadiran.target} hari kerja` : "Memuat..."}</span>
+            <span className="text-xl sm:text-2xl font-bold w-full">{stat ? `${stat.kehadiran.persen}%` : "-"}</span>
+            <span className="text-xs sm:text-md text-gray-500 flex items-center gap-1 w-full">{stat ? `${stat.kehadiran.hadir}/${stat.kehadiran.target} hari kerja` : "Memuat..."}</span>
           </div>
           <div
-            className="flex flex-col items-center bg-white border 
-                  border-gray-300 rounded-xl p-4 gap-1 w-full"
+            className="flex flex-col items-start bg-white border 
+                  border-gray-300 rounded-xl p-3 sm:p-4 gap-1 w-full min-w-0"
           >
-            <span className="text-md text-gray-500 flex items-center gap-1 w-full">
+            <span className="text-sm sm:text-md text-gray-500 flex items-center gap-1 w-full">
               <LuClock3 />
               Jam Kerja
             </span>
-            <span className="text-2xl font-bold w-full">{isDokter ? "-" : stat ? `${stat.jam_kerja.total_jam} jam` : "-"}</span>
-            <span className="text-md text-gray-500 flex items-center gap-1 w-full">{isDokter ? "Jam kerja fleksibel" : stat ? `target ${stat.jam_kerja.target_jam} jam` : "Memuat..."}</span>
+            <span className="text-xl sm:text-2xl font-bold w-full">{isDokter ? "-" : stat ? `${stat.jam_kerja.total_jam} jam` : "-"}</span>
+            <span className="text-xs sm:text-md text-gray-500 flex items-center gap-1 w-full">{isDokter ? "Jam kerja fleksibel" : stat ? `target ${stat.jam_kerja.target_jam} jam` : "Memuat..."}</span>
           </div>
         </div>
 
@@ -100,13 +100,13 @@ export default function PresentStatistic() {
           <>
             {/* Ketepatan waktu masuk & pulang */}
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="bg-white border border-gray-300 rounded-xl p-4">
+              <div className="bg-white border border-gray-300 rounded-xl p-3 sm:p-4">
                 <p className="text-sm text-gray-500">Tepat Masuk</p>
-                <p className="mt-1 text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_masuk}%` : "-"}</p>
+                <p className="mt-1 text-xl sm:text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_masuk}%` : "-"}</p>
               </div>
-              <div className="bg-white border border-gray-300 rounded-xl p-4">
+              <div className="bg-white border border-gray-300 rounded-xl p-3 sm:p-4">
                 <p className="text-sm text-gray-500">Tepat Pulang</p>
-                <p className="mt-1 text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_pulang}%` : "-"}</p>
+                <p className="mt-1 text-xl sm:text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_pulang}%` : "-"}</p>
               </div>
             </div>
 
