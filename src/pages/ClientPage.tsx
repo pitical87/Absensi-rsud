@@ -30,15 +30,18 @@ export default function ClientPage() {
 
   const [selectedTanggal, setSelectedTanggal] = useState<string | null>(null);
   const activeTanggal = selectedTanggal ?? openSession?.tanggal ?? GetTodayKey();
+  const [loadingToday, setLoadingToday] = useState(true);
 
   useEffect(() => {
+    let aktif = true;
     getTodayLeave().then((res) => {
+      if (!aktif) return;
       setHasLeave(res.hasLeave);
       setTodayLeave(res.izin);
     });
-    if (isDokter) return;
     getStatus()
       .then((res) => {
+        if (!aktif || isDokter) return;
         if (res.sukses) {
           setHasMasuk(!!res.absen_masuk);
           setHasPulang(!!res.absen_pulang);
@@ -46,7 +49,13 @@ export default function ClientPage() {
           setPulang(res.absen_pulang);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (aktif) setLoadingToday(false);
+      });
+    return () => {
+      aktif = false;
+    };
   }, [isDokter]);
 
   const week = GetWeekDays();
@@ -116,9 +125,10 @@ export default function ClientPage() {
         isDokter={isDokter}
         openSession={openSession ? { tanggal: openSession.tanggal, tanggal_label: openSession.tanggal_label } : null}
         selectedTanggal={activeTanggal}
+        loading={loadingToday}
       />
       {/* second top part */}
-      <HeroCard masuk={masuk} pulang={pulang} isDokter={isDokter} sesi={todaySession.sessions.length} />
+      <HeroCard masuk={masuk} pulang={pulang} isDokter={isDokter} sesi={todaySession.sessions.length} loading={loadingToday} />
       {/* week shift slider */}
       <ShiftWeekSlider
         days={days}

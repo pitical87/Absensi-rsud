@@ -2,6 +2,7 @@ import { CiLock, CiLogin, CiLogout } from "react-icons/ci";
 import { FaCalendarCheck } from "react-icons/fa6";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { useNavigate } from "react-router";
+import Skeleton from "../Skeleton";
 
 type props = {
   hasMasuk: boolean;
@@ -16,6 +17,7 @@ type props = {
   isDokter?: boolean;
   openSession?: { tanggal: string; tanggal_label: string } | null;
   selectedTanggal?: string;
+  loading?: boolean;
 };
 
 export default function Absensi({
@@ -26,6 +28,7 @@ export default function Absensi({
   isDokter,
   openSession,
   selectedTanggal,
+  loading,
 }: props) {
   const navigate = useNavigate();
   const adaSesiTerbuka = !!openSession;
@@ -64,6 +67,21 @@ export default function Absensi({
           </span>
         </div>
         <div className="flex items-center justify-between gap-3 sm:gap-5 w-full">
+          {loading ? (
+            <>
+              <div className="w-full rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+                <Skeleton className="h-8 w-8" />
+                <Skeleton className="mt-2 h-4 w-24" />
+                <Skeleton className="mt-1 h-3 w-32" />
+              </div>
+              <div className="w-full rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+                <Skeleton className="h-8 w-8" />
+                <Skeleton className="mt-2 h-4 w-24" />
+                <Skeleton className="mt-1 h-3 w-32" />
+              </div>
+            </>
+          ) : (
+          <>
           <button
             disabled={masukDisabled}
             onClick={() => navigate("/present/masuk")}
@@ -198,6 +216,8 @@ export default function Absensi({
               </div>
             </div>
           </button>
+          </>
+          )}
         </div>
       </section>
     </>

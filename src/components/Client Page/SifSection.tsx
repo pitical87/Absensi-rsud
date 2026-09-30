@@ -11,6 +11,7 @@ import { FaFileCircleCheck } from "react-icons/fa6";
 import { getPendingLeavesCount } from "../../utils/api/Leave";
 import { getLemburMenungguTotal } from "../../utils/api/Lembur";
 import { getPerubahanJadwalMenungguTotal } from "../../utils/api/PerubahanJadwal";
+import Skeleton from "../Skeleton";
 
 interface ShiftInfo {
   id: number;
@@ -27,6 +28,9 @@ export default function SifSection() {
   const [totalPending, setTotalPending] = useState(0);
   const [totalLemburPending, setTotalLemburPending] = useState(0);
   const [totalJadwalPending, setTotalJadwalPending] = useState(0);
+  const [loadingIzin, setLoadingIzin] = useState(true);
+  const [loadingLembur, setLoadingLembur] = useState(true);
+  const [loadingJadwal, setLoadingJadwal] = useState(true);
 
   useEffect(() => {
     getPendingLeavesCount()
@@ -35,7 +39,8 @@ export default function SifSection() {
           setTotalPending(res.total);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingIzin(false));
   }, []);
 
   useEffect(() => {
@@ -45,7 +50,8 @@ export default function SifSection() {
           setTotalLemburPending(res.total);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingLembur(false));
   }, []);
 
   useEffect(() => {
@@ -55,7 +61,8 @@ export default function SifSection() {
           setTotalJadwalPending(res.total);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingJadwal(false));
   }, []);
 
   useEffect(() => {
@@ -115,7 +122,11 @@ export default function SifSection() {
 
           <div className="flex flex-col">
             {loading ? (
-              <span className="text-xs text-gray-400">Memuat...</span>
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-20" />
+              </div>
             ) : shift ? (
               <>
                 <span
@@ -220,7 +231,9 @@ export default function SifSection() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
-                {totalPending > 0
+                {loadingIzin ? (
+                  <Skeleton className="h-5 w-56" />
+                ) : totalPending > 0
                   ? `Ada ${totalPending} pengajuan yang menunggu!`
                   : "tidak ada pengajuan"}
               </h3>
@@ -240,7 +253,9 @@ export default function SifSection() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
-                {totalLemburPending > 0
+                {loadingLembur ? (
+                  <Skeleton className="h-5 w-56" />
+                ) : totalLemburPending > 0
                   ? `Ada ${totalLemburPending} lembur yang menunggu!`
                   : "tidak ada pengajuan lembur"}
               </h3>
@@ -260,7 +275,9 @@ export default function SifSection() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
-                {totalJadwalPending > 0
+                {loadingJadwal ? (
+                  <Skeleton className="h-5 w-56" />
+                ) : totalJadwalPending > 0
                   ? `Ada ${totalJadwalPending} ubah jadwal yang menunggu!`
                   : "tidak ada pengajuan ubah jadwal"}
               </h3>

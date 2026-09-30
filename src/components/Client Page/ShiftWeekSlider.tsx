@@ -1,5 +1,6 @@
 import { FaCalendarDay } from "react-icons/fa6";
 import type { WeekDay } from "../../utils/DateUtils";
+import Skeleton from "../Skeleton";
 
 export type WeekSliderItem = WeekDay & {
   jamMasuk: string | null;
@@ -39,8 +40,8 @@ export default function ShiftWeekSlider({ days, selected, onSelect, openSession,
                   key={i}
                   className="flex min-w-[76px] flex-col items-center gap-1 rounded-xl border border-gray-200 bg-gray-100 p-2"
                 >
-                  <span className="h-3 w-10 animate-pulse rounded bg-gray-300" />
-                  <span className="h-3 w-10 animate-pulse rounded bg-gray-200" />
+                  <Skeleton className="h-3 w-10 bg-gray-300" />
+                  <Skeleton className="h-3 w-10" />
                 </div>
               ))
             : days.map((d) => (

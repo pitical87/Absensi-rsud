@@ -1,14 +1,16 @@
 import { useAuth } from "../../context/AuthContext";
 import { GetGreeting, GetRandomGreeting } from "../../utils/DateUtils";
+import Skeleton from "../Skeleton";
 
 type props = {
   masuk: { waktu: string; status: string } | null;
   pulang: { waktu: string } | null;
   isDokter?: boolean;
   sesi?: number;
+  loading?: boolean;
 };
 
-export default function HeroCard({ masuk, pulang, isDokter, sesi }: props) {
+export default function HeroCard({ masuk, pulang, isDokter, sesi, loading }: props) {
   const { user } = useAuth();
   return (
     <>
@@ -31,21 +33,21 @@ export default function HeroCard({ masuk, pulang, isDokter, sesi }: props) {
             <div className="min-w-0">
               <p className="text-sm font-medium text-blue-100">Masuk</p>
               <p className="mt-2 text-2xl sm:text-3xl font-bold text-white">
-                {masuk ? masuk.waktu : "-"}
+                {loading ? <Skeleton className="h-8 w-20 bg-blue-400/40" /> : masuk ? masuk.waktu : "-"}
               </p>
               <p className="mt-2 text-sm text-blue-100">
                 {" "}
-                {masuk ? "Sudah absen" : "Belum absen"}
+                {loading ? <Skeleton className="h-3 w-24 bg-blue-400/40" /> : masuk ? "Sudah absen" : "Belum absen"}
               </p>
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-blue-100">Pulang</p>
               <p className="mt-2 text-2xl sm:text-3xl font-bold text-white">
-                {pulang ? pulang.waktu : "-"}
+                {loading ? <Skeleton className="h-8 w-20 bg-blue-400/40" /> : pulang ? pulang.waktu : "-"}
               </p>
               <p className="mt-2 text-sm text-blue-100">
                 {" "}
-                {pulang ? "Sudah absen" : "Belum absen"}
+                {loading ? <Skeleton className="h-3 w-24 bg-blue-400/40" /> : pulang ? "Sudah absen" : "Belum absen"}
               </p>
             </div>
           </div>

@@ -59,3 +59,10 @@ export const logout = async () => {
   const response = await api.post("/logout");
   return response.data;
 };
+
+export const forgetPassword = async (email: string) => {
+  const response = await api.post("/lupa-password", {
+    email,
+  });
+  return response.data;
+};

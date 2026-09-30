@@ -5,6 +5,7 @@ import { FaStar, FaRegStar } from "react-icons/fa6";
 import { getAttRecords } from "../../utils/api/Attendence";
 import { MdWorkHistory } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
+import Skeleton from "../Skeleton";
 
 type RecordItem = {
   key: string;
@@ -57,14 +58,17 @@ function getRows(record: RecordItem[], isDokter: boolean): RowItem[] {
 
 export default function RecentPresents() {
   const [record, setRecord] = useState<RecordItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const isDokter =
     user?.profesi?.nama.toLocaleLowerCase() == "dokter";
 
   useEffect(() => {
-    getAttRecords().then((res) => {
-      if (res.sukses) setRecord(res.riwayat);
-    });
+    getAttRecords()
+      .then((res) => {
+        if (res.sukses) setRecord(res.riwayat);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const rows = useMemo(() => getRows(record, isDokter), [record, isDokter]);
@@ -78,7 +82,22 @@ export default function RecentPresents() {
         </h1>
         <div className="mt-4">
           <ul className="flex flex-col bg-white border border-gray-300 rounded-xl max-h-70 overflow-y-auto">
-            {rows.length === 0 ? (
+            {loading ? (
+              [0, 1, 2, 3].map((i) => (
+                <li
+                  key={i}
+                  className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </li>
+              ))
+            ) : rows.length === 0 ? (
               <li className="p-4 text-center text-gray-400 text-sm">
                 Belum ada riwayat absensi
               </li>
