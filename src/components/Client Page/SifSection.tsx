@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BiCalendar, BiCalendarEdit, BiTimeFive } from "react-icons/bi";
+import { BiCalendar, BiCalendarEdit, BiCalendarWeek, BiTimeFive } from "react-icons/bi";
 import { HiOutlineDocumentText } from "react-icons/hi";
 import { IoPersonOutline, IoSunny } from "react-icons/io5";
 import { LuInfo } from "react-icons/lu";
@@ -226,6 +226,24 @@ export default function SifSection() {
           </button>
         </div>
       </section>
+      {user?.posisi !== "Staf" && (
+        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">
+                Kelola & buat jadwal shift pegawai ?
+              </h3>
+            </div>
+
+            <button
+              onClick={() => navigate("/kelola-jadwal")}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-600 transition hover:bg-sky-100 sm:w-auto">
+              <BiCalendarWeek size={20} />
+              Kelola Jadwal
+            </button>
+          </div>
+        </section>
+      )}
       {user?.posisi !== "Staf" && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

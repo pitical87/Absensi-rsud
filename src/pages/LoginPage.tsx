@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { FaHospitalUser } from "react-icons/fa";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { forgetPassword, login } from "../utils/api/Authentication";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { FiArrowRight, FiLock, FiMail, FiX } from "react-icons/fi";
 import toast from "react-hot-toast";
+import LogoWarna from "../assets/logo_white.svg?react";
 import Spinner from "../components/Spinner";
 
 export default function LoginPage() {
@@ -67,12 +67,11 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col items-center">
       <div className="bg-blue-600 w-full h-72 flex items-center justify-center flex-col text-white">
-        <div className="p-4 bg-blue-50/50 rounded-2xl">
-          <FaHospitalUser className="text-6xl" />
+        <div className="p-4 ">
+          <LogoWarna className="h-32 w-auto" />
         </div>
-        <h1 className="font-bold text-2xl">SIMARO</h1>
-        <span className="text-xs text-gray-300 max-w-80 text-center">
-          Sistem Informasi Monitoring Absensi RSUD Online
+        <span className="text-md font-bold text-gray-300 max-w-80 text-center">
+          Sistem Monitoring Absensi RSUD Online
         </span>
       </div>
       <div className="w-full p-6">

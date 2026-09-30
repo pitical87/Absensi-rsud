@@ -96,6 +96,16 @@ export default function TopNavbar() {
             </button>
 
             <button
+              className="w-full border-b border-gray-200 px-5 py-3 text-left text-md transition-colors hover:bg-gray-50"
+              onClick={() => {
+                setShowMenu(false);
+                setShowModalRekap(true);
+                navigate("/profile");
+              }}>
+              Profile
+            </button>
+
+            <button
               className="w-full px-5 py-3 text-left text-md text-red-600 transition-colors hover:bg-red-50"
               onClick={() => {
                 setShowMenu(false);

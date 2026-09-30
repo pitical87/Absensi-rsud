@@ -1,5 +1,14 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { me as fetchMe, logout as apiLogout } from "../utils/api/Authentication";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  me as fetchMe,
+  logout as apiLogout,
+} from "../utils/api/Authentication";
 import { useNavigate } from "react-router";
 
 type User = {
@@ -19,6 +28,13 @@ type User = {
   jabatan: { id: number; nama: string } | null;
   posisi: string;
   status_pegawai: string;
+
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  jenis_kelamin?: string;
+  agama?: string;
+  no_hp?: string;
+  nip?: string;
 };
 
 type Lokasi = {
@@ -81,8 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLokasi,
         setUser,
         logout,
-      }}
-    >
+      }}>
       {children}
     </AuthContext.Provider>
   );

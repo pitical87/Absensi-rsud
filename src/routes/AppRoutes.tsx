@@ -13,7 +13,9 @@ import AbsenLemburPage from "../pages/AbsenLemburPage";
 import PersetujuanLembur from "../pages/PersetujuanLembur";
 import PerubahanJadwalPage from "../pages/PerubahanJadwalPage";
 import PersetujuanPerubahanJadwal from "../pages/PersetujuanPerubahanJadwal";
+import KelolaJadwalPage from "../pages/KelolaJadwalPage";
 import Rekap from "../components/Rekap";
+import ProfilPage from "../pages/ProfilPage";
 
 export default function AppRoutes() {
   return (
@@ -36,8 +38,10 @@ export default function AppRoutes() {
           path="/persetujuan-jadwal"
           element={<PersetujuanPerubahanJadwal />}
         />
+        <Route path="/kelola-jadwal" element={<KelolaJadwalPage />} />
         <Route path="/logbook" element={<LogbookPage />} />
         <Route path="/rekap" element={<Rekap />} />
+        <Route path="/profile" element={<ProfilPage />} />
       </Route>
     </Routes>
   );

@@ -66,3 +66,19 @@ export const forgetPassword = async (email: string) => {
   });
   return response.data;
 };
+
+export type UpdateProfileData = {
+  nama_lengkap: string;
+  tempat_lahir: string | null;
+  tanggal_lahir: string | null;
+  jenis_kelamin: string | null;
+  agama: string | null;
+  email: string;
+  no_hp: string | null;
+  nip: string | null;
+};
+
+export const updateProfile = async (data: UpdateProfileData) => {
+  const response = await api.post("/profil", data);
+  return response.data;
+};
