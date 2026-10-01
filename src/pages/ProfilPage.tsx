@@ -120,7 +120,10 @@ export default function ProfilPage() {
 
   const nilaiPribadi: { label: string; value?: string }[] = [
     { label: "Tempat Lahir", value: user?.tempat_lahir },
-    { label: "Tanggal Lahir", value: formatTanggal(user?.tanggal_lahir) },
+    {
+      label: "Tanggal Lahir",
+      value: formatTanggal(user?.tanggal_lahir?.slice(0, 10)),
+    },
     { label: "Jenis Kelamin", value: user?.jenis_kelamin },
     { label: "Agama", value: user?.agama },
     { label: "No. HP", value: user?.no_hp },
@@ -172,31 +175,30 @@ export default function ProfilPage() {
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-3 text-white flex flex-col items-center gap-4 shadow-sm">
+      <div className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 text-white shadow-sm">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold">
+          {userInitials}
+        </div>
+
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg text-center font-bold truncate">
+          <h2 className="text-base font-bold leading-tight break-words">
             {user?.nama_lengkap}
           </h2>
-          <div className="flex justify-between items-center gap-3">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-xl font-bold">
-              {userInitials}
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="mt-2 flex flex-col gap-2">
-                {user?.posisi && (
-                  <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-medium w-fit">
-                    {user.posisi}
-                  </span>
-                )}
-                {user?.status_pegawai && (
-                  <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-medium w-fit">
-                    {user.status_pegawai}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-blue-100 truncate">{user?.email}</p>
-            </div>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            {user?.posisi && (
+              <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-medium">
+                {user.posisi}
+              </span>
+            )}
+            {user?.status_pegawai && (
+              <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-medium">
+                {user.status_pegawai}
+              </span>
+            )}
           </div>
+
+          <p className="mt-2 truncate text-sm text-blue-100">{user?.email}</p>
         </div>
       </div>
 
@@ -245,7 +247,7 @@ export default function ProfilPage() {
               <input
                 type="date"
                 className={inputCls}
-                value={form.tanggal_lahir ?? ""}
+                value={form.tanggal_lahir?.slice(0, 10) ?? ""}
                 onChange={(e) => set("tanggal_lahir")(e.target.value)}
               />
             </div>
