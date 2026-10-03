@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import {
   IoArrowBack,
+  IoCloudUploadOutline,
   IoPersonAddOutline,
 } from "react-icons/io5";
 import { BiCalendarWeek, BiCalendarCheck } from "react-icons/bi";
@@ -11,10 +12,7 @@ import TopNavbar from "../components/Client Page/TopNavbar";
 import ConfirmModal from "../components/ConfirmModal";
 import MonthGrid from "../components/Jadwal Page/MonthGrid";
 import PegawaiPickerModal from "../components/Jadwal Page/PegawaiPickerModal";
-import {
-  getKelolaJadwal,
-  simpanJadwalPegawai,
-} from "../utils/api/Jadwal";
+import { getKelolaJadwal, simpanJadwalPegawai } from "../utils/api/Jadwal";
 import type {
   GridJadwalPegawai,
   PegawaiJadwal,
@@ -22,6 +20,7 @@ import type {
   ShiftOpsi,
   SubUnitJadwal,
 } from "../types/JadwalType";
+import ImportJadwalSheet from "../components/Jadwal Page/ImportJadwalSheet";
 
 const BULAN_ID = [
   "Januari",
@@ -65,6 +64,8 @@ export default function KelolaJadwalPage() {
   const [confirmGanti, setConfirmGanti] = useState(false);
   const [pendingAksi, setPendingAksi] = useState<(() => void) | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const [importOpen, setImportOpen] = useState(false);
 
   const buatNilai = (
     grid: GridJadwalPegawai,
@@ -197,9 +198,11 @@ export default function KelolaJadwalPage() {
       }
     } catch (err: unknown) {
       setConfirmSimpan(false);
-      const pesan = (err as {
-        response?: { data?: { pesan?: string } };
-      })?.response?.data?.pesan;
+      const pesan = (
+        err as {
+          response?: { data?: { pesan?: string } };
+        }
+      )?.response?.data?.pesan;
       toast.error(pesan || "Gagal menyimpan jadwal. Silakan coba lagi.");
     } finally {
       setSaving(false);
@@ -251,6 +254,15 @@ export default function KelolaJadwalPage() {
         }}
       />
 
+      <ImportJadwalSheet
+        isOpen={importOpen}
+        bulan={bulan}
+        tahun={tahun}
+        labelPeriode={`${BULAN_ID[bulan - 1]} ${tahun}`}
+        onClose={() => setImportOpen(false)}
+        onImported={() => refetch(dipilih?.id ?? null)}
+      />
+
       <section className="px-6 py-2 flex flex-col gap-2">
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
@@ -264,6 +276,13 @@ export default function KelolaJadwalPage() {
               Kelola jadwal pegawai per bulan.
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            title="Import jadwal dari Excel"
+            className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl hover:bg-blue-200 transition shrink-0">
+            <IoCloudUploadOutline />
+          </button>
           <button
             type="button"
             onClick={kembali}
