@@ -503,7 +503,7 @@ export default function RegisterPage() {
           type="submit"
           disabled={submitting || loadingMaster}
           className="mt-2 w-full rounded-2xl bg-blue-500 py-3 font-bold text-white transition hover:bg-blue-600 disabled:opacity-60">
-          {submitting ? "Mendaftar..." : "Daftar"}
+          {submitting ? <span>Mendaftar...</span> : <span>Daftar</span>}
         </button>
 
         <div className="flex items-center justify-center gap-3">

@@ -56,6 +56,7 @@ export default function ConfirmAbsenLembur({
 
   async function handleSubmit() {
     setSubmitting(true);
+    let sukses = false;
     try {
       const payload = {
         tanggal,
@@ -96,6 +97,7 @@ export default function ConfirmAbsenLembur({
           return;
         }
       }
+      sukses = true;
       setCurrentStep(3);
       setTimeout(() => navigate("/"), 3000);
     } catch (err: unknown) {
@@ -104,7 +106,7 @@ export default function ConfirmAbsenLembur({
       })?.response?.data?.pesan;
       toast.error(pesan || "Gagal mengirim data");
     } finally {
-      setSubmitting(false);
+      if (!sukses) setSubmitting(false);
     }
   }
 
@@ -115,7 +117,7 @@ export default function ConfirmAbsenLembur({
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
           <span className=" text-gray-500">Jenis</span>
           <span className=" text-blue-400">
-            {tipe === "masuk" ? "Absen Masuk Lembur" : "Absen Pulang Lembur"}
+            <span>{tipe === "masuk" ? "Absen Masuk Lembur" : "Absen Pulang Lembur"}</span>
           </span>
         </li>
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
@@ -144,8 +146,7 @@ export default function ConfirmAbsenLembur({
                 ? "text-green-600 bg-green-100"
                 : "text-red-600 bg-red-100"
             } px-2 py-1 rounded-xl`}>
-            {" "}
-            {isWithinRadius ? "Dalam Radius" : "Diluar Radius"}
+            <span>{isWithinRadius ? "Dalam Radius" : "Diluar Radius"}</span>
           </span>
         </li>
       </ul>
@@ -192,7 +193,7 @@ export default function ConfirmAbsenLembur({
               Menyimpan...
             </div>
           ) : (
-            "Konfirmasi Absen"
+            <span>Konfirmasi Absen</span>
           )}
         </button>
       </div>

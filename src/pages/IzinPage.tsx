@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { RiFileHistoryLine } from "react-icons/ri";
 import { createLeave, deleteLeave, getLeaves } from "../utils/api/Leave";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { TiDelete } from "react-icons/ti";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
@@ -53,9 +53,9 @@ export default function IzinPage() {
   const {
     register,
     handleSubmit,
-    watch,
     resetField,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: {
@@ -67,13 +67,15 @@ export default function IzinPage() {
       alasan: "",
     },
   });
-  const jenisPengajuan = watch("jenis_pengajuan");
-  const tanggalMulai = watch("tanggal_mulai");
+  const jenisPengajuan = useWatch({ control, name: "jenis_pengajuan" });
+  const tanggalMulai = useWatch({ control, name: "tanggal_mulai" });
   const [leaves, setLeaves] = useState<LeaveType[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const lampiranRef = useRef<HTMLInputElement | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
+  const selesai = useWatch({ control, name: "tanggal_selesai" });
 
   useEffect(() => {
     return () => {
@@ -82,11 +84,10 @@ export default function IzinPage() {
   }, [previewUrl]);
   // reset tanggal_selesai if it's before tanggal_mulai
   useEffect(() => {
-    const selesai = watch("tanggal_selesai");
     if (selesai && tanggalMulai && selesai < tanggalMulai) {
       setValue("tanggal_selesai", tanggalMulai);
     }
-  }, [tanggalMulai, watch, setValue]);
+  }, [selesai, tanggalMulai, setValue]);
 
   // reset jenis_cuti when jenis_pengajuan is not "Cuti"
   useEffect(() => {
@@ -153,9 +154,8 @@ export default function IzinPage() {
     }
 
     formData.append("alasan", data.alasan);
-    const file = lampiranRef.current?.files?.[0];
-    if (file) {
-      formData.append("lampiran", file);
+    if (selectedFile) {
+      formData.append("lampiran", selectedFile);
     }
     console.log(data);
     try {

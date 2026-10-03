@@ -89,6 +89,7 @@ export default function ConfirmPresent({
         onSuccess?.(res);
         setCurrentStep(3);
         setTimeout(() => navigate("/"), 3000);
+        return;
       } else {
         toast.error(res.pesan);
       }
@@ -108,7 +109,7 @@ export default function ConfirmPresent({
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
           <span className=" text-gray-500">Jenis</span>
           <span className=" text-blue-400">
-            {type == "masuk" ? "Absen Masuk" : "Absen Pulang"}
+            <span>{type == "masuk" ? "Absen Masuk" : "Absen Pulang"}</span>
           </span>
         </li>
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
@@ -139,8 +140,7 @@ export default function ConfirmPresent({
           <span className=" text-gray-500">Status</span>
           <span
             className={`${isWithinRadius ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100"} px-2 py-1 rounded-xl`}>
-            {" "}
-            {isWithinRadius ? "Dalam Radius" : "Diluar Radius"}
+            <span>{isWithinRadius ? "Dalam Radius" : "Diluar Radius"}</span>
           </span>
         </li>
       </ul>
@@ -165,7 +165,7 @@ export default function ConfirmPresent({
           onClick={handleSubmit}
           disabled={submitting}
           className="flex-1 flex items-center justify-center rounded-xl bg-blue-600 py-3 text-white font-semibold cursor-pointer hover:bg-blue-700 transition-colors">
-          {submitting ? <Spinner /> : "Konfirmasi Absensi"}
+          {submitting ? <Spinner /> : <span>Konfirmasi Absensi</span>}
         </button>
       </div>
     </div>

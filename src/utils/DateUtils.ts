@@ -7,7 +7,7 @@ export function GetCurrentDateString(): string {
   }).format(new Date());
 }
 
-export function GetGreeting(): String {
+export function GetGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) {
     return "Selamat Pagi";
@@ -18,7 +18,7 @@ export function GetGreeting(): String {
   }
 }
 
-export function GetRandomGreeting(): String {
+export function GetRandomGreeting(): string {
   const morningGreetings = [
     "Semoga harimu menyenangkan.",
     "Semoga aktivitas hari ini berjalan lancar.",

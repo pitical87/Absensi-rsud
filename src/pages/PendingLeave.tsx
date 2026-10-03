@@ -13,6 +13,8 @@ import {
 import ConfirmModal from "../components/ConfirmModal";
 import TopNavbar from "../components/Client Page/TopNavbar";
 
+type ApiErrorShape = { response?: { data?: { pesan?: string } } };
+
 type PendingIzin = {
   id: number;
   jenis: "Izin" | "Sakit" | "Cuti" | "Dinas Luar";
@@ -120,7 +122,27 @@ export default function PendingLeave() {
   };
 
   useEffect(() => {
-    fetchData();
+    let aktif = true;
+    (async () => {
+      try {
+        const [detailRes, riwayatRes] = await Promise.all([
+          getPendingLeaveDetails(),
+          getRiwayatPersetujuan(),
+        ]);
+        if (!aktif) return;
+        if (detailRes.sukses) setDaftar(detailRes.izin ?? []);
+        if (riwayatRes.sukses) setRiwayat(riwayatRes.riwayat ?? []);
+      } catch {
+        if (!aktif) return;
+        toast.error("Gagal memuat data persetujuan.");
+      } finally {
+        if (aktif) setLoading(false);
+      }
+    })();
+
+    return () => {
+      aktif = false;
+    };
   }, []);
 
   const handleProses = async () => {
@@ -141,8 +163,9 @@ export default function PendingLeave() {
       });
       setDaftar((prev) => prev.filter((i) => i.id !== id));
       fetchData();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.pesan || "Gagal memproses pengajuan.");
+    } catch (err: unknown) {
+      const pesan = (err as ApiErrorShape).response?.data?.pesan;
+      toast.error(pesan || "Gagal memproses pengajuan.");
     } finally {
       setSubmittingId(null);
     }

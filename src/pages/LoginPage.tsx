@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { forgetPassword, login } from "../utils/api/Authentication";
 import { Link, useNavigate } from "react-router";
@@ -8,39 +8,31 @@ import toast from "react-hot-toast";
 import LogoWarna from "../assets/logo_white.svg?react";
 import Spinner from "../components/Spinner";
 
+type ApiErrorShape = { response?: { data?: { pesan?: string } } };
+
 export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { setUser, setLokasi } = useAuth();
 
   const [showForgetForm, setShowForgetForm] = useState(false);
   const [forgetEmail, setForgetEmail] = useState("");
 
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-      setError("");
-    }
-  }, [error]);
-
   const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       const res = await login(email, pass);
       setUser(res.user);
       setLokasi(res.lokasi);
       // console.log(isDokter);
       navigate("/");
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.pesan || "Terjadi kesalahan. Silakan coba lagi."; // TAMBAH: tampilkan error
-      setError(msg);
+    } catch (err: unknown) {
+      const pesan = (err as ApiErrorShape).response?.data?.pesan;
+      toast.error(pesan || "Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -49,17 +41,15 @@ export default function LoginPage() {
   const handleForgetPassword = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       const res = await forgetPassword(forgetEmail);
       if (res.sukses) {
         toast.success(res.pesan);
         setShowForgetForm(false);
       }
-    } catch (err: any) {
-      const message =
-        err.response?.data?.pesan || "Terjadi Kesalahan. Silahkan Coba lagi";
-      setError(message);
+    } catch (err: unknown) {
+      const pesan = (err as ApiErrorShape).response?.data?.pesan;
+      toast.error(pesan || "Terjadi Kesalahan. Silahkan Coba lagi");
     } finally {
       setLoading(false);
     }

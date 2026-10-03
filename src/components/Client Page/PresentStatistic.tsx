@@ -141,7 +141,7 @@ export default function PresentStatistic() {
             <div className="mt-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-amber-800 flex items-center gap-1">
-                  <FaRegStar /> Bintang Ketepatan {hasPulang ? "Hari ini" : "Masuk"}
+                  <FaRegStar /> Bintang Ketepatan <span>{hasPulang ? "Hari ini" : "Masuk"}</span>
                 </p>
                 <p className="text-xs text-amber-600 mt-1">{bintang === null ? "Belum ada penilaian hari ini" : `Rata-rata ${bintang} dari 5 bintang`}</p>
               </div>

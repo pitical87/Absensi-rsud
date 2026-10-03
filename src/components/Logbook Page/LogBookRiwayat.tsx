@@ -145,7 +145,7 @@ export default function LogBookRiwayat({ refreshKey }: { refreshKey: number }) {
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-medium text-gray-500">{formatTanggal(e.tanggal)}</span>
                 <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${e.is_verified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                  {e.jam} · {e.is_verified ? "Terverifikasi" : "Belum verifikasi"}
+                  {e.jam} · <span>{e.is_verified ? "Terverifikasi" : "Belum verifikasi"}</span>
                 </span>
               </div>
               <p className="mt-2 text-sm text-gray-800">{e.isi}</p>

@@ -10,7 +10,13 @@ type props = {
   loading?: boolean;
 };
 
-export default function HeroCard({ masuk, pulang, isDokter, sesi, loading }: props) {
+export default function HeroCard({
+  masuk,
+  pulang,
+  isDokter,
+  sesi,
+  loading,
+}: props) {
   const { user } = useAuth();
   return (
     <>
@@ -21,7 +27,9 @@ export default function HeroCard({ masuk, pulang, isDokter, sesi, loading }: pro
               <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-white break-words">
                 {GetGreeting()}, {user?.nama_lengkap}
               </h1>
-              <p className="mt-1 text-sm text-blue-200">{GetRandomGreeting()}</p>
+              <p className="mt-1 text-sm text-blue-200">
+                {GetRandomGreeting()}
+              </p>
             </div>
             {isDokter && (sesi ?? 0) > 0 && (
               <span className="shrink-0 rounded-full bg-blue-800/40 px-3 py-1 text-xs font-medium text-blue-100">
@@ -31,24 +39,42 @@ export default function HeroCard({ masuk, pulang, isDokter, sesi, loading }: pro
           </div>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 rounded-2xl bg-blue-300/40 p-4 sm:p-5">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-blue-100">Masuk</p>
-              <p className="mt-2 text-2xl sm:text-3xl font-bold text-white">
-                {loading ? <Skeleton className="h-8 w-20 bg-blue-400/40" /> : masuk ? masuk.waktu : "-"}
-              </p>
-              <p className="mt-2 text-sm text-blue-100">
-                {" "}
-                {loading ? <Skeleton className="h-3 w-24 bg-blue-400/40" /> : masuk ? "Sudah absen" : "Belum absen"}
-              </p>
+              <div className="text-sm font-medium text-blue-100">Masuk</div>
+              <div className="mt-2 text-2xl sm:text-3xl font-bold text-white">
+                {loading ? (
+                  <Skeleton className="h-8 w-20 bg-blue-400/40" />
+                ) : masuk ? (
+                  masuk.waktu
+                ) : (
+                  "-"
+                )}
+              </div>
+              <div className="mt-2 text-sm text-blue-100">
+                {loading ? (
+                  <Skeleton className="h-3 w-24 bg-blue-400/40" />
+                ) : (
+                  <span>{masuk ? "Sudah absen" : "Belum absen"}</span>
+                )}
+              </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-blue-100">Pulang</p>
-              <p className="mt-2 text-2xl sm:text-3xl font-bold text-white">
-                {loading ? <Skeleton className="h-8 w-20 bg-blue-400/40" /> : pulang ? pulang.waktu : "-"}
-              </p>
-              <p className="mt-2 text-sm text-blue-100">
-                {" "}
-                {loading ? <Skeleton className="h-3 w-24 bg-blue-400/40" /> : pulang ? "Sudah absen" : "Belum absen"}
-              </p>
+              <div className="text-sm font-medium text-blue-100">Pulang</div>
+              <div className="mt-2 text-2xl sm:text-3xl font-bold text-white">
+                {loading ? (
+                  <Skeleton className="h-8 w-20 bg-blue-400/40" />
+                ) : pulang ? (
+                  pulang.waktu
+                ) : (
+                  "-"
+                )}
+              </div>
+              <div className="mt-2 text-sm text-blue-100">
+                {loading ? (
+                  <Skeleton className="h-3 w-24 bg-blue-400/40" />
+                ) : (
+                  <span>{pulang ? "Sudah absen" : "Belum absen"}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

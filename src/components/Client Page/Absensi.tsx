@@ -47,7 +47,7 @@ export default function Absensi({
               <IoDocumentTextOutline />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-yellow-800 text-sm">Sedang {todayLeave.jenis === "Cuti" ? "Cuti" : "Izin"}</span>
+              <span className="font-semibold text-yellow-800 text-sm">Sedang <span>{todayLeave.jenis === "Cuti" ? "Cuti" : "Izin"}</span></span>
               <span className="text-xs text-yellow-600">
                 {todayLeave.jenis_cuti ? `${todayLeave.jenis_cuti} — ` : ""}
                 {todayLeave.tanggal_mulai} s.d. {todayLeave.tanggal_selesai}

@@ -2,9 +2,14 @@ import TopNavbar from "../components/Client Page/TopNavbar";
 import { IoArrowBack, IoDocumentTextOutline } from "react-icons/io5";
 import { HiOutlineClock } from "react-icons/hi";
 import { useEffect, useState } from "react";
-import { FaRegCheckCircle, FaRegTrashAlt, FaRegStar, FaStar } from "react-icons/fa";
+import {
+  FaRegCheckCircle,
+  FaRegTrashAlt,
+  FaRegStar,
+  FaStar,
+} from "react-icons/fa";
 import { RiFileHistoryLine } from "react-icons/ri";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
@@ -60,8 +65,7 @@ function StatusBadge({ status }: { status: string }) {
         ? "bg-red-100 text-red-700"
         : "bg-yellow-100 text-yellow-700";
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-medium ${cls}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${cls}`}>
       {status}
     </span>
   );
@@ -85,15 +89,16 @@ export default function LemburPage() {
   const [riwayat, setRiwayat] = useState<PengajuanLembur[]>([]);
   const [disetujui, setDisetujui] = useState<PengajuanLembur[]>([]);
   const [tanggalAbsen, setTanggalAbsen] = useState("");
-  const [statusAbsen, setStatusAbsen] = useState<StatusLemburResponse | null>(
-    null,
-  );
+  const [statusAbsen, setStatusAbsen] = useState<{
+    tanggal: string;
+    data: StatusLemburResponse | null;
+  } | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -105,8 +110,8 @@ export default function LemburPage() {
     },
   });
 
-  const jamMulai = watch("jam_mulai");
-  const jamSelesai = watch("jam_selesai");
+  const jamMulai = useWatch({ control, name: "jam_mulai" });
+  const jamSelesai = useWatch({ control, name: "jam_selesai" });
 
   const refetch = () => {
     getLemburList().then((res) => {
@@ -133,20 +138,19 @@ export default function LemburPage() {
   }, []);
 
   useEffect(() => {
-    if (!tanggalAbsen) {
-      setStatusAbsen(null);
-      return;
-    }
+    if (!tanggalAbsen) return;
     getStatusLembur({ tanggal: tanggalAbsen })
-      .then((res) => setStatusAbsen(res))
-      .catch(() => setStatusAbsen(null));
+      .then((res) => setStatusAbsen({ tanggal: tanggalAbsen, data: res }))
+      .catch(() => setStatusAbsen({ tanggal: tanggalAbsen, data: null }));
   }, [tanggalAbsen]);
 
+  const status =
+    statusAbsen?.tanggal === tanggalAbsen ? statusAbsen.data : null;
   const minTanggal = ymd(new Date());
-  const maxTanggal =
-    konfig !== null
-      ? ymd(new Date(Date.now() + konfig.hari_ke_depan * 86400000))
-      : undefined;
+
+  const maxDate = new Date();
+  if (konfig) maxDate.setDate(maxDate.getDate() + konfig.hari_ke_depan);
+  const maxTanggal = konfig ? ymd(maxDate) : undefined;
 
   const durasiPreview =
     jamMulai && jamSelesai && toMenit(jamSelesai) > toMenit(jamMulai)
@@ -164,9 +168,11 @@ export default function LemburPage() {
         toast.error(res.pesan);
       }
     } catch (err: unknown) {
-      const pesan = (err as {
-        response?: { data?: { pesan?: string } };
-      })?.response?.data?.pesan;
+      const pesan = (
+        err as {
+          response?: { data?: { pesan?: string } };
+        }
+      )?.response?.data?.pesan;
       toast.error(pesan || "Gagal mengirim pengajuan. Silakan coba lagi.");
     }
   };
@@ -181,9 +187,11 @@ export default function LemburPage() {
         toast.error(res.pesan);
       }
     } catch (err: unknown) {
-      const pesan = (err as {
-        response?: { data?: { pesan?: string } };
-      })?.response?.data?.pesan;
+      const pesan = (
+        err as {
+          response?: { data?: { pesan?: string } };
+        }
+      )?.response?.data?.pesan;
       toast.error(pesan || "Gagal membatalkan pengajuan.");
     }
   };
@@ -229,7 +237,9 @@ export default function LemburPage() {
           <div className="bg-blue-50 rounded-2xl border border-blue-200 px-4 py-3 flex flex-col gap-1 text-sm text-blue-700">
             <p className="flex items-center gap-2">
               <HiOutlineClock className="shrink-0" />
-              Pengajuan paling lambat <strong>{konfig.batas_jam} jam</strong>{" "}
+              Pengajuan paling lambat <strong>
+                {konfig.batas_jam} jam
+              </strong>{" "}
               sebelum jam mulai.
             </p>
             <p className="flex items-center gap-2">
@@ -431,11 +441,11 @@ export default function LemburPage() {
                 </div>
               ))}
 
-            {!statusAbsen && (
+            {!status && (
               <p className="text-sm text-gray-400">Memuat status absen...</p>
             )}
 
-            {statusAbsen && statusAbsen.absen_masuk === null && (
+            {status && status.absen_masuk === null && (
               <button
                 onClick={() =>
                   navigate(`/absen-lembur/masuk?tanggal=${tanggalAbsen}`)
@@ -445,15 +455,13 @@ export default function LemburPage() {
               </button>
             )}
 
-            {statusAbsen &&
-              statusAbsen.absen_masuk !== null &&
-              statusAbsen.absen_pulang === null && (
+            {status &&
+              status.absen_masuk !== null &&
+              status.absen_pulang === null && (
                 <div className="flex flex-col gap-3">
                   <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
                     Sudah absen masuk{" "}
-                    <span className="font-semibold">
-                      {statusAbsen.absen_masuk}
-                    </span>
+                    <span className="font-semibold">{status.absen_masuk}</span>
                   </div>
                   <button
                     onClick={() =>
@@ -465,28 +473,24 @@ export default function LemburPage() {
                 </div>
               )}
 
-            {statusAbsen &&
-              statusAbsen.absen_masuk !== null &&
-              statusAbsen.absen_pulang !== null && (
+            {status &&
+              status.absen_masuk !== null &&
+              status.absen_pulang !== null && (
                 <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex flex-col gap-1 text-sm">
                   <p className="text-gray-700">
                     Masuk{" "}
-                    <span className="font-semibold">
-                      {statusAbsen.absen_masuk}
-                    </span>{" "}
+                    <span className="font-semibold">{status.absen_masuk}</span>{" "}
                     · Pulang{" "}
-                    <span className="font-semibold">
-                      {statusAbsen.absen_pulang}
-                    </span>
+                    <span className="font-semibold">{status.absen_pulang}</span>
                   </p>
-                  {statusAbsen.durasi_menit !== null && (
+                  {status.durasi_menit !== null && (
                     <p className="text-gray-600">
-                      Durasi: {durasiTeks(statusAbsen.durasi_menit)}
+                      Durasi: {durasiTeks(status.durasi_menit)}
                     </p>
                   )}
                   <p className="flex items-center gap-2 text-gray-600">
                     Bintang:
-                    <Bintang nilai={statusAbsen.bintang} />
+                    <Bintang nilai={status.bintang} />
                   </p>
                 </div>
               )}

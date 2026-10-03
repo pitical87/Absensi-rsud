@@ -48,7 +48,7 @@ export default function AbsenLemburPage() {
       <TopNavbar />
       {/* steps wizard */}
       <section className="bg-white border-b border-gray-300 px-4 py-1 flex flex-col gap-3">
-        <h1 className="text-lg font-bold">Absen {mode === "masuk" ? "Masuk" : "Pulang"} Lembur</h1>
+        <h1 className="text-lg font-bold">Absen <span>{mode === "masuk" ? "Masuk" : "Pulang"}</span> Lembur</h1>
         <span className="-mt-1 text-sm text-gray-500">Tanggal: {tanggal || "—"}</span>
         <div className="w-full">
           <StepWizard currentStep={currentStep} steps={steps} />

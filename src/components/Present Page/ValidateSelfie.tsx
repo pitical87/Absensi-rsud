@@ -33,11 +33,11 @@ export default function ValidateSelfie({ setCurrentStep, onNext }: Props) {
 
         localStream = mediaStream;
         setStream(mediaStream);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (cancelled) return;
-
+        const name = err instanceof Error ? err.name : "";
         setError(
-          err.name === "NotAllowedError"
+          name === "NotAllowedError"
             ? "Izin kamera ditolak."
             : "Kamera tidak tersedia.",
         );

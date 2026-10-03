@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import LocationPicker from "./LocationPicker";
 import { useAuth } from "../../context/AuthContext";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { getDistance } from "../../utils/GeoLocation";
 
 type props = {
@@ -20,16 +20,18 @@ export default function ValidateLocation({ setCurrentStep, onNext }: props) {
       ? getDistance(lokasi.lat, lokasi.lng, location.lat, location.lng)
       : Infinity;
 
+  const handleLocationReady = useCallback(
+    (loc: { lat: number; lng: number }) => setLocation(loc),
+    [],
+  );
+
   return (
     <div className="bg-white w-full rounded-2xl p-4">
       <h1 className="text-lg mb-3 font-medium">Validasi GPS</h1>
 
       {/* show map */}
       {lokasi && (
-        <LocationPicker
-          onLocationReady={(loc) => setLocation(loc)}
-          lokasi={lokasi}
-        />
+        <LocationPicker onLocationReady={handleLocationReady} lokasi={lokasi} />
       )}
 
       {/* Next button — enable only if location is ready */}
