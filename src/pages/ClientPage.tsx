@@ -5,15 +5,14 @@ import RecentPresents from "../components/Client Page/RecentPresents";
 import TopNavbar from "../components/Client Page/TopNavbar";
 import SifSection from "../components/Client Page/SifSection";
 import PerformaBanner from "../components/Client Page/PerformaBanner";
-import ShiftWeekSlider, { type WeekSliderItem } from "../components/Client Page/ShiftWeekSlider";
 import { useEffect, useState } from "react";
 import { getStatus } from "../utils/api/Attendence";
 import { getTodayLeave } from "../utils/api/Leave";
 import LogBookSection from "../components/Client Page/LogBookSection";
 import { useAuth } from "../context/AuthContext";
 import useTodaySession from "../hooks/useTodaySession";
-import useOpenSession, { type SessionRecord } from "../hooks/useOpenSession";
-import { GetTodayKey, GetWeekDays } from "../utils/DateUtils";
+import useOpenSession from "../hooks/useOpenSession";
+
 import useSharedQuery from "../hooks/useSharedQuery";
 
 type StatusRes = {
@@ -28,11 +27,7 @@ export default function ClientPage() {
   const { isDokter } = useAuth();
 
   const todaySession = useTodaySession(isDokter);
-  const { records, openSession, loading } = useOpenSession();
-
-  const [selectedTanggal, setSelectedTanggal] = useState<string | null>(null);
-  const activeTanggal = selectedTanggal ?? openSession?.tanggal ?? GetTodayKey();
-
+  const { openSession } = useOpenSession();
   useEffect(() => {
     let aktif = true;
     getTodayLeave().then((res) => {
@@ -55,34 +50,6 @@ export default function ClientPage() {
   const masukNonDokter = statusRes?.absen_masuk ?? null;
   const pulangNonDokter = statusRes?.absen_pulang ? { waktu: statusRes.absen_pulang.waktu } : null;
 
-  const week = GetWeekDays();
-  const todayKey = GetTodayKey();
-  const byTanggal = new Map<string, SessionRecord>();
-  for (const r of records) {
-    if (!byTanggal.has(r.tanggal)) byTanggal.set(r.tanggal, r);
-  }
-  const days: WeekSliderItem[] = week.map((d) => {
-    const r = byTanggal.get(d.tanggal);
-    return {
-      ...d,
-      jamMasuk: r?.jam_masuk ?? null,
-      jamPulang: r?.jam_pulang ?? null,
-      isOpen: openSession?.tanggal === d.tanggal,
-      isToday: d.tanggal === todayKey,
-    };
-  });
-  if (openSession && !week.some((d) => d.tanggal === openSession.tanggal)) {
-    days.push({
-      tanggal: openSession.tanggal,
-      hari: openSession.hari,
-      label: openSession.tanggal_label,
-      jamMasuk: openSession.jam_masuk,
-      jamPulang: openSession.jam_pulang,
-      isOpen: true,
-      isToday: false,
-    });
-  }
-
   const hasMasuk = openSession ? true : isDokter ? todaySession.hasMasuk : hasMasukNonDokter;
   const hasPulang = openSession ? false : isDokter ? todaySession.hasPulang : hasPulangNonDokter;
 
@@ -101,13 +68,10 @@ export default function ClientPage() {
         todayLeave={todayLeave}
         isDokter={isDokter}
         openSession={openSession ? { tanggal: openSession.tanggal, tanggal_label: openSession.tanggal_label } : null}
-        selectedTanggal={activeTanggal}
         loading={loadingToday}
       />
       {/* second top part */}
       <HeroCard masuk={masuk} pulang={pulang} isDokter={isDokter} sesi={todaySession.sessions.length} loading={loadingToday} />
-      {/* week shift slider */}
-      <ShiftWeekSlider days={days} selected={activeTanggal} onSelect={setSelectedTanggal} openSession={openSession ? { tanggal: openSession.tanggal, label: openSession.tanggal_label } : null} loading={loading} />
       {/* logbook section */}
       <LogBookSection hasMasuk={hasMasuk} hasPulang={hasPulang} hasLeave={hasLeave} />
       {/* sif & absensi section */}

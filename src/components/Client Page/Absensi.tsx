@@ -16,23 +16,13 @@ type props = {
   } | null;
   isDokter?: boolean;
   openSession?: { tanggal: string; tanggal_label: string } | null;
-  selectedTanggal?: string;
   loading?: boolean;
 };
 
-export default function Absensi({
-  hasMasuk,
-  hasPulang,
-  hasLeave,
-  todayLeave,
-  isDokter,
-  openSession,
-  selectedTanggal,
-  loading,
-}: props) {
+export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isDokter, openSession, loading }: props) {
   const navigate = useNavigate();
   const adaSesiTerbuka = !!openSession;
-  const pulangTerpilih = adaSesiTerbuka && selectedTanggal === openSession.tanggal;
+  const pulangTerpilih = adaSesiTerbuka;
   const masukDisabled = hasLeave || adaSesiTerbuka || (!isDokter && hasMasuk);
   const pulangDisabled = hasLeave || !pulangTerpilih;
   return (
@@ -47,7 +37,9 @@ export default function Absensi({
               <IoDocumentTextOutline />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-yellow-800 text-sm">Sedang <span>{todayLeave.jenis === "Cuti" ? "Cuti" : "Izin"}</span></span>
+              <span className="font-semibold text-yellow-800 text-sm">
+                Sedang <span>{todayLeave.jenis === "Cuti" ? "Cuti" : "Izin"}</span>
+              </span>
               <span className="text-xs text-yellow-600">
                 {todayLeave.jenis_cuti ? `${todayLeave.jenis_cuti} — ` : ""}
                 {todayLeave.tanggal_mulai} s.d. {todayLeave.tanggal_selesai}
@@ -60,11 +52,7 @@ export default function Absensi({
             items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-xs"
         >
           <CiLock className="text-sm font-semibold" />
-          <span>
-            {isDokter
-              ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari."
-              : "Absen pulang hanya tersedia sesudah absen masuk. Bila shift melewati tengah malam, pilih tanggal shift di jadwal."}
-          </span>
+          <span>{isDokter ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari." : "Absen pulang hanya tersedia sesudah absen masuk."}</span>
         </div>
         <div className="flex items-center justify-between gap-3 sm:gap-5 w-full">
           {loading ? (
@@ -81,142 +69,134 @@ export default function Absensi({
               </div>
             </>
           ) : (
-          <>
-          <button
-            disabled={masukDisabled}
-            onClick={() => navigate("/present/masuk")}
-            className="
+            <>
+              <button
+                disabled={masukDisabled}
+                onClick={() => navigate("/present/masuk")}
+                className="
                 group min-w-0 w-full rounded-xl border border-blue-200 bg-white p-3 sm:p-4
                 transition-colors duration-200 cursor-pointer
                 hover:bg-blue-100 hover:border-blue-400
                 disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-blue-200
                 disabled:cursor-not-allowed
               "
-          >
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span
-                className="
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span
+                    className="
                   flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
                   bg-blue-100 transition-colors duration-200
                   group-hover:bg-blue-600
                   group-disabled:bg-blue-100
                 "
-              >
-                <CiLogin
-                  className="
+                  >
+                    <CiLogin
+                      className="
                       text-xl text-blue-600
                       transition-colors duration-200
                       group-hover:text-white
                       group-disabled:text-blue-600
                     "
-                />
-              </span>
+                    />
+                  </span>
 
-              <div className="flex min-w-0 flex-1 flex-col text-left">
-                <span
-                  className="
+                  <div className="flex min-w-0 flex-1 flex-col text-left">
+                    <span
+                      className="
                     font-medium text-gray-800
                     transition-colors duration-200
                     group-hover:text-blue-700
                     group-disabled:text-gray-800
                   "
-                >
-                  Absen Masuk
-                </span>
+                    >
+                      Absen Masuk
+                    </span>
 
-                <span
-                  className="
+                    <span
+                      className="
                     text-xs text-gray-500 leading-snug
                     transition-colors duration-200
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
                   "
-                >
-                  {hasLeave
-                    ? "Sedang izin/cuti"
-                    : adaSesiTerbuka
-                      ? isDokter
-                        ? "Selesaikan sesi berjalan dulu"
-                        : "Selesaikan shift berjalan dulu"
-                      : isDokter
-                        ? hasPulang
-                          ? "Absen sesi berikutnya"
-                          : "Untuk absen Masuk"
-                        : hasMasuk
-                          ? "Sudah Masuk"
-                          : "Untuk absen Masuk"}
-                </span>
-              </div>
-            </div>
-          </button>
-          <button
-            disabled={pulangDisabled}
-            onClick={() =>
-              navigate("/present/pulang", {
-                state: { tanggal: adaSesiTerbuka ? openSession.tanggal : undefined },
-              })
-            }
-            className="
+                    >
+                      {hasLeave
+                        ? "Sedang izin/cuti"
+                        : adaSesiTerbuka
+                          ? isDokter
+                            ? "Selesaikan sesi berjalan dulu"
+                            : "Selesaikan shift berjalan dulu"
+                          : isDokter
+                            ? hasPulang
+                              ? "Absen sesi berikutnya"
+                              : "Untuk absen Masuk"
+                            : hasMasuk
+                              ? "Sudah Masuk"
+                              : "Untuk absen Masuk"}
+                    </span>
+                  </div>
+                </div>
+              </button>
+              <button
+                disabled={pulangDisabled}
+                onClick={() =>
+                  navigate("/present/pulang", {
+                    state: { tanggal: adaSesiTerbuka ? openSession.tanggal : undefined },
+                  })
+                }
+                className="
                 group min-w-0 w-full rounded-xl border border-blue-200 bg-white p-3 sm:p-4
                 transition-colors duration-200 cursor-pointer
                 hover:bg-blue-100 hover:border-blue-400
                 disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-blue-200
                 disabled:cursor-not-allowed
               "
-          >
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span
-                className="
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span
+                    className="
                   flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
                   bg-blue-100 transition-colors duration-200
                   group-hover:bg-blue-600
                   group-disabled:bg-blue-100
                 "
-              >
-                <CiLogout
-                  className="
+                  >
+                    <CiLogout
+                      className="
                       text-xl text-blue-600
                       transition-colors duration-200
                       group-hover:text-white
                       group-disabled:text-blue-600
                     "
-                />
-              </span>
+                    />
+                  </span>
 
-              <div className="flex min-w-0 flex-1 flex-col text-left">
-                <span
-                  className="
+                  <div className="flex min-w-0 flex-1 flex-col text-left">
+                    <span
+                      className="
                     font-medium text-gray-800
                     transition-colors duration-200
                     group-hover:text-blue-700
                     group-disabled:text-gray-800
                   "
-                >
-                  Absen Pulang
-                </span>
+                    >
+                      Absen Pulang
+                    </span>
 
-                <span
-                  className="
+                    <span
+                      className="
                     text-xs text-gray-500 leading-snug
                     transition-colors duration-200
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
                   "
-                >
-                  {hasLeave
-                    ? "Sedang izin/cuti"
-                    : adaSesiTerbuka
-                      ? pulangTerpilih
-                        ? isDokter
-                          ? "Selesaikan sesi berjalan"
-                          : `Pulang shift ${openSession.tanggal_label}`
-                        : `Pilih ${openSession.tanggal_label} dulu`
-                      : "Absen masuk dulu"}
-                </span>
-              </div>
-            </div>
-          </button>
-          </>
+                    >
+                      {hasLeave ? "Sedang izin/cuti" : adaSesiTerbuka ? (isDokter ? "Selesaikan sesi berjalan" : `Pulang shift ${openSession.tanggal_label}`) : "Absen masuk dulu"}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            </>
           )}
         </div>
       </section>
