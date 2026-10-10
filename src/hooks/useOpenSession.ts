@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { getAttRecords } from "../utils/api/Attendence";
+import useSharedQuery from "./useSharedQuery";
 
 export type SessionRecord = {
   tanggal: string;
@@ -16,30 +16,12 @@ export type SessionRecord = {
   bintang_harian: number | null;
 };
 
-export default function useOpenSession() {
-  const [records, setRecords] = useState<SessionRecord[]>([]);
-  const [openSession, setOpenSession] = useState<SessionRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+type RiwayatRes = { sukses: boolean; riwayat: SessionRecord[] };
 
-  useEffect(() => {
-    let aktif = true;
-    getAttRecords()
-      .then((res) => {
-        if (!aktif || !res.sukses) return;
-        const riwayat = (res.riwayat as SessionRecord[]) ?? [];
-        setRecords(riwayat);
-        setOpenSession(riwayat.find((r) => r.jam_pulang == null) ?? null);
-      })
-      .catch(() => {
-        if (aktif) setRecords([]);
-      })
-      .finally(() => {
-        if (aktif) setLoading(false);
-      });
-    return () => {
-      aktif = false;
-    };
-  }, []);
+export default function useOpenSession() {
+  const { data, loading } = useSharedQuery<RiwayatRes>("riwayat", getAttRecords);
+  const records = data?.riwayat ?? [];
+  const openSession = records.find((r) => r.jam_pulang == null) ?? null;
 
   return { records, openSession, loading };
 }

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { getAttRecords } from "../utils/api/Attendence";
 import { GetTodayKey } from "../utils/DateUtils";
+import useSharedQuery from "./useSharedQuery";
 
 type SessionRecord = {
   tanggal: string;
@@ -16,35 +17,15 @@ type SessionRecord = {
   bintang_pulang: number | null;
   bintang_harian: number | null;
 };
+type RiwayatRes = { sukses: boolean; riwayat: SessionRecord[] };
 
 export default function useTodaySession(isDokter: boolean) {
-  const [sessions, setSessions] = useState<SessionRecord[]>([]);
-  const [loading, setLoading] = useState(isDokter);
+  const { data, loading } = useSharedQuery<RiwayatRes>("riwayat", getAttRecords, { enabled: isDokter });
 
-  useEffect(() => {
-    if (!isDokter) return;
-    let aktif = true;
-    getAttRecords()
-      .then((res) => {
-        if (!aktif || !res.sukses) return;
-        const hariIni = (res.riwayat as SessionRecord[]).filter(
-          (r) => r.tanggal == GetTodayKey() || r.jam_pulang == null,
-        );
-        hariIni.sort((a, b) =>
-          a.tanggal == b.tanggal
-            ? a.jam_masuk.localeCompare(b.jam_masuk)
-            : a.tanggal.localeCompare(b.tanggal),
-        );
-        setSessions(hariIni);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (aktif) setLoading(false);
-      });
-    return () => {
-      aktif = false;
-    };
-  }, [isDokter]);
+  const sessions = useMemo(() => {
+    if (!isDokter) return [] as SessionRecord[];
+    return (data?.riwayat ?? []).filter((r) => r.tanggal === GetTodayKey() || r.jam_pulang == null).sort((a, b) => (a.tanggal === b.tanggal ? a.jam_masuk.localeCompare(b.jam_masuk) : a.tanggal.localeCompare(b.tanggal)));
+  }, [data, isDokter]);
 
   const latest = sessions.length > 0 ? sessions[sessions.length - 1] : null;
   const hasMasuk = isDokter && sessions.length > 0;

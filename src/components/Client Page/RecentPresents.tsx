@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { useEffect, useState } from "react";
 import { CiLogin, CiLogout } from "react-icons/ci";
 import { FaStar, FaRegStar } from "react-icons/fa6";
 import { getAttRecords } from "../../utils/api/Attendence";
 import { MdWorkHistory } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
 import Skeleton from "../Skeleton";
+import useSharedQuery from "../../hooks/useSharedQuery";
 
 type RecordItem = {
   key: string;
@@ -28,13 +28,7 @@ type RowItem = RecordItem & { sesiLabel?: string };
 function BintangMini({ nilai }: { nilai: number | null }) {
   if (nilai === null) return null;
   const bulat = Math.round(nilai);
-  return (
-    <span className="flex gap-0.5 text-amber-400 text-xs mt-1">
-      {[1, 2, 3, 4, 5].map((i) =>
-        i <= bulat ? <FaStar key={i} /> : <FaRegStar key={i} />,
-      )}
-    </span>
-  );
+  return <span className="flex gap-0.5 text-amber-400 text-xs mt-1">{[1, 2, 3, 4, 5].map((i) => (i <= bulat ? <FaStar key={i} /> : <FaRegStar key={i} />))}</span>;
 }
 
 function getRows(record: RecordItem[], isDokter: boolean): RowItem[] {
@@ -50,28 +44,20 @@ function getRows(record: RecordItem[], isDokter: boolean): RowItem[] {
     return {
       ...r,
       key: String(i),
-      sesiLabel:
-        isDokter && total > 1 ? `Sesi ${n}` : undefined,
+      sesiLabel: isDokter && total > 1 ? `Sesi ${n}` : undefined,
     };
   });
 }
 
+type RiwayatRes = { sukses: boolean; riwayat: RecordItem[] };
+
 export default function RecentPresents() {
-  const [record, setRecord] = useState<RecordItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const isDokter =
-    user?.profesi?.nama.toLocaleLowerCase() == "dokter";
+  const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
 
-  useEffect(() => {
-    getAttRecords()
-      .then((res) => {
-        if (res.sukses) setRecord(res.riwayat);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, loading } = useSharedQuery<RiwayatRes>("riwayat", getAttRecords);
 
-  const rows = useMemo(() => getRows(record, isDokter), [record, isDokter]);
+  const rows = useMemo(() => getRows(data?.riwayat ?? [], isDokter), [data, isDokter]);
 
   return (
     <>
@@ -84,9 +70,7 @@ export default function RecentPresents() {
           <ul className="flex flex-col bg-white border border-gray-300 rounded-xl max-h-70 overflow-y-auto">
             {loading ? (
               [0, 1, 2, 3].map((i) => (
-                <li
-                  key={i}
-                  className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
+                <li key={i} className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
                   <div className="flex min-w-0 flex-col gap-1.5">
                     <Skeleton className="h-4 w-28" />
                     <Skeleton className="h-3 w-20" />
@@ -98,24 +82,14 @@ export default function RecentPresents() {
                 </li>
               ))
             ) : rows.length === 0 ? (
-              <li className="p-4 text-center text-gray-400 text-sm">
-                Belum ada riwayat absensi
-              </li>
+              <li className="p-4 text-center text-gray-400 text-sm">Belum ada riwayat absensi</li>
             ) : (
               rows.map((r) => (
-                <li
-                  key={r.key}
-                  className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
+                <li key={r.key} className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
                   <div className="flex min-w-0 flex-col">
                     <span className="text-md font-medium ">{r.hari}</span>
-                    <span className="text-sm text-gray-500">
-                      {r.tanggal_label}
-                    </span>
-                    {r.sesiLabel && (
-                      <span className="text-xs text-blue-500 mt-0.5">
-                        {r.sesiLabel}
-                      </span>
-                    )}
+                    <span className="text-sm text-gray-500">{r.tanggal_label}</span>
+                    {r.sesiLabel && <span className="text-xs text-blue-500 mt-0.5">{r.sesiLabel}</span>}
                     <BintangMini nilai={r.bintang_harian} />
                   </div>
                   <div className="flex shrink-0 flex-col items-end">
@@ -128,22 +102,11 @@ export default function RecentPresents() {
                         <CiLogout /> {r.jam_pulang}
                       </span>
                     </div>
-                    <span
-                      className={`text-xs sm:text-sm ${
-                        r.status === "Tepat Waktu" || r.status === "Hadir"
-                          ? "text-green-500 bg-green-100"
-                          : "text-orange-500 bg-orange-100"
-                      } w-fit px-2 py-1 rounded-md mt-1`}>
+                    <span className={`text-xs sm:text-sm ${r.status === "Tepat Waktu" || r.status === "Hadir" ? "text-green-500 bg-green-100" : "text-orange-500 bg-orange-100"} w-fit px-2 py-1 rounded-md mt-1`}>
                       {r.status}
-                      {r.status === "Terlambat" && r.menit_terlambat > 0
-                        ? ` ${r.menit_terlambat} mnt`
-                        : ""}
+                      {r.status === "Terlambat" && r.menit_terlambat > 0 ? ` ${r.menit_terlambat} mnt` : ""}
                     </span>
-                    {r.status_pulang === "Lebih Awal" && (
-                      <span className="text-xs text-red-500 bg-red-100 w-fit px-2 py-1 rounded-md mt-1">
-                        Pulang awal {r.menit_awal_pulang} mnt
-                      </span>
-                    )}
+                    {r.status_pulang === "Lebih Awal" && <span className="text-xs text-red-500 bg-red-100 w-fit px-2 py-1 rounded-md mt-1">Pulang awal {r.menit_awal_pulang} mnt</span>}
                   </div>
                 </li>
               ))

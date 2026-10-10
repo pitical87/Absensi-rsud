@@ -1,19 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import {
-  getNotifications,
-  getTotalNotifications,
-  readNotification,
-  readdAllNotifications,
-} from "../utils/api/Notification";
-import type {
-  NotifikasiBacaResponse,
-  NotifikasiItem,
-  NotifikasiListResponse,
-  NotifikasiTotalResponse,
-} from "../types/NotifikasiType";
+import { getNotifications, getTotalNotifications, readNotification, readdAllNotifications } from "../utils/api/Notification";
+import type { NotifikasiBacaResponse, NotifikasiItem, NotifikasiListResponse, NotifikasiTotalResponse } from "../types/NotifikasiType";
 
-const INTERVAL_MS = 45_000;
+const INTERVAL_MS = 60_000;
 
 export default function useNotifications() {
   const { user } = useAuth();
@@ -22,6 +12,7 @@ export default function useNotifications() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const aktifRef = useRef(true);
+  const intervalRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -29,9 +20,7 @@ export default function useNotifications() {
       if (!aktifRef.current || !res?.sukses) return;
       const list = res.notifikasi ?? [];
       setItems(list);
-      setUnreadCount(
-        res.belum_dibaca ?? list.filter((n) => !n.is_read).length,
-      );
+      setUnreadCount(res.belum_dibaca ?? list.filter((n) => !n.is_read).length);
       setTotal(res.total ?? list.length);
     } catch {
       // biarkan data lama bila gagal
@@ -55,25 +44,42 @@ export default function useNotifications() {
 
     aktifRef.current = true;
 
-    const timer = window.setInterval(refreshBadge, INTERVAL_MS);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") refresh();
+    const mulai = () => {
+      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+      intervalRef.current = window.setInterval(refreshBadge, INTERVAL_MS);
     };
+    const berhenti = () => {
+      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+        mulai();
+      } else {
+        berhenti();
+      }
+    };
+
     document.addEventListener("visibilitychange", onVisible);
-    const idAwal = window.setTimeout(refresh, 0);
+    if (document.visibilityState === "visible") {
+      mulai();
+    }
+    const idAwal = window.setTimeout(() => {
+      if (document.visibilityState === "visible") refresh();
+    }, 0);
 
     return () => {
       aktifRef.current = false;
-      window.clearInterval(timer);
+      berhenti();
       window.clearTimeout(idAwal);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [user, refresh, refreshBadge]);
 
   const markRead = useCallback(async (id: number) => {
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
-    );
+    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
     setUnreadCount((c) => Math.max(0, c - 1));
     try {
       const res = (await readNotification(id)) as NotifikasiBacaResponse;

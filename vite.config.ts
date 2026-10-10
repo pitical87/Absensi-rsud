@@ -17,5 +17,23 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return undefined;
+            if (id.includes("react-dom") || id.includes("/react/")) return "react";
+            if (id.includes("react-router")) return "react-router";
+            if (id.includes("axios")) return "axios";
+            if (id.includes("react-hook-form")) return "react-hook-form";
+            if (id.includes("leaflet")) return "leaflet";
+            if (id.includes("react-hot-toast")) return "toast";
+            if (id.includes("react-icons")) return "icons";
+            return "vendor";
+          },
+        },
+      },
+    },
   };
 });

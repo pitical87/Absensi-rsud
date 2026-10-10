@@ -33,6 +33,7 @@ export default function SifSection() {
   const [loadingJadwal, setLoadingJadwal] = useState(true);
 
   useEffect(() => {
+    if (!can("approve.izin")) return;
     getPendingLeavesCount()
       .then((res) => {
         if (res.sukses) {
@@ -41,9 +42,10 @@ export default function SifSection() {
       })
       .catch(() => {})
       .finally(() => setLoadingIzin(false));
-  }, []);
+  }, [can]);
 
   useEffect(() => {
+    if (!can("approve.lembur")) return;
     getLemburMenungguTotal()
       .then((res) => {
         if (res.sukses) {
@@ -52,9 +54,10 @@ export default function SifSection() {
       })
       .catch(() => {})
       .finally(() => setLoadingLembur(false));
-  }, []);
+  }, [can]);
 
   useEffect(() => {
+    if (!can("approve.jadwal")) return;
     getPerubahanJadwalMenungguTotal()
       .then((res) => {
         if (res.sukses) {
@@ -63,7 +66,7 @@ export default function SifSection() {
       })
       .catch(() => {})
       .finally(() => setLoadingJadwal(false));
-  }, []);
+  }, [can]);
 
   useEffect(() => {
     const fetchJadwal = async () => {
