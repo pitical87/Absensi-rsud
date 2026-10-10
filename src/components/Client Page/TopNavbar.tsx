@@ -1,5 +1,5 @@
-import { IoIosNotificationsOutline } from "react-icons/io";
 import { GetCurrentDateString } from "../../utils/DateUtils";
+import NotificationBell from "../NotificationBell";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Logo from "../../assets/logo_white.svg?react";
@@ -54,7 +54,7 @@ export default function TopNavbar() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <IoIosNotificationsOutline className="text-2xl text-gray-700 cursor-pointer" />
+          <NotificationBell />
           <button
             onClick={() => setShowMenu(true)}
             className="flex h-8 w-8 items-center text-sm justify-center rounded-full cursor-pointer
