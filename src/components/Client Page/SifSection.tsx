@@ -22,7 +22,7 @@ interface ShiftInfo {
 
 export default function SifSection() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const [shift, setShift] = useState<ShiftInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalPending, setTotalPending] = useState(0);
@@ -107,11 +107,10 @@ export default function SifSection() {
       </h1>
       <div
         className="bg-white border border-gray-300 flex font-semibold
-                  items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-sm">
+                  items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-sm"
+      >
         <LuInfo className="text-md font-semibold" />
-        <span className="text-xs">
-          Jadwal diambil dari sistem sesuai penugasan anda
-        </span>
+        <span className="text-xs">Jadwal diambil dari sistem sesuai penugasan anda</span>
       </div>
       <div className="flex w-full flex-col gap-3 min-[400px]:flex-row">
         {/* Shift */}
@@ -129,22 +128,13 @@ export default function SifSection() {
               </div>
             ) : shift ? (
               <>
-                <span
-                  className={`w-fit rounded-md px-2 py-0.5 text-xs font-semibold ${
-                    shift.kategori === "Pagi"
-                      ? "bg-green-100 text-green-600"
-                      : shift.kategori === "Sore"
-                        ? "bg-orange-100 text-orange-600"
-                        : "bg-blue-100 text-blue-600"
-                  }`}>
+                <span className={`w-fit rounded-md px-2 py-0.5 text-xs font-semibold ${shift.kategori === "Pagi" ? "bg-green-100 text-green-600" : shift.kategori === "Sore" ? "bg-orange-100 text-orange-600" : "bg-blue-100 text-blue-600"}`}>
                   Shift {shift.kategori}
                 </span>
                 <span className="mt-1 text-sm font-semibold text-gray-800">
                   {shift.jam_masuk} - {shift.jam_pulang}
                 </span>
-                <span className="text-xs text-gray-500">
-                  Durasi {getDurasi()}
-                </span>
+                <span className="text-xs text-gray-500">Durasi {getDurasi()}</span>
               </>
             ) : (
               <span className="text-xs text-gray-400">Belum ada shift</span>
@@ -158,9 +148,7 @@ export default function SifSection() {
             <PiBuildingOfficeFill className="text-lg text-sky-600" />
             <div>
               <p className="text-[11px] text-gray-500">Unit</p>
-              <p className="text-sm font-semibold">
-                {user?.unit_kerja?.nama ?? user?.sub_unit?.nama ?? "—"}
-              </p>
+              <p className="text-sm font-semibold">{user?.unit_kerja?.nama ?? user?.sub_unit?.nama ?? "—"}</p>
             </div>
           </div>
 
@@ -168,9 +156,7 @@ export default function SifSection() {
             <IoPersonOutline className="text-lg text-sky-600" />
             <div>
               <p className="text-[11px] text-gray-500">Atasan</p>
-              <p className="text-sm font-semibold">
-                {user?.jabatan?.nama ?? "—"}
-              </p>
+              <p className="text-sm font-semibold">{user?.jabatan?.nama ?? "—"}</p>
             </div>
           </div>
         </div>
@@ -179,14 +165,13 @@ export default function SifSection() {
       <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
-              Tidak bisa hadir ?
-            </h3>
+            <h3 className="text-base font-semibold text-gray-900">Tidak bisa hadir ?</h3>
           </div>
 
           <button
             onClick={() => navigate("/izin")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto">
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto"
+          >
             <HiOutlineDocumentText size={20} />
             Ajukan Izin
           </button>
@@ -196,14 +181,10 @@ export default function SifSection() {
       <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
-              Lembur di luar jam kerja ?
-            </h3>
+            <h3 className="text-base font-semibold text-gray-900">Lembur di luar jam kerja ?</h3>
           </div>
 
-          <button
-            onClick={() => navigate("/lembur")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto">
+          <button onClick={() => navigate("/lembur")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto">
             <BiTimeFive size={20} />
             Ajukan Lembur
           </button>
@@ -213,97 +194,82 @@ export default function SifSection() {
       <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
-              Perlu ubah / tukar shift ?
-            </h3>
+            <h3 className="text-base font-semibold text-gray-900">Perlu ubah / tukar shift ?</h3>
           </div>
 
           <button
             onClick={() => navigate("/ubah-jadwal")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto">
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto"
+          >
             <BiCalendarEdit size={20} />
             Ajukan Perubahan
           </button>
         </div>
       </section>
-      {user?.posisi !== "Staf" && (
+      {can("jadwal.kelola") && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
-                Kelola & buat jadwal shift pegawai ?
-              </h3>
+              <h3 className="text-base font-semibold text-gray-900">Kelola & buat jadwal shift pegawai ?</h3>
             </div>
 
             <button
               onClick={() => navigate("/kelola-jadwal")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-600 transition hover:bg-sky-100 sm:w-auto">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-600 transition hover:bg-sky-100 sm:w-auto"
+            >
               <BiCalendarWeek size={20} />
               Kelola Jadwal
             </button>
           </div>
         </section>
       )}
-      {user?.posisi !== "Staf" && (
+      {can("approve.izin") && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
-                {loadingIzin ? (
-                  <Skeleton className="h-5 w-56" />
-                ) : totalPending > 0
-                  ? `Ada ${totalPending} pengajuan yang menunggu!`
-                  : "tidak ada pengajuan"}
-              </h3>
+              <h3 className="text-base font-semibold text-gray-900">{loadingIzin ? <Skeleton className="h-5 w-56" /> : totalPending > 0 ? `Ada ${totalPending} pengajuan yang menunggu!` : "tidak ada pengajuan"}</h3>
             </div>
 
             <button
               onClick={() => navigate("/persetujuan")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto"
+            >
               <FaFileCircleCheck size={20} />
               Persetujuan
             </button>
           </div>
         </section>
       )}
-      {user?.posisi !== "Staf" && (
+      {can("approve.lembur") && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
-                {loadingLembur ? (
-                  <Skeleton className="h-5 w-56" />
-                ) : totalLemburPending > 0
-                  ? `Ada ${totalLemburPending} lembur yang menunggu!`
-                  : "tidak ada pengajuan lembur"}
-              </h3>
+              <h3 className="text-base font-semibold text-gray-900">{loadingLembur ? <Skeleton className="h-5 w-56" /> : totalLemburPending > 0 ? `Ada ${totalLemburPending} lembur yang menunggu!` : "tidak ada pengajuan lembur"}</h3>
             </div>
 
             <button
               onClick={() => navigate("/persetujuan-lembur")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto"
+            >
               <FaFileCircleCheck size={20} />
               Persetujuan Lembur
             </button>
           </div>
         </section>
       )}
-      {user?.posisi !== "Staf" && (
+      {can("approve.jadwal") && (
         <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-900">
-                {loadingJadwal ? (
-                  <Skeleton className="h-5 w-56" />
-                ) : totalJadwalPending > 0
-                  ? `Ada ${totalJadwalPending} ubah jadwal yang menunggu!`
-                  : "tidak ada pengajuan ubah jadwal"}
+                {loadingJadwal ? <Skeleton className="h-5 w-56" /> : totalJadwalPending > 0 ? `Ada ${totalJadwalPending} ubah jadwal yang menunggu!` : "tidak ada pengajuan ubah jadwal"}
               </h3>
             </div>
 
             <button
               onClick={() => navigate("/persetujuan-jadwal")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto">
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto"
+            >
               <FaFileCircleCheck size={20} />
               Persetujuan Jadwal
             </button>

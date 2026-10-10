@@ -32,6 +32,8 @@ export type Lokasi = {
   radius: number;
 };
 
+export type Permission = "approve.izin" | "approve.lembur" | "approve.jadwal" | "jadwal.kelola";
+
 export type AuthContextType = {
   user: User | null;
   lokasi: Lokasi | null;
@@ -41,10 +43,9 @@ export type AuthContextType = {
   setLokasi: (lokasi: Lokasi | null) => void;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
+  can: (permission: Permission) => boolean;
 };
 
-export const AuthContext = createContext<AuthContextType>(
-  {} as AuthContextType,
-);
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const useAuth = () => useContext(AuthContext);
