@@ -156,6 +156,8 @@ src/
 │   └── AuthContext.tsx        # State user, lokasi, login/logout, isDokter
 ├── hooks/
 │   ├── useTodaySession.ts     # Multi-sesi absen dokter hari ini
+│   ├── useOpenSession.ts      # Sesi absen yang masih terbuka
+│   ├── useSharedQuery.ts      # Dedup + cache request bersama (riwayat/status)
 │   ├── useLoading.ts
 ├── routes/
 │   └── AppRoutes.tsx          # Definisi seluruh rute
@@ -212,6 +214,53 @@ VITE_API_URL=http://localhost:8000   # URL backend Laravel (proxy dev & arah bui
 - Saat respons API berstatus **401**, otomatis diarahkan ke `/login`.
 - **Proxy dev** (`vite.config.ts`): `"/api"` → `VITE_API_URL` dengan `changeOrigin`.
 - **GeoLocation** (`src/utils/GeoLocation.ts`): `TARGET_LAT`/`TARGET_LNG`/`MAX_DISTANCE` menentukan pusat & radius validasi absen (klien). Nilai server yang berlaku adalah yang dikonfigurasi di backend.
+
+---
+
+## Optimasi Performa
+
+Perubahan berikut diterapkan untuk mempercepat *time-to-interactive*, mengurangi beban server, dan menghemat sumber daya perangkat.
+
+### 1. Code-splitting vendor (`vite.config.ts`)
+
+Dengan `manualChunks`, library `node_modules` dipisah ke chunk tersendiri (`react`, `react-router`, `axios`, `icons`, `leaflet`, dll.) alih-alih ikut halaman pertama.
+
+- Sebelum: bundle utama `index` ± **326 kB** (gzip ± 98 kB) diunduh penuh tiap kunjungan.
+- Sesudah: `index` ± **76 kB** (gzip ± 19 kB); library jarang berubah sehingga tersimpan di **cache browser** dan tinggal dipakai ulang pada kunjungan berikutnya.
+
+### 2. Dedup & cache request dashboard (`src/hooks/useSharedQuery.ts`)
+
+Hook `useSharedQuery` melakukan *single-flight* (beberapa komponen memakai **satu promise fetch** yang sama) dan *time-based cache* (TTL 5 detik).
+
+- Sebelum: buka dashboard memicu `/riwayat` **3×** (useOpenSession, useTodaySession, RecentPresents) dan `/status` **2×** (ClientPage, PresentStatistic).
+- Sesudah: `useOpenSession`, `useTodaySession`, dan `RecentPresents` berbagi key `"riwayat"`; `ClientPage` dan `PresentStatistic` berbagi key `"status"`. Navigasi cepat (masuk halaman lain lalu balik) juga tidak perlu fetch ulang selama cache belum kedaluwarsa.
+
+### 3. Fetch bersyarat di `SifSection`
+
+Effect penghitung pengajuan menunggu (`getPendingLeavesCount`, `getLemburMenungguTotal`, `getPerubahanJadwalMenungguTotal`) kini langsung berhenti saat user **tidak memiliki permission** `approve.izin` / `approve.lembur` / `approve.jadwal`. Staf biasa (mayoritas) tidak lagi memicu 3 request mubazir setiap buka dashboard.
+
+### 4. Polling notifikasi hemat baterai (`src/hooks/useNotifications.ts`)
+
+- Interval polling diperbesar dari 45 dtk → **60 dtk**.
+- Polling **berhenti saat tab tersembunyi** (`visibilitychange`) dan langsung `refresh()` begitu tab terlihat kembali.
+
+### 5. Meminimalkan render berantai
+
+Nilai yang bisa dihitung langsung dari data (mis. `bintang`, status masuk/pulang non-dokter) di-derive saat render, bukan melalui `useEffect` + `setState`. Ini mengurangi jumlah render serta memenuhi aturan lint `react-hooks/set-state-in-effect` (semua `setState` di effect dipindah ke callback async).
+
+### 6. Hapus dead code
+
+`src/components/Dashboard.tsx` tidak pernah diimpor dan dihapus dari bundle.
+
+### Verifikasi
+
+```bash
+npm run lint      # 0 error, 0 warning
+npx tsc -b        # bersih
+npm run build     # bundle utama turun ke ± 76 kB (gzip ± 19 kB)
+```
+
+Cek manual: buka dashboard dan amati tab **Network** — `/riwayat` & `/status` hanya muncul **1×**, dan polling notifikasi berhenti saat tab dialihkan ke background.
 
 ---
 
