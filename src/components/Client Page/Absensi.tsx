@@ -16,15 +16,16 @@ type props = {
   } | null;
   isDokter?: boolean;
   openSession?: { tanggal: string; tanggal_label: string } | null;
+  sesiTerlupakan?: boolean;
   loading?: boolean;
 };
 
-export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isDokter, openSession, loading }: props) {
+export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isDokter, openSession, sesiTerlupakan, loading }: props) {
   const navigate = useNavigate();
   const adaSesiTerbuka = !!openSession;
   const pulangTerpilih = adaSesiTerbuka;
-  const masukDisabled = hasLeave || adaSesiTerbuka || (!isDokter && hasMasuk);
-  const pulangDisabled = hasLeave || !pulangTerpilih;
+  const masukDisabled = hasLeave || (adaSesiTerbuka && !sesiTerlupakan) || (!isDokter && hasMasuk);
+  const pulangDisabled = hasLeave || !pulangTerpilih || sesiTerlupakan;
   return (
     <>
       <section className="flex flex-col items-center px-4 sm:px-6 py-2 gap-2">
@@ -52,7 +53,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
             items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-xs"
         >
           <CiLock className="text-sm font-semibold" />
-          <span>{isDokter ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari." : "Absen pulang hanya tersedia sesudah absen masuk."}</span>
+          <span>{isDokter ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari." : sesiTerlupakan ? "Shift sebelumnya belum ditutup — akan ditutup otomatis saat absen masuk (bintang pulang 1)." : "Absen pulang hanya tersedia sesudah absen masuk."}</span>
         </div>
         <div className="flex items-center justify-between gap-3 sm:gap-5 w-full">
           {loading ? (
@@ -72,7 +73,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
             <>
               <button
                 disabled={masukDisabled}
-                onClick={() => navigate("/present/masuk")}
+                onClick={() => navigate("/present/masuk", { state: { sesiTerlupakan: sesiTerlupakan ?? false } })}
                 className="
                 group min-w-0 w-full rounded-xl border border-blue-200 bg-white p-3 sm:p-4
                 transition-colors duration-200 cursor-pointer
@@ -122,7 +123,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     >
                       {hasLeave
                         ? "Sedang izin/cuti"
-                        : adaSesiTerbuka
+                        : adaSesiTerbuka && !sesiTerlupakan
                           ? isDokter
                             ? "Selesaikan sesi berjalan dulu"
                             : "Selesaikan shift berjalan dulu"
@@ -191,7 +192,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     group-disabled:text-gray-500
                   "
                     >
-                      {hasLeave ? "Sedang izin/cuti" : adaSesiTerbuka ? (isDokter ? "Selesaikan sesi berjalan" : `Pulang shift ${openSession.tanggal_label}`) : "Absen masuk dulu"}
+                      {hasLeave ? "Sedang izin/cuti" : sesiTerlupakan ? "Akan ditutup otomatis saat absen masuk" : adaSesiTerbuka ? (isDokter ? "Selesaikan sesi berjalan" : `Pulang shift ${openSession.tanggal_label}`) : "Absen masuk dulu"}
                     </span>
                   </div>
                 </div>

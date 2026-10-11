@@ -12,8 +12,8 @@ import LogBookSection from "../components/Client Page/LogBookSection";
 import { useAuth } from "../context/AuthContext";
 import useTodaySession from "../hooks/useTodaySession";
 import useOpenSession from "../hooks/useOpenSession";
-
 import useSharedQuery from "../hooks/useSharedQuery";
+import { isSesiTerlupakan } from "../utils/DateUtils";
 
 type StatusRes = {
   sukses: boolean;
@@ -24,10 +24,14 @@ type StatusRes = {
 export default function ClientPage() {
   const [hasLeave, setHasLeave] = useState(false);
   const [todayLeave, setTodayLeave] = useState(null);
-  const { isDokter } = useAuth();
+  const { user, isDokter } = useAuth();
 
   const todaySession = useTodaySession(isDokter);
   const { openSession } = useOpenSession();
+
+  const sesiTerlupakan = !isDokter && isSesiTerlupakan(openSession, user?.shift);
+  const openSesiBerlaku = openSession && !sesiTerlupakan ? openSession : null;
+
   useEffect(() => {
     let aktif = true;
     getTodayLeave().then((res) => {
@@ -50,11 +54,11 @@ export default function ClientPage() {
   const masukNonDokter = statusRes?.absen_masuk ?? null;
   const pulangNonDokter = statusRes?.absen_pulang ? { waktu: statusRes.absen_pulang.waktu } : null;
 
-  const hasMasuk = openSession ? true : isDokter ? todaySession.hasMasuk : hasMasukNonDokter;
-  const hasPulang = openSession ? false : isDokter ? todaySession.hasPulang : hasPulangNonDokter;
+  const hasMasuk = openSesiBerlaku ? true : isDokter ? todaySession.hasMasuk : hasMasukNonDokter;
+  const hasPulang = openSesiBerlaku ? false : isDokter ? todaySession.hasPulang : hasPulangNonDokter;
 
-  const masuk = openSession ? { waktu: openSession.jam_masuk, status: openSession.status } : isDokter ? (todaySession.latest ? { waktu: todaySession.latest.jam_masuk, status: "" } : null) : masukNonDokter;
-  const pulang = openSession ? null : isDokter ? (todaySession.latest?.jam_pulang ? { waktu: todaySession.latest.jam_pulang } : null) : pulangNonDokter;
+  const masuk = openSesiBerlaku ? { waktu: openSesiBerlaku.jam_masuk, status: openSesiBerlaku.status } : isDokter ? (todaySession.latest ? { waktu: todaySession.latest.jam_masuk, status: "" } : null) : masukNonDokter;
+  const pulang = openSesiBerlaku ? null : isDokter ? (todaySession.latest?.jam_pulang ? { waktu: todaySession.latest.jam_pulang } : null) : pulangNonDokter;
 
   return (
     <div>
@@ -68,6 +72,7 @@ export default function ClientPage() {
         todayLeave={todayLeave}
         isDokter={isDokter}
         openSession={openSession ? { tanggal: openSession.tanggal, tanggal_label: openSession.tanggal_label } : null}
+        sesiTerlupakan={sesiTerlupakan}
         loading={loadingToday}
       />
       {/* second top part */}

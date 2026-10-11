@@ -48,6 +48,16 @@ Flow **3 langkah**:
 
 Rute menggunakan param `type` (`masuk` / `pulang`).
 
+#### Lupa absen pulang (bintang 1)
+
+Bila user **absen masuk** tetapi **lupa absen pulang**, sesi tidak dibiarkan menggantung — backend menutupnya secara **otomatis** (dipicu saat user melakukan absen masuk pada hari berikutnya):
+
+- Sesi hari kerja sebelumnya yang `waktu_pulang`-nya masih kosong ditutup paksa oleh backend.
+- `waktu_pulang` diset mengikuti **jam pulang shift** yang berlaku untuk tanggal sesi tersebut (bila shift tidak memiliki jam pulang, fallback **jam masuk + 8 jam**).
+- Sesi otomatis tersebut mendapat **`bintang_pulang = 1`**, `status_pulang = "Tepat Waktu"`, dan catatan **"Lupa absen pulang – ditutup otomatis"**.
+
+Dari sisi frontend, tombol **Absen Pulang** di Dashboard hanya aktif ketika ada **sesi yang masih terbuka** (`pulangTerpilih = adaSesiTerbuka`). Bila sesi tersebut sudah **lewat jam pulang shift-nya** (terlupakan), tombol Absen Pulang **dimatikan** — user langsung absen masuk untuk shift berikutnya tanpa perlu pulang manual; backend menutup shift lama otomatis dengan `bintang_pulang = 1` dan muncul **toast** di halaman konfirmasi: *"Shift sebelumnya telah ditutup otomatis — bintang pulang 1."* Sesi yang masih berjalan (termasuk shift malam sebelum jam pulang, serta sesi pada tanggal yang sama) tetap bisa ditutup manual.
+
 ### 4. Absen Lembur (`/absen-lembur/:tipe`)
 
 Flow 3 langkah yang sama (Lokasi → Selfie → Konfirmasi) untuk absen **masuk** dan **pulang** lembur. Mengambil parameter `tanggal` dari query string (tanggal pengajuan lembur yang disetujui); jika tidak ada tanggal maka dikembalikan ke `/lembur`. Menggunakan:

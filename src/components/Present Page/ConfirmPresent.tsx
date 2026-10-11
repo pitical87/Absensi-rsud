@@ -41,6 +41,7 @@ export default function ConfirmPresent({
   const [submitting, setSubmitting] = useState(false);
 
   const tanggalShift = (location.state as { tanggal?: string } | null)?.tanggal;
+  const sesiTerlupakan = (location.state as { sesiTerlupakan?: boolean } | null)?.sesiTerlupakan ?? false;
   const tanggalShiftLabel = tanggalShift
     ? new Date(`${tanggalShift}T00:00:00`).toLocaleDateString("id-ID", {
         day: "numeric",
@@ -63,6 +64,11 @@ export default function ConfirmPresent({
       });
       if (res.sukses) {
         toast.success(res.pesan);
+        if (type === "masuk" && sesiTerlupakan) {
+          toast("Shift sebelumnya telah ditutup otomatis — bintang pulang 1.", {
+            duration: 6000,
+          });
+        }
         if (type === "masuk") {
           if (res.keterlambatan) {
             localStorage.setItem(

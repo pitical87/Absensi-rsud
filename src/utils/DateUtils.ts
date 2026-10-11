@@ -116,9 +116,7 @@ export function GetWeekDays(): WeekDay[] {
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const tanggal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-      d.getDate(),
-    ).padStart(2, "0")}`;
+    const tanggal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const hari = new Intl.DateTimeFormat("id-ID", { weekday: "short" }).format(d);
     const label = new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
@@ -127,4 +125,33 @@ export function GetWeekDays(): WeekDay[] {
     days.push({ tanggal, hari, label });
   }
   return days;
+}
+
+export function isSesiTerlupakan(
+  openSession: {
+    tanggal: string;
+    jam_masuk: string;
+  } | null,
+  shift:
+    | {
+        jam_masuk: string;
+        jam_pulang: string;
+      }
+    | null
+    | undefined,
+  todayKey: string = GetTodayKey(),
+): boolean {
+  if (!openSession) return false;
+  if (openSession.tanggal >= todayKey) return false; // sesi hari ini -> pulang manual tetap boleh
+  const jamPulang = shift?.jam_pulang;
+  const jamMasuk = jamPulang ? shift.jam_masuk : openSession.jam_masuk;
+  let expected: Date;
+  if (jamPulang) {
+    expected = new Date(`${openSession.tanggal}T${jamPulang}:00`);
+    if (jamPulang <= jamMasuk) expected.setDate(expected.getDate() + 1); // malam lintas hari
+  } else {
+    expected = new Date(`${openSession.tanggal}T${jamMasuk}:00`);
+    expected.setHours(expected.getHours() + 8);
+  }
+  return new Date().getTime() > expected.getTime();
 }
