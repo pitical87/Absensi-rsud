@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { FaSearch } from "react-icons/fa";
+import { FaCheck, FaSearch } from "react-icons/fa";
 import type { PegawaiJadwal } from "../../types/JadwalType";
 
 type Props = {
   isOpen: boolean;
   pegawai: PegawaiJadwal[];
   sudahAdaJadwal: Set<number>;
-  onPilih: (p: PegawaiJadwal) => void;
+  terpilihSebelumnya: number[];
+  onPilih: (p: PegawaiJadwal[]) => void;
   onTutup: () => void;
 };
 
@@ -14,12 +15,29 @@ export default function PegawaiPickerModal({
   isOpen,
   pegawai,
   sudahAdaJadwal,
+  terpilihSebelumnya,
   onPilih,
   onTutup,
 }: Props) {
   const [q, setQ] = useState("");
+  const [pilihan, setPilihan] = useState<number[]>(() => [
+    ...terpilihSebelumnya,
+  ]);
 
   if (!isOpen) return null;
+
+  const toggle = (id: number) => {
+    setPilihan((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const gunakan = () => {
+    const pegawaiPilihan = pilihan
+      .map((id) => pegawai.find((p) => p.id === id))
+      .filter((p): p is PegawaiJadwal => Boolean(p));
+    onPilih(pegawaiPilihan);
+  };
 
   const query = q.trim().toLowerCase();
   const hasil =
@@ -60,37 +78,61 @@ export default function PegawaiPickerModal({
             </p>
           ) : (
             <ul className="space-y-1.5">
-              {hasil.map((p) => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() => onPilih(p)}
-                    className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition hover:bg-blue-50 active:scale-[0.99]">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-800">
-                        {p.nama_lengkap}
-                      </p>
-                      {(p.unit_nama || p.sub_unit_nama) && (
-                        <p className="truncate text-xs text-gray-500">
-                          {p.sub_unit_nama
-                            ? `${p.unit_nama ?? ""} — ${p.sub_unit_nama}`
-                            : p.unit_nama}
+              {hasil.map((p) => {
+                const tercentang = pilihan.includes(p.id);
+                return (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggle(p.id)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition active:scale-[0.99] ${
+                        tercentang
+                          ? "border-blue-400 bg-blue-50"
+                          : "border-transparent hover:bg-blue-50"
+                      }`}>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-gray-800">
+                          {p.nama_lengkap}
                         </p>
-                      )}
-                    </div>
-                    {sudahAdaJadwal.has(p.id) && (
-                      <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-600">
-                        Sudah ada
+                        {(p.unit_nama || p.sub_unit_nama) && (
+                          <p className="truncate text-xs text-gray-500">
+                            {p.sub_unit_nama
+                              ? `${p.unit_nama ?? ""} — ${p.sub_unit_nama}`
+                              : p.unit_nama}
+                          </p>
+                        )}
+                      </div>
+                      <span className="flex shrink-0 items-center gap-2">
+                        {sudahAdaJadwal.has(p.id) && (
+                          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-600">
+                            Sudah ada
+                          </span>
+                        )}
+                        <span
+                          className={`flex h-5 w-5 items-center justify-center rounded-md border ${
+                            tercentang
+                              ? "border-blue-600 bg-blue-600 text-white"
+                              : "border-gray-300 bg-white text-transparent"
+                          }`}>
+                          <FaCheck className="text-[10px]" />
+                        </span>
                       </span>
-                    )}
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
 
-        <div className="border-t border-gray-100 p-4">
+        <div className="border-t border-gray-100 p-4 space-y-3">
+          <button
+            type="button"
+            onClick={gunakan}
+            disabled={pilihan.length === 0}
+            className="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500">
+            Gunakan ({pilihan.length} pegawai)
+          </button>
           <button
             type="button"
             onClick={onTutup}
