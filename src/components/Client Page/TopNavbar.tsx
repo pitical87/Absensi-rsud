@@ -49,16 +49,15 @@ export default function TopNavbar() {
       <section className="b-white flex items-center justify-between border-b border-gray-200 px-4 sm:px-5 py-4 bg-white">
         <div className="flex flex-col cursor-default">
           <Logo className="h-12 w-fit text-blue-600" />
-          <span className="text-sm text-gray-500">
-            {GetCurrentDateString()}
-          </span>
+          <span className="text-sm text-gray-500">{GetCurrentDateString()}</span>
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell />
           <button
             onClick={() => setShowMenu(true)}
             className="flex h-8 w-8 items-center text-sm justify-center rounded-full cursor-pointer
-                bg-blue-100 font-semibold text-blue-600">
+                bg-blue-100 font-semibold text-blue-600"
+          >
             {userInitials}
           </button>
         </div>
@@ -67,21 +66,14 @@ export default function TopNavbar() {
       {showMenu && (
         <>
           {/* Overlay */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowMenu(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
 
           {/* Dropdown */}
           <div className="absolute right-4 top-16 z-50 w-72 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
             {/* Header */}
             <div className="border-b border-gray-200 px-5 py-3">
-              <h2 className="text-xl font-bold text-gray-900">
-                {user?.nama_lengkap}
-              </h2>
-              <p className="mt-1 text-gray-500 text-sm">
-                {user?.unit_kerja?.nama}
-              </p>
+              <h2 className="text-xl font-bold text-gray-900">{user?.nama_lengkap}</h2>
+              <p className="mt-1 text-gray-500 text-sm">{user?.unit_kerja?.nama}</p>
             </div>
 
             {/* Menu */}
@@ -91,7 +83,8 @@ export default function TopNavbar() {
                 setShowMenu(false);
                 setShowModalRekap(true);
                 // navigate("/history")
-              }}>
+              }}
+            >
               Rekap Kehadiran
             </button>
 
@@ -99,9 +92,9 @@ export default function TopNavbar() {
               className="w-full border-b border-gray-200 px-5 py-3 text-left text-md transition-colors hover:bg-gray-50"
               onClick={() => {
                 setShowMenu(false);
-                setShowModalRekap(true);
                 navigate("/profile");
-              }}>
+              }}
+            >
               Profile
             </button>
 
@@ -110,7 +103,8 @@ export default function TopNavbar() {
               onClick={() => {
                 setShowMenu(false);
                 handleLogout();
-              }}>
+              }}
+            >
               Keluar
             </button>
           </div>
@@ -118,34 +112,14 @@ export default function TopNavbar() {
       )}
 
       {showModalRekap && (
-        <div
-          className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center"
-          onClick={() => setShowModalRekap(false)}>
-          <div
-            className="bg-white rounded-xl p-6 w-80 flex flex-col gap-4"
-            onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center" onClick={() => setShowModalRekap(false)}>
+          <div className="bg-white rounded-xl p-6 w-80 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-base font-medium m-0">Rekap Absensi</h2>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-gray-500">Bulan</label>
-              <select
-                value={bulan}
-                onChange={(e) => setBulan(Number(e.target.value))}
-                className="px-3 py-1.5 rounded-md border border-gray-300 text-sm">
-                {[
-                  "Januari",
-                  "Februari",
-                  "Maret",
-                  "April",
-                  "Mei",
-                  "Juni",
-                  "Juli",
-                  "Agustus",
-                  "September",
-                  "Oktober",
-                  "November",
-                  "Desember",
-                ].map((b, i) => (
+              <select value={bulan} onChange={(e) => setBulan(Number(e.target.value))} className="px-3 py-1.5 rounded-md border border-gray-300 text-sm">
+                {["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"].map((b, i) => (
                   <option key={i} value={i + 1}>
                     {b}
                   </option>
@@ -155,25 +129,14 @@ export default function TopNavbar() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-gray-500">Tahun</label>
-              <input
-                type="number"
-                value={tahun}
-                onChange={(e) => setTahun(Number(e.target.value))}
-                min={2020}
-                max={2099}
-                className="px-3 py-1.5 rounded-md border border-gray-300 text-sm"
-              />
+              <input type="number" value={tahun} onChange={(e) => setTahun(Number(e.target.value))} min={2020} max={2099} className="px-3 py-1.5 rounded-md border border-gray-300 text-sm" />
             </div>
 
             <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setShowModalRekap(false)}
-                className="px-4 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50">
+              <button onClick={() => setShowModalRekap(false)} className="px-4 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50">
                 Batal
               </button>
-              <button
-                onClick={handleCetakRekap}
-                className="px-4 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700">
+              <button onClick={handleCetakRekap} className="px-4 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700">
                 Cetak
               </button>
             </div>
