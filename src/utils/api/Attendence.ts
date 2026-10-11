@@ -1,12 +1,6 @@
 import api from "./client";
 
-export const absen = async (data: {
-  tipe: "datang" | "pulang";
-  lat: number;
-  lng: number;
-  akurasi?: number;
-  foto?: string;
-}) => {
+export const absen = async (data: { tipe: "datang" | "pulang"; lat: number; lng: number; akurasi?: number; foto?: string }) => {
   const response = await api.post("/absen", data);
   return response.data;
 };
@@ -26,10 +20,7 @@ export const getStatistic = async () => {
   return res.data;
 };
 
-export const getPerformaBulan = async (params?: {
-  bulan?: number;
-  tahun?: number;
-}) => {
+export const getPerformaBulan = async (params?: { bulan?: number; tahun?: number }) => {
   const res = await api.get("/performa/bulan", { params });
   return res.data;
 };
@@ -41,5 +32,10 @@ export const getJadwal = async () => {
 
 export const rekapAbsensi = async (bulan: number, tahun: number) => {
   const res = await api.get(`rekap?bulan=${bulan}&tahun=${tahun}`);
+  return res.data;
+};
+
+export const getJadwalBulanan = async (bulan: number, tahun: number) => {
+  const res = await api.get("/jadwal/bulanan", { params: { bulan, tahun } });
   return res.data;
 };

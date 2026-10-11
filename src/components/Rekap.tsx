@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
-import { rekapAbsensi } from "../utils/api/Attendence";
+import { getJadwalBulanan, rekapAbsensi } from "../utils/api/Attendence";
 
 type RekapResponse = {
   sukses: boolean;
@@ -49,6 +49,14 @@ type RekapResponse = {
   }[];
 };
 
+type JadwalBulananResponse = {
+  sukses: boolean;
+  data?: {
+    tanggal: string;
+    shift: { id: number; kategori: string } | null;
+  }[];
+};
+
 const STATUS_BADGE: Record<string, { cls: string; lbl: string }> = {
   "Tepat Waktu": { cls: "bg-green-50 text-green-700", lbl: "Tepat" },
   Terlambat: { cls: "bg-amber-50 text-amber-700", lbl: "Terlambat" },
@@ -62,20 +70,7 @@ const STATUS_BADGE: Record<string, { cls: string; lbl: string }> = {
   Alpa: { cls: "bg-red-50 text-red-700", lbl: "Alpa" },
 };
 
-const BULAN_ID = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
-];
+const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
 const fmtTanggal = (t: string) => {
   const d = new Date(t + "T00:00:00");
@@ -92,6 +87,8 @@ export default function Rekap() {
   const [data, setData] = useState<RekapResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [jadwalTersedia, setJadwalTersedia] = useState<Set<string>>(new Set());
+  const [punyaJadwal, setPunyaJadwal] = useState(false);
   const printed = useRef(false);
 
   useEffect(() => {
@@ -105,6 +102,18 @@ export default function Rekap() {
   }, [bulan, tahun]);
 
   useEffect(() => {
+    getJadwalBulanan(bulan, tahun)
+      .then((res: JadwalBulananResponse) => {
+        if (res.sukses && res.data) {
+          const tersedia = new Set(res.data.filter((j) => j.shift).map((j) => j.tanggal));
+          setJadwalTersedia(tersedia);
+          setPunyaJadwal(tersedia.size > 0);
+        }
+      })
+      .catch(() => {});
+  }, [bulan, tahun]);
+
+  useEffect(() => {
     if (!loading && data && !printed.current) {
       printed.current = true;
       const t = setTimeout(() => window.print(), 300);
@@ -114,22 +123,14 @@ export default function Rekap() {
 
   return (
     <div>
-      {loading && (
-        <div className="p-8 text-center text-sm text-gray-500">
-          Memuat data rekap...
-        </div>
-      )}
+      {loading && <div className="p-8 text-center text-sm text-gray-500">Memuat data rekap...</div>}
 
-      {error && (
-        <div className="p-8 text-center text-sm text-red-600">{error}</div>
-      )}
+      {error && <div className="p-8 text-center text-sm text-red-600">{error}</div>}
 
       {data && (
         <div className="p-4 print:p-0">
           <div className="print-break-avoid text-center border-b-2 border-gray-800 pb-3 mb-4">
-            <h1 className="text-lg font-bold">
-              PEMERINTAH DAERAH KABUPATEN MERAUKE
-            </h1>
+            <h1 className="text-lg font-bold">PEMERINTAH DAERAH KABUPATEN MERAUKE</h1>
             <h2 className="text-xl font-bold">RSUD MERAUKE</h2>
             <p className="text-xs text-gray-600">
               {user?.unit_kerja?.nama} • {user?.jabatan?.nama ?? user?.posisi}
@@ -154,12 +155,8 @@ export default function Rekap() {
               { val: data.ringkasan.libur, lbl: "Libur" },
               { val: data.ringkasan.alpa, lbl: "Alpa" },
             ].map((s) => (
-              <div
-                key={s.lbl}
-                className="border border-gray-200 rounded-lg px-2 py-2 text-center print-break-avoid">
-                <div className="text-lg font-semibold leading-none">
-                  {s.val}
-                </div>
+              <div key={s.lbl} className="border border-gray-200 rounded-lg px-2 py-2 text-center print-break-avoid">
+                <div className="text-lg font-semibold leading-none">{s.val}</div>
                 <div className="text-[11px] text-gray-500 mt-1">{s.lbl}</div>
               </div>
             ))}
@@ -173,13 +170,11 @@ export default function Rekap() {
               Target: <strong>{data.periode.hari_efektif} hari</strong>
             </span>
             <span>
-              Total jam kerja:{" "}
-              <strong>{data.ringkasan.total_jam_kerja} jam</strong>
+              Total jam kerja: <strong>{data.ringkasan.total_jam_kerja} jam</strong>
             </span>
             {data.ringkasan.bintang_bulanan !== null && (
               <span>
-                Bintang bulanan:{" "}
-                <strong>{data.ringkasan.bintang_bulanan}</strong>
+                Bintang bulanan: <strong>{data.ringkasan.bintang_bulanan}</strong>
               </span>
             )}
           </div>
@@ -188,30 +183,14 @@ export default function Rekap() {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
-                    Tanggal
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
-                    Hari
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
-                    Masuk
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">
-                    Pulang
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">
-                    Telat (mnt)
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">
-                    Jam Kerja
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">
-                    Bintang
-                  </th>
-                  <th className="border border-gray-200 px-2 py-1.5 text-center font-medium">
-                    Status
-                  </th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">Tanggal</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">Hari</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">Masuk</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-left font-medium">Pulang</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">Telat (mnt)</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">Jam Kerja</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-right font-medium">Bintang</th>
+                  <th className="border border-gray-200 px-2 py-1.5 text-center font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,34 +199,18 @@ export default function Rekap() {
                     cls: "bg-gray-100 text-gray-600",
                     lbl: r.status,
                   };
+                  const tanpaJadwal = r.status === "Alpa" && punyaJadwal && !jadwalTersedia.has(r.tanggal);
                   return (
-                    <tr key={r.tanggal} className="print-break-avoid">
-                      <td className="border border-gray-200 px-2 py-1.5">
-                        {fmtTanggal(r.tanggal)}
-                      </td>
-                      <td className="border border-gray-200 px-2 py-1.5">
-                        {r.hari}
-                      </td>
-                      <td className="border border-gray-200 px-2 py-1.5">
-                        {r.jam_masuk ?? "—"}
-                      </td>
-                      <td className="border border-gray-200 px-2 py-1.5">
-                        {r.jam_pulang ?? "—"}
-                      </td>
-                      <td className="border border-gray-200 px-2 py-1.5 text-right">
-                        {r.menit_telat > 0 ? r.menit_telat : "0"}
-                      </td>
-                      <td className="border border-gray-200 px-2 py-1.5 text-right">
-                        {r.total_jam_kerja ?? "—"}
-                      </td>
-                      <td className="border border-gray-200 px-2 py-1.5 text-right">
-                        {r.bintang_harian ?? "—"}
-                      </td>
+                    <tr key={r.tanggal} className={`print-break-avoid ${tanpaJadwal ? "bg-red-500 text-white print:bg-red-500 print:text-white" : ""}`}>
+                      <td className="border border-gray-200 px-2 py-1.5">{fmtTanggal(r.tanggal)}</td>
+                      <td className="border border-gray-200 px-2 py-1.5">{r.hari}</td>
+                      <td className="border border-gray-200 px-2 py-1.5">{r.jam_masuk ?? "—"}</td>
+                      <td className="border border-gray-200 px-2 py-1.5">{r.jam_pulang ?? "—"}</td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-right">{r.menit_telat > 0 ? r.menit_telat : "0"}</td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-right">{r.total_jam_kerja ?? "—"}</td>
+                      <td className="border border-gray-200 px-2 py-1.5 text-right">{r.bintang_harian ?? "—"}</td>
                       <td className="border border-gray-200 px-2 py-1.5 text-center">
-                        <span
-                          className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${badge.cls}`}>
-                          {badge.lbl}
-                        </span>
+                        {tanpaJadwal ? <span className="text-[11px] font-medium">Libur</span> : <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${badge.cls}`}>{badge.lbl}</span>}
                       </td>
                     </tr>
                   );
