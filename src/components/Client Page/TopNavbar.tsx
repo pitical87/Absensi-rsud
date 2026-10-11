@@ -1,4 +1,4 @@
-import { GetCurrentDateString } from "../../utils/DateUtils";
+﻿import { GetCurrentDateString } from "../../utils/DateUtils";
 import NotificationBell from "../NotificationBell";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -46,7 +46,7 @@ export default function TopNavbar() {
 
   return (
     <div className="relative">
-      <section className="b-white flex items-center justify-between border-b border-gray-200 px-4 sm:px-5 py-4 bg-white">
+      <section className="b-white flex items-center justify-between border-b border-gray-200 px-4 sm:px-5 py-4 bg-white fixed top-0 left-0 right-0 z-50 md:relative">
         <div className="flex flex-col cursor-default">
           <Logo className="h-12 w-fit text-blue-600" />
           <span className="text-sm text-gray-500">{GetCurrentDateString()}</span>
@@ -62,6 +62,7 @@ export default function TopNavbar() {
           </button>
         </div>
       </section>
+      <div className="h-16 md:h-0" />
 
       {showMenu && (
         <>
