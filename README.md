@@ -274,6 +274,21 @@ Cek manual: buka dashboard dan amati tab **Network** — `/riwayat` & `/status` 
 
 ---
 
+## Lighthouse
+
+Skor **Lighthouse** (audit performa web) pada halaman utama — perbandingan sebelum dan sesudah optimasi:
+
+| Metrik              | Before | After |
+| ------------------- | ------ | ----- |
+| Performance         | 65     | 97    |
+| Accessibility       | 86     | 90    |
+| Best Practices      | 96     | 100   |
+| SEO                 | 82     | 82    |
+
+Peningkatan paling besar ada pada **Performance** (65 → 97) berkat pengurangan ukuran bundle utama, dedup & cache request, dan penghentian polling saat tab tidak aktif. **SEO** tidak berubah (82) karena basis halaman SPA murni tanpa rendering sisi server — bukan fokus optimasi ini.
+
+---
+
 ## Catatan
 
 - Frontend ini bergantung pada `backend-absensi` (Laravel) untuk seluruh endpoint `/api/mobile`. Tanpa backend yang berjalan, login dan seluruh fitur tidak berfungsi.
