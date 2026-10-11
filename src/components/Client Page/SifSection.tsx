@@ -164,121 +164,102 @@ export default function SifSection() {
           </div>
         </div>
       </div>
-      {/* izin */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">Tidak bisa hadir ?</h3>
-          </div>
+      {/* Pengajuan */}
+      <section className="w-full rounded-2xl border border-gray-200 bg-white p-3">
+        <div className="flex flex-col gap-3">
+          <h3 className="text-base font-semibold text-gray-900">Pengajuan</h3>
 
-          <button
-            onClick={() => navigate("/izin")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto"
-          >
-            <HiOutlineDocumentText size={20} />
-            Ajukan Izin
-          </button>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => navigate("/izin")}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100"
+            >
+              <HiOutlineDocumentText size={20} />
+              <span>Izin/Cuti</span>
+            </button>
+
+            <button
+              onClick={() => navigate("/lembur")}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100"
+            >
+              <BiTimeFive size={20} />
+              <span>Lembur</span>
+            </button>
+
+            <button
+              onClick={() => navigate("/ubah-jadwal")}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-3 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100"
+            >
+              <BiCalendarEdit size={20} />
+              <span>Perubahan Shift</span>
+            </button>
+          </div>
         </div>
       </section>
-      {/* lembur */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">Lembur di luar jam kerja ?</h3>
-          </div>
+      {/* Persetujuan & pengelolaan*/}
+      <section className="w-full rounded-2xl border border-gray-200 bg-white p-3">
+        <div className="flex flex-col gap-3">
+          <h3 className="text-base font-semibold text-gray-900">Persetujuan & Pengelolaan</h3>
 
-          <button onClick={() => navigate("/lembur")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto">
-            <BiTimeFive size={20} />
-            Ajukan Lembur
-          </button>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {can("jadwal.kelola") && (
+              <button
+                onClick={() => navigate("/kelola-jadwal")}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-2 py-3 text-sm font-medium text-sky-600 transition hover:bg-sky-100"
+              >
+                <BiCalendarWeek size={20} />
+                <span>Kelola Jadwal</span>
+                {!loadingIzin && totalPending > 0 && <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">{totalPending}</span>}
+              </button>
+            )}
+
+            {can("approve.izin") && (
+              <button
+                onClick={() => navigate("/persetujuan")}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100"
+              >
+                <FaFileCircleCheck size={20} />
+                <span>Izin</span>
+                {!loadingIzin && totalPending > 0 && (
+                  <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                    {totalPending}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {can("approve.lembur") && (
+              <button
+                onClick={() => navigate("/persetujuan-lembur")}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100"
+              >
+                <FaFileCircleCheck size={20} />
+                <span>Lembur</span>
+                {!loadingLembur && totalLemburPending > 0 && (
+                  <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                    {totalLemburPending}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {can("approve.jadwal") && (
+              <button
+                onClick={() => navigate("/persetujuan-jadwal")}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-3 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100"
+              >
+                <FaFileCircleCheck size={20} />
+                <span>Perubahan Jadwal</span>
+                {!loadingJadwal && totalJadwalPending > 0 && (
+                  <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                    {totalJadwalPending}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </section>
-      {/* ubah jadwal */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">Perlu ubah / tukar shift ?</h3>
-          </div>
-
-          <button
-            onClick={() => navigate("/ubah-jadwal")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto"
-          >
-            <BiCalendarEdit size={20} />
-            Ajukan Perubahan
-          </button>
-        </div>
-      </section>
-      {can("jadwal.kelola") && (
-        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-gray-900">Kelola & buat jadwal shift pegawai ?</h3>
-            </div>
-
-            <button
-              onClick={() => navigate("/kelola-jadwal")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-600 transition hover:bg-sky-100 sm:w-auto"
-            >
-              <BiCalendarWeek size={20} />
-              Kelola Jadwal
-            </button>
-          </div>
-        </section>
-      )}
-      {can("approve.izin") && (
-        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-gray-900">{loadingIzin ? <Skeleton className="h-5 w-56" /> : totalPending > 0 ? `Ada ${totalPending} pengajuan yang menunggu!` : "tidak ada pengajuan"}</h3>
-            </div>
-
-            <button
-              onClick={() => navigate("/persetujuan")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-600 transition hover:bg-orange-100 sm:w-auto"
-            >
-              <FaFileCircleCheck size={20} />
-              Persetujuan
-            </button>
-          </div>
-        </section>
-      )}
-      {can("approve.lembur") && (
-        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-gray-900">{loadingLembur ? <Skeleton className="h-5 w-56" /> : totalLemburPending > 0 ? `Ada ${totalLemburPending} lembur yang menunggu!` : "tidak ada pengajuan lembur"}</h3>
-            </div>
-
-            <button
-              onClick={() => navigate("/persetujuan-lembur")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-100 sm:w-auto"
-            >
-              <FaFileCircleCheck size={20} />
-              Persetujuan Lembur
-            </button>
-          </div>
-        </section>
-      )}
-      {can("approve.jadwal") && (
-        <section className="rounded-2xl border border-gray-200 bg-white p-3 w-full">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-gray-900">
-                {loadingJadwal ? <Skeleton className="h-5 w-56" /> : totalJadwalPending > 0 ? `Ada ${totalJadwalPending} ubah jadwal yang menunggu!` : "tidak ada pengajuan ubah jadwal"}
-              </h3>
-            </div>
-
-            <button
-              onClick={() => navigate("/persetujuan-jadwal")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 sm:w-auto"
-            >
-              <FaFileCircleCheck size={20} />
-              Persetujuan Jadwal
-            </button>
-          </div>
-        </section>
-      )}
     </section>
   );
 }
