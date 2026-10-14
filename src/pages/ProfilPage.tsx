@@ -145,12 +145,6 @@ export default function ProfilPage() {
       className="px-6 py-2 flex flex-col gap-4"
       style={{ paddingBottom: "80px" }}>
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="w-8 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
-          <IoArrowBack />
-        </button>
         <div>
           <h1 className="text-lg font-semibold text-gray-800">Profil Saya</h1>
           <p className="text-sm text-gray-500">
@@ -173,6 +167,12 @@ export default function ProfilPage() {
             <MdCancel />
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
+          <IoArrowBack />
+        </button>
       </div>
 
       <div className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 text-white shadow-sm">

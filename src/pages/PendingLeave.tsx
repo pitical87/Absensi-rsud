@@ -175,14 +175,6 @@ export default function PendingLeave() {
     <>
       {/* Navbar */}
       <TopNavbar />
-      <section className="flex items-center gap-3 border-b border-gray-200 bg-white px-5 py-4">
-        <button
-          onClick={() => navigate("/")}
-          className="rounded-xl p-2 transition hover:bg-gray-100">
-          <IoArrowBack className="text-xl text-gray-700" />
-        </button>
-        <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
-      </section>
 
       <div className="space-y-6 p-5">
         {/* Loading */}
@@ -194,6 +186,17 @@ export default function PendingLeave() {
 
         {!loading && (
           <>
+            <section className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4">
+              <h1 className="text-lg font-bold text-gray-900">
+                Persetujuan Izin
+              </h1>
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
+                <IoArrowBack />
+              </button>
+            </section>
             {/* ===== SECTION: Menunggu Persetujuan ===== */}
             <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
               <div className="flex items-start justify-between gap-4">

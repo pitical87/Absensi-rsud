@@ -110,9 +110,11 @@ export default function PersetujuanPerubahanJadwal() {
       setDaftar((prev) => prev.filter((i) => i.id !== id));
       refetch();
     } catch (err: unknown) {
-      const pesan = (err as {
-        response?: { data?: { pesan?: string } };
-      })?.response?.data?.pesan;
+      const pesan = (
+        err as {
+          response?: { data?: { pesan?: string } };
+        }
+      )?.response?.data?.pesan;
       toast.error(pesan || "Gagal memproses pengajuan.");
     } finally {
       setSubmittingId(null);
@@ -122,18 +124,19 @@ export default function PersetujuanPerubahanJadwal() {
   return (
     <>
       <TopNavbar />
-      <section className="flex items-center gap-3 border-b border-gray-200 bg-white px-5 py-4">
-        <button
-          onClick={() => navigate("/")}
-          className="rounded-xl p-2 transition hover:bg-gray-100">
-          <IoArrowBack className="text-xl text-gray-700" />
-        </button>
-        <h1 className="text-lg font-bold text-gray-900">
-          Persetujuan Perubahan Jadwal
-        </h1>
-      </section>
 
       <div className="space-y-6 p-5">
+        <section className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4">
+          <h1 className="text-lg font-bold text-gray-900">
+            Persetujuan Perubahan Jadwal
+          </h1>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
+            <IoArrowBack />
+          </button>
+        </section>
         {loading && (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />

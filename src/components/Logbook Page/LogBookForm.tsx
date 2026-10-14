@@ -71,14 +71,7 @@ export default function LogBookForm({ onSaved }: { onSaved: () => void }) {
         <button
           type="button"
           onClick={() => navigate("/")}
-          title="Kembali"
-          className="
-    flex h-10 w-10 shrink-0 items-center justify-center
-    rounded-2xl bg-gray-100 text-gray-600
-    transition-all duration-200
-    hover:bg-gray-200
-    active:scale-95
-  "
+          className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0"
         >
           <IoArrowBack />
         </button>
