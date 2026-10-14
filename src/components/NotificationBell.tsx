@@ -4,6 +4,12 @@ import { FiCheckCircle } from "react-icons/fi";
 import { useNavigate } from "react-router";
 import useNotifications from "../hooks/useNotifications";
 import type { NotifikasiItem, NotifikasiTipe } from "../types/NotifikasiType";
+import { mapNotifUrl } from "../utils/NotifUrl";
+import {
+  dukungNotifikasiOs,
+  izinNotifikasi,
+  tampilkanNotifikasi,
+} from "../utils/OsNotification";
 
 const WARNA_TIPE: Record<NotifikasiTipe, string> = {
   info: "bg-blue-500",
@@ -11,22 +17,6 @@ const WARNA_TIPE: Record<NotifikasiTipe, string> = {
   danger: "bg-red-500",
   success: "bg-emerald-500",
 };
-
-function mapNotifUrl(item: NotifikasiItem): string | null {
-  if (item.kategori === "password") return "/profile";
-
-  const url = item.url;
-  if (!url || url.startsWith("admin/")) return null;
-  if (url === "lembur") return "/lembur";
-  if (url === "ubah-jadwal") return "/ubah-jadwal";
-  if (url === "persetujuan") {
-    const teks = item.isi.toLowerCase();
-    if (teks.includes("lembur")) return "/persetujuan-lembur";
-    if (teks.includes("jadwal")) return "/persetujuan-jadwal";
-    return "/persetujuan";
-  }
-  return url.startsWith("/") ? url : `/${url}`;
-}
 
 function waktuRelatif(iso: string): string {
   const t = new Date(iso).getTime();
@@ -47,6 +37,21 @@ export default function NotificationBell() {
   const { items, unreadCount, loading, markRead, markAllRead } =
     useNotifications();
   const [open, setOpen] = useState(false);
+  const [izin, setIzin] = useState<NotificationPermission | null>(
+    dukungNotifikasiOs() ? Notification.permission : null,
+  );
+
+  const aktifkanNotifikasi = async () => {
+    const hasil = await izinNotifikasi();
+    setIzin(hasil);
+    if (hasil === "granted") {
+      await tampilkanNotifikasi(
+        "Notifikasi aktif",
+        "Anda akan menerima notifikasi di perangkat ini",
+        "/",
+      );
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +91,9 @@ export default function NotificationBell() {
           <div className="absolute right-0 top-11 z-50 w-72 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-gray-900">Notifikasi</h2>
+                <h2 className="text-base font-bold text-gray-900">
+                  Notifikasi
+                </h2>
                 {unreadCount > 0 && (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
                     {unreadCount} baru
@@ -103,6 +110,16 @@ export default function NotificationBell() {
                 </button>
               )}
             </div>
+
+            {izin === "default" && (
+              <button
+                type="button"
+                onClick={aktifkanNotifikasi}
+                className="flex w-full items-center justify-center gap-2 border-b border-gray-200 bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100">
+                <IoIosNotificationsOutline size={16} />
+                Aktifkan notifikasi HP
+              </button>
+            )}
 
             <div className="max-h-80 divide-y divide-gray-100 overflow-y-auto">
               {loading && items.length === 0 ? (

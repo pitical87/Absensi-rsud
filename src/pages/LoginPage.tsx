@@ -28,7 +28,7 @@ export default function LoginPage() {
       const res = await login(email, pass);
       setUser(res.user);
       setLokasi(res.lokasi);
-      // console.log(isDokter);
+      console.log(res.user);
       navigate("/");
     } catch (err: unknown) {
       const pesan = (err as ApiErrorShape).response?.data?.pesan;

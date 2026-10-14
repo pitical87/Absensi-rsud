@@ -1,12 +1,23 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { me as fetchMe, logout as apiLogout } from "../utils/api/Authentication";
+import {
+  me as fetchMe,
+  logout as apiLogout,
+} from "../utils/api/Authentication";
 import { useNavigate } from "react-router";
-import { AuthContext, type AuthContextType, type Lokasi, type Permission, type User } from "./AuthContext";
+import {
+  AuthContext,
+  type AuthContextType,
+  type Lokasi,
+  type Permission,
+  type User,
+} from "./AuthContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [lokasi, setLokasi] = useState<Lokasi | null>(null);
-  const [loading, setLoading] = useState(() => window.location.pathname !== "/login");
+  const [loading, setLoading] = useState(
+    () => window.location.pathname !== "/login",
+  );
   const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
 
   const can = useCallback(

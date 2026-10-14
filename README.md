@@ -42,6 +42,7 @@ Disusun dari beberapa seksi:
 ### 3. Absensi Masuk / Pulang (`/present/:type`)
 
 Flow **3 langkah**:
+
 1. **Lokasi** (`ValidateLocation`) — deteksi GPS, hitung jarak ke titik instansi dengan rumus Haversine, tampilkan posisi di peta Leaflet; hanya lanjut jika jarak ≤ radius maksimum.
 2. **Selfie** (`ValidateSelfie`) — ambil foto dari kamera depan via `getUserMedia`.
 3. **Konfirmasi** (`ConfirmPresent`) — kirim `POST /api/mobile/absen` (tipe `datang`/`pulang`, lat/lng, akurasi, foto) lalu tampilkan hasil (status, menit terlambat, bintang).
@@ -56,11 +57,24 @@ Bila user **absen masuk** tetapi **lupa absen pulang**, sesi tidak dibiarkan men
 - `waktu_pulang` diset mengikuti **jam pulang shift** yang berlaku untuk tanggal sesi tersebut (bila shift tidak memiliki jam pulang, fallback **jam masuk + 8 jam**).
 - Sesi otomatis tersebut mendapat **`bintang_pulang = 1`**, `status_pulang = "Tepat Waktu"`, dan catatan **"Lupa absen pulang – ditutup otomatis"**.
 
-Dari sisi frontend, tombol **Absen Pulang** di Dashboard hanya aktif ketika ada **sesi yang masih terbuka** (`pulangTerpilih = adaSesiTerbuka`). Bila sesi tersebut sudah **lewat jam pulang shift-nya** (terlupakan), tombol Absen Pulang **dimatikan** — user langsung absen masuk untuk shift berikutnya tanpa perlu pulang manual; backend menutup shift lama otomatis dengan `bintang_pulang = 1` dan muncul **toast** di halaman konfirmasi: *"Shift sebelumnya telah ditutup otomatis — bintang pulang 1."* Sesi yang masih berjalan (termasuk shift malam sebelum jam pulang, serta sesi pada tanggal yang sama) tetap bisa ditutup manual.
+Dari sisi frontend, tombol **Absen Pulang** di Dashboard hanya aktif ketika ada **sesi yang masih terbuka** (`pulangTerpilih = adaSesiTerbuka`). Penilaian "terlupakan" dilakukan terhadap **shift pada tanggal sesi itu** (`openSession.tanggal`) — bukan shift hari ini — melalui hook `useSessionShift` yang mengambil jadwal dari `GET /api/mobile/jadwal/bulanan`. Bila sesi tersebut sudah **lewat jam pulang shift-nya** (terlupakan), tombol Absen Pulang **dimatikan** — user langsung absen masuk untuk shift berikutnya tanpa perlu pulang manual; backend menutup shift lama otomatis dengan `bintang_pulang = 1` dan muncul **toast** di halaman konfirmasi: _"Shift sebelumnya telah ditutup otomatis — bintang pulang 1."_ Sesi yang masih berjalan (termasuk shift malam, serta sesi pada tanggal yang sama) tetap bisa ditutup manual.
+
+#### Shift lintas hari (malam)
+
+Shift yang **lintas hari** (mis. masuk `21:00`, pulang `08:00` besoknya) tidak dianggap terlupakan, sehingga tombol **Absen Pulang** tetap aktif sepanjang sesi sampai user benar-benar absen pulang — walaupun tanggal sudah berganti.
+
+- Deteksi lintas hari (`isShiftLintasHari` di `src/utils/DateUtils.ts`) memakai **tiga jalur berurutan**:
+  1. flag `lintas_hari` dari backend (bila tersedia);
+  2. `jam_pulang <= jam_masuk` (jam pulang melewati tengah malam);
+  3. `kategori === "Malam"`.
+- Bila jadwal pada tanggal sesi **tidak diketahui** (mis. shift belum diatur), tombol pulang dibiarkan **aktif** (permissive) agar tidak salah mengunci.
+- Saat sesi terbuka terdeteksi sebagai shift kemarin yang lintas hari, muncul **keterangan** (box indigo dengan ikon bulan) di atas tombol absen: _"Absen saat ini adalah shift kemarin yang lintas hari. Absen pulang tetap tersedia hingga 4 jam setelah shift berakhir."_
+- Untuk sesi hari ini, atau saat `useSessionShift` masih memuat, sesi **tidak** ditandai terlupakan (tombol tidak pernah terkunci keliru).
 
 ### 4. Absen Lembur (`/absen-lembur/:tipe`)
 
 Flow 3 langkah yang sama (Lokasi → Selfie → Konfirmasi) untuk absen **masuk** dan **pulang** lembur. Mengambil parameter `tanggal` dari query string (tanggal pengajuan lembur yang disetujui); jika tidak ada tanggal maka dikembalikan ke `/lembur`. Menggunakan:
+
 - `POST /api/mobile/absen-lembur` — absen masuk lembur
 - `PUT /api/mobile/absen-lembur/pulang` — absen pulang lembur
 - `GET /api/mobile/absen-lembur/status?tanggal=...` — status absen lembur hari itu
@@ -68,6 +82,7 @@ Flow 3 langkah yang sama (Lokasi → Selfie → Konfirmasi) untuk absen **masuk*
 ### 5. Izin / Sakit / Cuti / Dinas Luar (`/izin`)
 
 Form pengajuan:
+
 - **Jenis pengajuan**: Izin, Sakit, Dinas Luar — serta **Cuti** (hanya tampil untuk pegawai berstatus **PNS**), dilengkapi pilihan jenis cuti (Tahunan, Sakit, Melahirkan, dsb.).
 - **Tanggal** mulai (wajib) dan selesai (opsional, otomatis dikoreksi agar tidak mendahului tanggal mulai), **alamat** (wajib untuk Izin & Cuti), **alasan/keperluan** (wajib), dan **lampiran** (PDF/JPG/PNG) dengan pratinjau gambar.
 - Validasi dengan `react-hook-form`; pengiriman `multipart/form-data` ke `POST /api/mobile/izin`.
@@ -79,6 +94,7 @@ API: `GET /api/mobile/izin` (riwayat), `POST /api/mobile/izin`, `DELETE /api/mob
 ### 6. Persetujuan Izin (`/persetujuan`)
 
 Untuk pengguna dengan posisi yang terlibat dalam alur persetujuan:
+
 - **Menunggu Persetujuan Saya** — daftar pengajuan dengan tahap aktif, data pemohon (nama, NIP, unit), jenis, rentang tanggal, lama hari kerja, alamat, alasan + lampiran; persetuju dapat menulis **catatan** lalu **Setujui / Tolak** (dengan modal konfirmasi).
 - **Riwayat Keputusan Saya** — daftar keputusan yang pernah diambil beserta putusan, catatan, dan waktunya.
 
@@ -104,10 +120,12 @@ API: `GET /api/mobile/lembur/menunggu`, `GET /api/mobile/lembur/riwayat-persetuj
 Halaman dengan **2 tab**:
 
 #### a. Entri Manual
+
 - **LogBookForm** — formulir multi-baris (tambah/hapus baris). Setiap baris berisi tanggal, jam (HH:MM), dan isi aktivitas. Simpan bulk ke `POST /api/mobile/logbook/simpan-bulk` (maks 100 entri/request, isi maks 1000 karakter). Memiliki **Template**: buka modal (`LogBookTemplateModal`) untuk menyimpan, mengubah, menghapus, dan menerapkan template ke baris form.
 - **LogBookRiwayat** — riwayat entri dengan pencarian teks, filter bulan & tahun, tombol **edit** dan **hapus** (entri yang **sudah diverifikasi** tidak dapat diubah/dihapus). API: `GET /api/mobile/logbook`, `POST /api/mobile/logbook/ubah`, `DELETE /api/mobile/logbook/{id}`, `GET/POST/DELETE /api/mobile/logbook/template...`.
 
 #### b. Ambil dari SIMRS
+
 - Mengambil aktivitas kerja dari **sistem SIMRS** untuk tanggal yang dipilih secara massal lalu mengimpornya ke logbook.
 - Pilihan **jenis data**: Gabungan (Tindakan & Laboratorium), Tindakan, atau Lab.
 - Rentang tanggal default **7 hari terakhir**, ada preset cepat **7 hari** dan **bulan ini**; bisa diatur manual `dari`–`sampai`.
@@ -119,18 +137,18 @@ Halaman dengan **2 tab**:
 
 ## Route
 
-| Path                  | Halaman                                              | Proteksi     |
-| --------------------- | ---------------------------------------------------- | ------------ |
-| `/login`              | Halaman login (SIMARO)                               | Guest only   |
-| `/register`           | Halaman registrasi pegawai baru                      | Guest only   |
-| `/`                   | Dashboard beranda                                    | Login        |
-| `/present/:type`      | Flow absen masuk/pulang (`type` = `masuk`/`pulang`)  | Login        |
-| `/izin/`              | Ajukan izin/sakit/cuti/dinas luar + riwayat          | Login        |
-| `/persetujuan`        | Persetujuan izin (menunggu + riwayat keputusan)      | Login        |
-| `/lembur`             | Ajukan lembur + absen lembur + riwayat               | Login        |
-| `/absen-lembur/:tipe` | Absen lembur masuk/pulang (`tipe` = `masuk`/`pulang`) | Login        |
-| `/persetujuan-lembur` | Persetujuan lembur (menunggu + riwayat keputusan)    | Login        |
-| `/logbook`            | Logbook — tab Entri Manual & Ambil dari SIMRS        | Login        |
+| Path                  | Halaman                                               | Proteksi   |
+| --------------------- | ----------------------------------------------------- | ---------- |
+| `/login`              | Halaman login (SIMARO)                                | Guest only |
+| `/register`           | Halaman registrasi pegawai baru                       | Guest only |
+| `/`                   | Dashboard beranda                                     | Login      |
+| `/present/:type`      | Flow absen masuk/pulang (`type` = `masuk`/`pulang`)   | Login      |
+| `/izin/`              | Ajukan izin/sakit/cuti/dinas luar + riwayat           | Login      |
+| `/persetujuan`        | Persetujuan izin (menunggu + riwayat keputusan)       | Login      |
+| `/lembur`             | Ajukan lembur + absen lembur + riwayat                | Login      |
+| `/absen-lembur/:tipe` | Absen lembur masuk/pulang (`tipe` = `masuk`/`pulang`) | Login      |
+| `/persetujuan-lembur` | Persetujuan lembur (menunggu + riwayat keputusan)     | Login      |
+| `/logbook`            | Logbook — tab Entri Manual & Ambil dari SIMRS         | Login      |
 
 Router di `src/routes/AppRoutes.tsx`: rute publik dibungkus `GuestRoute`, rute ber-login dibungkus `ProtectedRoutes`. `ProtectedRoutes` mengandalkan `AuthContext` (token cookie `auth_token`; saat menerima 401, otomatis dialihkan ke `/login`).
 
@@ -167,6 +185,7 @@ src/
 ├── hooks/
 │   ├── useTodaySession.ts     # Multi-sesi absen dokter hari ini
 │   ├── useOpenSession.ts      # Sesi absen yang masih terbuka
+│   ├── useSessionShift.ts     # Shift pada tanggal sesi terbuka (jadwal/bulanan)
 │   ├── useSharedQuery.ts      # Dedup + cache request bersama (riwayat/status)
 │   ├── useLoading.ts
 ├── routes/
@@ -181,7 +200,7 @@ src/
 │   │   ├── Lembur.ts          # lembur + absen lembur
 │   │   └── LogBook.ts         # logbook + template + SIMRS
 │   ├── GeoLocation.ts         # Haversine, target koordinat, radius
-│   ├── DateUtils.ts           # Sapaan & format tanggal
+│   ├── DateUtils.ts           # Sapaan, format tanggal, isSesiTerlupakan/isShiftLintasHari
 │   ├── LogBookHelpers.ts      # Bantuan entri logbook
 │   └── Storage.ts
 ```
@@ -229,7 +248,7 @@ VITE_API_URL=http://localhost:8000   # URL backend Laravel (proxy dev & arah bui
 
 ## Optimasi Performa
 
-Perubahan berikut diterapkan untuk mempercepat *time-to-interactive*, mengurangi beban server, dan menghemat sumber daya perangkat.
+Perubahan berikut diterapkan untuk mempercepat _time-to-interactive_, mengurangi beban server, dan menghemat sumber daya perangkat.
 
 ### 1. Code-splitting vendor (`vite.config.ts`)
 
@@ -240,7 +259,7 @@ Dengan `manualChunks`, library `node_modules` dipisah ke chunk tersendiri (`reac
 
 ### 2. Dedup & cache request dashboard (`src/hooks/useSharedQuery.ts`)
 
-Hook `useSharedQuery` melakukan *single-flight* (beberapa komponen memakai **satu promise fetch** yang sama) dan *time-based cache* (TTL 5 detik).
+Hook `useSharedQuery` melakukan _single-flight_ (beberapa komponen memakai **satu promise fetch** yang sama) dan _time-based cache_ (TTL 5 detik).
 
 - Sebelum: buka dashboard memicu `/riwayat` **3×** (useOpenSession, useTodaySession, RecentPresents) dan `/status` **2×** (ClientPage, PresentStatistic).
 - Sesudah: `useOpenSession`, `useTodaySession`, dan `RecentPresents` berbagi key `"riwayat"`; `ClientPage` dan `PresentStatistic` berbagi key `"status"`. Navigasi cepat (masuk halaman lain lalu balik) juga tidak perlu fetch ulang selama cache belum kedaluwarsa.
@@ -278,12 +297,12 @@ Cek manual: buka dashboard dan amati tab **Network** — `/riwayat` & `/status` 
 
 Skor **Lighthouse** (audit performa web) pada halaman utama — perbandingan sebelum dan sesudah optimasi:
 
-| Metrik              | Before | After |
-| ------------------- | ------ | ----- |
-| Performance         | 65     | 97    |
-| Accessibility       | 86     | 90    |
-| Best Practices      | 96     | 100   |
-| SEO                 | 82     | 82    |
+| Metrik         | Before | After |
+| -------------- | ------ | ----- |
+| Performance    | 65     | 97    |
+| Accessibility  | 86     | 90    |
+| Best Practices | 96     | 100   |
+| SEO            | 82     | 82    |
 
 Peningkatan paling besar ada pada **Performance** (65 → 97) berkat pengurangan ukuran bundle utama, dedup & cache request, dan penghentian polling saat tab tidak aktif. **SEO** tidak berubah (82) karena basis halaman SPA murni tanpa rendering sisi server — bukan fokus optimasi ini.
 
@@ -292,4 +311,5 @@ Peningkatan paling besar ada pada **Performance** (65 → 97) berkat pengurangan
 ## Catatan
 
 - Frontend ini bergantung pada `backend-absensi` (Laravel) untuk seluruh endpoint `/api/mobile`. Tanpa backend yang berjalan, login dan seluruh fitur tidak berfungsi.
+- `GET /api/mobile/jadwal/bulanan` dan `/me` tidak selalu menyertakan `lintas_hari`; deteksi shift lintas hari karena itu memakai fallback jam/kategori (`jam_pulang <= jam_masuk` atau `kategori === "Malam"`). Bila backend menambahkan `lintas_hari` pada respons jadwal, nilai tersebut otomatis dipakai.
 - Bahasa UI: **Indonesia**. Zona waktu aktif: **Asia/Jayapura (WIT)**.

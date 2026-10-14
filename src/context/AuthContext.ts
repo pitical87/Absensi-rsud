@@ -13,6 +13,7 @@ export type User = {
     kategori: string;
     jam_masuk: string;
     jam_pulang: string;
+    lintas_hari: boolean;
   } | null;
   jabatan: { id: number; nama: string } | null;
   posisi: string;
@@ -32,7 +33,11 @@ export type Lokasi = {
   radius: number;
 };
 
-export type Permission = "approve.izin" | "approve.lembur" | "approve.jadwal" | "jadwal.kelola";
+export type Permission =
+  | "approve.izin"
+  | "approve.lembur"
+  | "approve.jadwal"
+  | "jadwal.kelola";
 
 export type AuthContextType = {
   user: User | null;
@@ -46,6 +51,8 @@ export type AuthContextType = {
   can: (permission: Permission) => boolean;
 };
 
-export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+export const AuthContext = createContext<AuthContextType>(
+  {} as AuthContextType,
+);
 
 export const useAuth = () => useContext(AuthContext);

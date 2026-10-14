@@ -117,7 +117,9 @@ export function GetWeekDays(): WeekDay[] {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const tanggal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const hari = new Intl.DateTimeFormat("id-ID", { weekday: "short" }).format(d);
+    const hari = new Intl.DateTimeFormat("id-ID", { weekday: "short" }).format(
+      d,
+    );
     const label = new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
       month: "short",
@@ -127,31 +129,47 @@ export function GetWeekDays(): WeekDay[] {
   return days;
 }
 
+export type ShiftLintas = {
+  jam_masuk: string;
+  jam_pulang: string;
+  kategori?: string;
+  lintas_hari?: boolean;
+};
+
+/**
+ * Shift lintas hari (pulang keesokan hari). Pakai flag backend bila ada,
+ * kalau tidak deteksi dari jam (jam_pulang <= jam_masuk) atau kategori Malam.
+ */
+export function isShiftLintasHari(
+  shift: ShiftLintas | null | undefined,
+): boolean {
+  if (!shift) return false;
+  return (
+    shift.lintas_hari === true ||
+    shift.jam_pulang <= shift.jam_masuk ||
+    shift.kategori === "Malam"
+  );
+}
+
+const GRACE_LINTAS_JAM = 4; //batas lupa untuk shift yang lintas hari 4 jam setelah jam pulang
+
 export function isSesiTerlupakan(
   openSession: {
     tanggal: string;
     jam_masuk: string;
   } | null,
-  shift:
-    | {
-        jam_masuk: string;
-        jam_pulang: string;
-      }
-    | null
-    | undefined,
+  shift: ShiftLintas | null | undefined,
   todayKey: string = GetTodayKey(),
 ): boolean {
   if (!openSession) return false;
   if (openSession.tanggal >= todayKey) return false; // sesi hari ini -> pulang manual tetap boleh
-  const jamPulang = shift?.jam_pulang;
-  const jamMasuk = jamPulang ? shift.jam_masuk : openSession.jam_masuk;
-  let expected: Date;
-  if (jamPulang) {
-    expected = new Date(`${openSession.tanggal}T${jamPulang}:00`);
-    if (jamPulang <= jamMasuk) expected.setDate(expected.getDate() + 1); // malam lintas hari
-  } else {
-    expected = new Date(`${openSession.tanggal}T${jamMasuk}:00`);
-    expected.setHours(expected.getHours() + 8);
+  if (!shift) return false; // tanpa info shift (sesi tanggal itu) -> jangan kunci tombol pulang
+
+  const expected = new Date(`${openSession.tanggal}T${shift.jam_pulang}:00`);
+  if (isShiftLintasHari(shift)) {
+    expected.setDate(expected.getDate() + 1); // berakhir keesokan hari
+    expected.setHours(expected.getHours() + GRACE_LINTAS_JAM); // + grace 4 jam
   }
+
   return new Date().getTime() > expected.getTime();
 }

@@ -1,6 +1,6 @@
 import { CiLock, CiLogin, CiLogout } from "react-icons/ci";
 import { FaCalendarCheck } from "react-icons/fa6";
-import { IoDocumentTextOutline } from "react-icons/io5";
+import { IoDocumentTextOutline, IoMoonOutline } from "react-icons/io5";
 import { useNavigate } from "react-router";
 import Skeleton from "../Skeleton";
 
@@ -17,14 +17,26 @@ type props = {
   isDokter?: boolean;
   openSession?: { tanggal: string; tanggal_label: string } | null;
   sesiTerlupakan?: boolean;
+  lintasHari?: boolean;
   loading?: boolean;
 };
 
-export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isDokter, openSession, sesiTerlupakan, loading }: props) {
+export default function Absensi({
+  hasMasuk,
+  hasPulang,
+  hasLeave,
+  todayLeave,
+  isDokter,
+  openSession,
+  sesiTerlupakan,
+  lintasHari,
+  loading,
+}: props) {
   const navigate = useNavigate();
   const adaSesiTerbuka = !!openSession;
   const pulangTerpilih = adaSesiTerbuka;
-  const masukDisabled = hasLeave || (adaSesiTerbuka && !sesiTerlupakan) || (!isDokter && hasMasuk);
+  const masukDisabled =
+    hasLeave || (adaSesiTerbuka && !sesiTerlupakan) || (!isDokter && hasMasuk);
   const pulangDisabled = hasLeave || !pulangTerpilih || sesiTerlupakan;
   return (
     <>
@@ -39,7 +51,8 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
             </div>
             <div className="flex flex-col">
               <span className="font-semibold text-yellow-800 text-sm">
-                Sedang <span>{todayLeave.jenis === "Cuti" ? "Cuti" : "Izin"}</span>
+                Sedang{" "}
+                <span>{todayLeave.jenis === "Cuti" ? "Cuti" : "Izin"}</span>
               </span>
               <span className="text-xs text-yellow-600">
                 {todayLeave.jenis_cuti ? `${todayLeave.jenis_cuti} — ` : ""}
@@ -50,11 +63,30 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
         )}
         <div
           className="bg-white border border-gray-300 flex font-semibold
-            items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-xs"
-        >
+            items-center gap-2 w-full rounded-xl p-3 text-blue-500 text-xs">
           <CiLock className="text-sm font-semibold" />
-          <span>{isDokter ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari." : sesiTerlupakan ? "Shift sebelumnya belum ditutup — akan ditutup otomatis saat absen masuk (bintang pulang 1)." : "Absen pulang hanya tersedia sesudah absen masuk."}</span>
+          <span>
+            {isDokter
+              ? "Dokter dapat absen masuk & pulang beberapa kali dalam sehari."
+              : sesiTerlupakan
+                ? "Shift sebelumnya belum ditutup — akan ditutup otomatis saat absen masuk (bintang pulang 1)."
+                : "Absen pulang hanya tersedia sesudah absen masuk."}
+          </span>
         </div>
+        {lintasHari && (
+          <div
+            className="w-full rounded-xl bg-indigo-50 border border-indigo-200 p-3
+              flex items-center gap-3 text-indigo-700">
+            <IoMoonOutline className="text-lg shrink-0" />
+            <span className="text-xs leading-snug">
+              Absen saat ini adalah{" "}
+              <span className="font-semibold">
+                shift kemarin yang lintas hari
+              </span>
+              . Absen pulang masih tersedia hingga 4 jam setelah shift berakhir.
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-3 sm:gap-5 w-full">
           {loading ? (
             <>
@@ -73,15 +105,18 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
             <>
               <button
                 disabled={masukDisabled}
-                onClick={() => navigate("/present/masuk", { state: { sesiTerlupakan: sesiTerlupakan ?? false } })}
+                onClick={() =>
+                  navigate("/present/masuk", {
+                    state: { sesiTerlupakan: sesiTerlupakan ?? false },
+                  })
+                }
                 className="
                 group min-w-0 w-full rounded-xl border border-blue-200 bg-white p-3 sm:p-4
                 transition-colors duration-200 cursor-pointer
                 hover:bg-blue-100 hover:border-blue-400
                 disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-blue-200
                 disabled:cursor-not-allowed
-              "
-              >
+              ">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span
                     className="
@@ -89,8 +124,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                   bg-blue-100 transition-colors duration-200
                   group-hover:bg-blue-600
                   group-disabled:bg-blue-100
-                "
-                  >
+                ">
                     <CiLogin
                       className="
                       text-xl text-blue-600
@@ -108,8 +142,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     transition-colors duration-200
                     group-hover:text-blue-700
                     group-disabled:text-gray-800
-                  "
-                    >
+                  ">
                       Absen Masuk
                     </span>
 
@@ -119,8 +152,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     transition-colors duration-200
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
-                  "
-                    >
+                  ">
                       {hasLeave
                         ? "Sedang izin/cuti"
                         : adaSesiTerbuka && !sesiTerlupakan
@@ -142,7 +174,9 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                 disabled={pulangDisabled}
                 onClick={() =>
                   navigate("/present/pulang", {
-                    state: { tanggal: adaSesiTerbuka ? openSession.tanggal : undefined },
+                    state: {
+                      tanggal: adaSesiTerbuka ? openSession.tanggal : undefined,
+                    },
                   })
                 }
                 className="
@@ -151,8 +185,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                 hover:bg-blue-100 hover:border-blue-400
                 disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-blue-200
                 disabled:cursor-not-allowed
-              "
-              >
+              ">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span
                     className="
@@ -160,8 +193,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                   bg-blue-100 transition-colors duration-200
                   group-hover:bg-blue-600
                   group-disabled:bg-blue-100
-                "
-                  >
+                ">
                     <CiLogout
                       className="
                       text-xl text-blue-600
@@ -179,8 +211,7 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     transition-colors duration-200
                     group-hover:text-blue-700
                     group-disabled:text-gray-800
-                  "
-                    >
+                  ">
                       Absen Pulang
                     </span>
 
@@ -190,9 +221,16 @@ export default function Absensi({ hasMasuk, hasPulang, hasLeave, todayLeave, isD
                     transition-colors duration-200
                     group-hover:text-gray-600
                     group-disabled:text-gray-500
-                  "
-                    >
-                      {hasLeave ? "Sedang izin/cuti" : sesiTerlupakan ? "Akan ditutup otomatis saat absen masuk" : adaSesiTerbuka ? (isDokter ? "Selesaikan sesi berjalan" : `Pulang shift ${openSession.tanggal_label}`) : "Absen masuk dulu"}
+                  ">
+                      {hasLeave
+                        ? "Sedang izin/cuti"
+                        : sesiTerlupakan
+                          ? "Akan ditutup otomatis saat absen masuk"
+                          : adaSesiTerbuka
+                            ? isDokter
+                              ? "Selesaikan sesi berjalan"
+                              : `Pulang shift ${openSession.tanggal_label}`
+                            : "Absen masuk dulu"}
                     </span>
                   </div>
                 </div>
