@@ -99,11 +99,13 @@ export default function ConfirmAbsenLembur({
       }
       sukses = true;
       setCurrentStep(3);
-      setTimeout(() => navigate("/"), 3000);
+      setTimeout(() => navigate("/"), 10000);
     } catch (err: unknown) {
-      const pesan = (err as {
-        response?: { data?: { pesan?: string } };
-      })?.response?.data?.pesan;
+      const pesan = (
+        err as {
+          response?: { data?: { pesan?: string } };
+        }
+      )?.response?.data?.pesan;
       toast.error(pesan || "Gagal mengirim data");
     } finally {
       if (!sukses) setSubmitting(false);
@@ -117,7 +119,9 @@ export default function ConfirmAbsenLembur({
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
           <span className=" text-gray-500">Jenis</span>
           <span className=" text-blue-400">
-            <span>{tipe === "masuk" ? "Absen Masuk Lembur" : "Absen Pulang Lembur"}</span>
+            <span>
+              {tipe === "masuk" ? "Absen Masuk Lembur" : "Absen Pulang Lembur"}
+            </span>
           </span>
         </li>
         <li className="flex items-center justify-between border-b border-gray-300 py-3">
@@ -172,9 +176,7 @@ export default function ConfirmAbsenLembur({
           className="flex-1 rounded-xl bg-blue-600 py-3 text-white font-semibold cursor-pointer hover:bg-blue-700 transition-colors">
           {submitting ? (
             <div className="flex items-center gap-1">
-              <svg
-                className="animate-spin h-5 w-5"
-                viewBox="0 0 24 24">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
                   cx="12"
