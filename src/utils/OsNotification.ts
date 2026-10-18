@@ -10,17 +10,16 @@ function berdiriSebagaiPwaIos(): boolean {
   return nav.standalone === true;
 }
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
+  const outputArray = new Uint8Array(rawData.length) as Uint8Array<ArrayBuffer>;
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
 }
-
 export function dukungNotifikasiOs(): boolean {
   if (typeof window === "undefined") return false;
   if (!("Notification" in window)) return false;
@@ -110,11 +109,7 @@ export async function unsubscribeWebPush(): Promise<void> {
   } catch {}
 }
 
-export async function tampilkanNotifikasi(
-  title: string,
-  body: string,
-  url: string | null,
-): Promise<void> {
+export async function tampilkanNotifikasi(title: string, body: string, url: string | null): Promise<void> {
   if (!dukungNotifikasiOs() || Notification.permission !== "granted") return;
 
   try {
@@ -129,12 +124,6 @@ export async function tampilkanNotifikasi(
   }
 }
 
-export async function tampilkanNotifikasiItem(
-  item: NotifikasiItem,
-): Promise<void> {
-  await tampilkanNotifikasi(
-    item.kategori_label ?? "Notifikasi",
-    item.isi,
-    mapNotifUrl(item),
-  );
+export async function tampilkanNotifikasiItem(item: NotifikasiItem): Promise<void> {
+  await tampilkanNotifikasi(item.kategori_label ?? "Notifikasi", item.isi, mapNotifUrl(item));
 }

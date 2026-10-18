@@ -16,25 +16,15 @@ type Props = {
   onHapus: (userId: number) => void;
 };
 
-const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+// const HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-export default function JadwalGridTable({
-  pegawai,
-  bulan,
-  tahun,
-  hariDalamBulan,
-  shiftList,
-  grid,
-  onUbahSel,
-  onIsiSemua,
-  onHapus,
-}: Props) {
+export default function JadwalGridTable({ pegawai, bulan, tahun, hariDalamBulan, shiftList, grid, onUbahSel, onIsiSemua, onHapus }: Props) {
   const [buka, setBuka] = useState<number | null>(null);
   const [isiShift, setIsiShift] = useState("");
-  const hariKe = (d: number): string =>
-    HARI[new Date(tahun, bulan - 1, d).getDay()];
+  // const hariKe = (d: number): string =>
+  //   HARI[new Date(tahun, bulan - 1, d).getDay()];
 
-  const minggu = (d: number) => new Date(tahun, bulan - 1, d).getDay() === 0;
+  // const minggu = (d: number) => new Date(tahun, bulan - 1, d).getDay() === 0;
 
   return (
     <div className="space-y-3">
@@ -48,70 +38,37 @@ export default function JadwalGridTable({
           .toUpperCase();
 
         return (
-          <div
-            key={p.id}
-            className={`overflow-hidden rounded-2xl border bg-white transition ${
-              terbuka ? "border-blue-300 shadow-sm" : "border-gray-200"
-            }`}>
+          <div key={p.id} className={`overflow-hidden rounded-2xl border bg-white transition ${terbuka ? "border-blue-300 shadow-sm" : "border-gray-200"}`}>
             <div className="flex items-center gap-3 p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                {inisial}
-              </div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">{inisial}</div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-800">
-                  {p.nama_lengkap}
-                </p>
-                {(p.unit_nama || p.sub_unit_nama) && (
-                  <p className="truncate text-xs text-gray-500">
-                    {p.sub_unit_nama
-                      ? `${p.unit_nama ?? ""} — ${p.sub_unit_nama}`
-                      : p.unit_nama}
-                  </p>
-                )}
+                <p className="truncate text-sm font-semibold text-gray-800">{p.nama_lengkap}</p>
+                {(p.unit_nama || p.sub_unit_nama) && <p className="truncate text-xs text-gray-500">{p.sub_unit_nama ? `${p.unit_nama ?? ""} — ${p.sub_unit_nama}` : p.unit_nama}</p>}
               </div>
 
               <button
                 type="button"
                 onClick={() => setBuka((prev) => (prev === p.id ? null : p.id))}
                 title="Lihat atau edit kalender jadwal"
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition active:scale-95 ${
-                  terbuka
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600"
-                }`}>
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition active:scale-95 ${terbuka ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600"}`}
+              >
                 <BiCalendar className="text-lg" />
               </button>
 
-              <button
-                type="button"
-                onClick={() => onHapus(p.id)}
-                title="Hapus baris ini"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 transition hover:bg-red-50 hover:text-red-600 active:scale-95">
+              <button type="button" onClick={() => onHapus(p.id)} title="Hapus baris ini" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 transition hover:bg-red-50 hover:text-red-600 active:scale-95">
                 <IoClose className="text-lg" />
               </button>
             </div>
 
             {terbuka && (
               <div className="space-y-4 border-t border-gray-100 bg-gray-50 p-3">
-                <MonthGrid
-                  bulan={bulan}
-                  tahun={tahun}
-                  hariDalamBulan={hariDalamBulan}
-                  shiftList={shiftList}
-                  nilai={grid[String(p.id)] ?? {}}
-                  onChange={(tgl, sid) => onUbahSel(p.id, tgl, sid)}
-                />
+                <MonthGrid bulan={bulan} tahun={tahun} hariDalamBulan={hariDalamBulan} shiftList={shiftList} nilai={grid[String(p.id)] ?? {}} onChange={(tgl, sid) => onUbahSel(p.id, tgl, sid)} />
 
                 <div className="flex flex-col gap-2 border-t border-gray-200 pt-3 sm:flex-row sm:items-end">
                   <div className="flex-1 space-y-1">
-                    <label className="text-xs font-medium text-gray-600">
-                      Isi semua hari dengan shift
-                    </label>
-                    <select
-                      value={isiShift}
-                      onChange={(e) => setIsiShift(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
+                    <label className="text-xs font-medium text-gray-600">Isi semua hari dengan shift</label>
+                    <select value={isiShift} onChange={(e) => setIsiShift(e.target.value)} className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
                       <option value="">Pilih shift...</option>
                       {shiftList.map((s) => (
                         <option key={s.id} value={s.id}>
@@ -127,7 +84,8 @@ export default function JadwalGridTable({
                       onIsiSemua(p.id, isiShift);
                       setIsiShift("");
                     }}
-                    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400">
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                  >
                     Isi Semua
                   </button>
                 </div>
