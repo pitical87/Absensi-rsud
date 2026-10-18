@@ -8,6 +8,7 @@ import { mapNotifUrl } from "../utils/NotifUrl";
 import {
   dukungNotifikasiOs,
   izinNotifikasi,
+  subscribeWebPush,
   tampilkanNotifikasi,
 } from "../utils/OsNotification";
 
@@ -45,6 +46,7 @@ export default function NotificationBell() {
     const hasil = await izinNotifikasi();
     setIzin(hasil);
     if (hasil === "granted") {
+      await subscribeWebPush();
       await tampilkanNotifikasi(
         "Notifikasi aktif",
         "Anda akan menerima notifikasi di perangkat ini",
@@ -52,6 +54,11 @@ export default function NotificationBell() {
       );
     }
   };
+
+  useEffect(() => {
+    if (izin !== "granted") return;
+    subscribeWebPush();
+  }, [izin]);
 
   useEffect(() => {
     if (!open) return;
@@ -168,3 +175,5 @@ export default function NotificationBell() {
     </div>
   );
 }
+
+

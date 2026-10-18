@@ -50,10 +50,20 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body || data.isi || "",
-      icon: payload.icon || "/icon-192.png",
-      badge: payload.badge || "/icon-192.png",
+      icon: payload.icon || "/favicon.svg",
+      badge: payload.badge || "/favicon.svg",
       data: { url: data.url || "/" },
       tag: data.id ? `notif-${data.id}` : undefined,
+    }),
+  );
+});
+
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({ type: "pushsubscriptionchange" });
+      });
     }),
   );
 });
