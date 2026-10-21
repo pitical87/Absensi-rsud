@@ -7,6 +7,8 @@ import { useNavigate } from "react-router";
 import {
   AuthContext,
   type AuthContextType,
+  type Bawahan,
+  type HakAkses,
   type Lokasi,
   type Permission,
   type User,
@@ -19,22 +21,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => window.location.pathname !== "/login",
   );
   const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
+  const [bawahan, setBawahan] = useState<Bawahan[] | null>([]);
+  const [hakAkses, setHakAkses] = useState<HakAkses | null>(null);
 
   const can = useCallback(
     (permission: Permission) => {
       if (!user) return false;
       if (user.role === "admin") return true;
       switch (permission) {
-        case "approve.izin":
-        case "approve.lembur":
-        case "approve.jadwal":
         case "jadwal.kelola":
-          return user.posisi !== "Staf";
+          return hakAkses?.buat_jadwal ?? false;
+        case "approve.izin":
+          return hakAkses?.verifikasi_ijin ?? false;
+        case "approve.lembur":
+          return hakAkses?.verifikasi_lembur ?? false;
+        case "approve.jadwal":
+          return hakAkses?.verifikasi_perubahan_jadwal ?? false;
         default:
           return true;
       }
     },
-    [user],
+    [user, hakAkses],
   );
 
   const navigate = useNavigate();
@@ -49,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (res.sukses) {
           setUser(res.user);
           setLokasi(res.lokasi);
+          setBawahan(res.bawahan ?? []);
+          setHakAkses(res.hak_akses ?? null);
         }
       })
       .catch(() => {
@@ -79,6 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser,
     logout,
     can,
+    bawahan,
+    setBawahan,
+    hakAkses,
+    setHakAkses,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

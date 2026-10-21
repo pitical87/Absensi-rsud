@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser, setLokasi } = useAuth();
+  const { setUser, setLokasi, setBawahan, setHakAkses } = useAuth();
 
   const [showForgetForm, setShowForgetForm] = useState(false);
   const [forgetEmail, setForgetEmail] = useState("");
@@ -28,7 +28,8 @@ export default function LoginPage() {
       const res = await login(email, pass);
       setUser(res.user);
       setLokasi(res.lokasi);
-      console.log(res.user);
+      setBawahan(res.bawahan ?? []);
+      setHakAkses(res.hak_akses ?? null);
       navigate("/");
     } catch (err: unknown) {
       const pesan = (err as ApiErrorShape).response?.data?.pesan;
@@ -98,6 +99,7 @@ export default function LoginPage() {
               type={passwordVisible ? "text" : "password"}
               onChange={(e) => setPass(e.target.value)}
               placeholder="Masukkan kata sandi"
+              autoComplete="current-password"
               className="w-full rounded-l-md px-4 py-2 outline-none"
             />
 

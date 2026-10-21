@@ -18,6 +18,9 @@ const PersetujuanLembur = lazy(() => import("../pages/PersetujuanLembur"));
 const PerubahanJadwalPage = lazy(() => import("../pages/PerubahanJadwalPage"));
 const PersetujuanPerubahanJadwal = lazy(() => import("../pages/PersetujuanPerubahanJadwal"));
 const KelolaJadwalPage = lazy(() => import("../pages/KelolaJadwalPage"));
+const VerifikasiEmailPage = lazy(
+  () => import("../pages/VerifikasiEmailPage"),
+);
 const Rekap = lazy(() => import("../components/Rekap"));
 const ProfilPage = lazy(() => import("../pages/ProfilPage"));
 
@@ -51,6 +54,10 @@ export default function AppRoutes() {
             <Route path="/kelola-jadwal" element={<KelolaJadwalPage />} />
           </Route>
           <Route path="/logbook" element={<LogbookPage />} />
+          <Route
+            path="/verifikasi-email"
+            element={<VerifikasiEmailPage />}
+          />
           <Route path="/rekap" element={<Rekap />} />
           <Route path="/profile" element={<ProfilPage />} />
         </Route>

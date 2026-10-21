@@ -12,7 +12,7 @@ import TopNavbar from "../components/Client Page/TopNavbar";
 import ConfirmModal from "../components/ConfirmModal";
 import JadwalGridTable from "../components/Jadwal Page/JadwalGridTable";
 import PegawaiPickerModal from "../components/Jadwal Page/PegawaiPickerModal";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, type Bawahan } from "../context/AuthContext";
 import { getKelolaJadwal, simpanJadwalPegawai } from "../utils/api/Jadwal";
 import type {
   GridJadwalPegawai,
@@ -38,11 +38,25 @@ const BULAN_ID = [
   "Desember",
 ];
 
+type SumberPegawai =
+  | { jenis: "bawahan" }
+  | { jenis: "sub_unit"; id: number }
+  | { jenis: "semua" };
+
 const pad = (n: number) => String(n).padStart(2, "0");
+
+const kePegawaiJadwal = (b: Bawahan[]) =>
+  b.map((x) => ({ id: x.id, nama_lengkap: x.nama }));
 
 export default function KelolaJadwalPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, bawahan } = useAuth();
+
+  const [sumber, setSumber] = useState<SumberPegawai>(() => {
+    if (bawahan?.length) return { jenis: "bawahan" };
+    if (user?.sub_unit?.id) return { jenis: "sub_unit", id: user.sub_unit.id };
+    return { jenis: "semua" };
+  });
 
   const [loading, setLoading] = useState(true);
   const [periode, setPeriode] = useState<PeriodeJadwal | null>(null);
@@ -53,9 +67,6 @@ export default function KelolaJadwalPage() {
 
   const [bulan, setBulan] = useState(() => new Date().getMonth() + 1);
   const [tahun, setTahun] = useState(() => new Date().getFullYear());
-  const [subUnitId, setSubUnitId] = useState<number | null>(
-    () => user?.sub_unit?.id ?? null,
-  );
 
   const [dipilih, setDipilih] = useState<PegawaiJadwal[]>([]);
   const [grid, setGrid] = useState<Record<string, Record<string, string>>>({});
@@ -83,7 +94,8 @@ export default function KelolaJadwalPage() {
 
   const refetch = useCallback(
     (idTetap: number[]) => {
-      getKelolaJadwal(bulan, tahun, subUnitId ?? undefined)
+      const subUnitKirim = sumber.jenis === "sub_unit" ? sumber.id : undefined;
+      getKelolaJadwal(bulan, tahun, subUnitKirim)
         .then((res) => {
           if (!res.sukses) {
             toast.error(res.pesan || "Gagal memuat data.");
@@ -93,9 +105,15 @@ export default function KelolaJadwalPage() {
           setSubUnits(res.sub_units);
           setShiftList(res.shift);
           setJadwalPegawai(res.jadwal_pegawai);
-          setDaftarPegawai(subUnitId ? res.pegawai : res.semua_pegawai);
 
-          const daftarBaru = subUnitId ? res.pegawai : res.semua_pegawai;
+          const daftarBaru =
+            sumber.jenis === "sub_unit"
+              ? res.pegawai
+              : sumber.jenis === "bawahan"
+                ? kePegawaiJadwal(bawahan ?? [])
+                : res.semua_pegawai;
+          setDaftarPegawai(daftarBaru);
+
           const tetap = idTetap
             .map((id) => daftarBaru.find((p) => p.id === id))
             .filter((p): p is PegawaiJadwal => Boolean(p));
@@ -112,7 +130,7 @@ export default function KelolaJadwalPage() {
         .catch(() => toast.error("Gagal memuat data jadwal."))
         .finally(() => setLoading(false));
     },
-    [bulan, tahun, subUnitId],
+    [bulan, tahun, sumber, bawahan],
   );
 
   useEffect(() => {
@@ -135,8 +153,8 @@ export default function KelolaJadwalPage() {
     });
   };
 
-  const ubahSubUnit = (id: number | null) => {
-    ganti(() => setSubUnitId(id));
+  const ubahSumber = (baru: SumberPegawai) => {
+    ganti(() => setSumber(baru));
   };
 
   const kembali = () => {
@@ -391,22 +409,38 @@ export default function KelolaJadwalPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Sub Unit
+                    Sumber Pegawai
                   </label>
                   <select
-                    value={subUnitId ?? ""}
-                    onChange={(e) =>
-                      ubahSubUnit(
-                        e.target.value ? Number(e.target.value) : null,
-                      )
+                    value={
+                      sumber.jenis === "sub_unit" ? sumber.id : sumber.jenis
                     }
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                    <option value="">Semua Pegawai</option>
-                    {subUnits.map((su) => (
-                      <option key={su.id} value={su.id}>
-                        {su.unit_nama} — {su.nama}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      ubahSumber(
+                        v === "bawahan"
+                          ? { jenis: "bawahan" }
+                          : v === "semua"
+                            ? { jenis: "semua" }
+                            : { jenis: "sub_unit", id: Number(v) },
+                      );
+                    }}
+                    disabled={!!bawahan?.length}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-50 disabled:text-gray-600">
+                    {bawahan?.length ? (
+                      <option value="bawahan">
+                        Bawahan Saya ({bawahan.length})
                       </option>
-                    ))}
+                    ) : (
+                      <>
+                        <option value="semua">Semua Pegawai</option>
+                        {subUnits.map((su) => (
+                          <option key={su.id} value={su.id}>
+                            {su.unit_nama} — {su.nama}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -450,7 +484,7 @@ export default function KelolaJadwalPage() {
                         className="block text-sm font-medium text-gray-700">
                         Isi semua hari yang masih kosong (semua pegawai)
                       </label>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row items-center gap-2">
                         <select
                           id="isi-kosong"
                           value={isiKosong}

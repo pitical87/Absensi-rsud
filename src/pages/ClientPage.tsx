@@ -5,6 +5,7 @@ import RecentPresents from "../components/Client Page/RecentPresents";
 import TopNavbar from "../components/Client Page/TopNavbar";
 import SifSection from "../components/Client Page/SifSection";
 import PerformaBanner from "../components/Client Page/PerformaBanner";
+import VerifikasiEmailBanner from "../components/Client Page/VerifikasiEmailBanner";
 import { useEffect, useState } from "react";
 import { getStatus } from "../utils/api/Attendence";
 import { getTodayLeave } from "../utils/api/Leave";
@@ -107,6 +108,7 @@ export default function ClientPage() {
     <div>
       <TopNavbar />
       <PerformaBanner />
+      <VerifikasiEmailBanner />
       {/* present section */}
       <Absensi
         hasMasuk={hasMasuk}

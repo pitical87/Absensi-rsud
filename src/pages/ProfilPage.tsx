@@ -140,39 +140,58 @@ export default function ProfilPage() {
     { label: "Status Pegawai", value: user?.status_pegawai || "-" },
   ];
 
+  const TOOLTIP =
+    "pointer-events-none absolute right-0 top-full z-10 mt-1 hidden whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 sm:block";
+
   return (
     <section
       className="px-6 py-2 flex flex-col gap-4"
       style={{ paddingBottom: "80px" }}>
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-center gap-3">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-800">Profil Saya</h1>
+      <div className="flex items-center gap-3 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-lg font-semibold text-gray-800">
+            Profil Saya
+          </h1>
           <p className="text-sm text-gray-500">
             Informasi akun dan data pribadi Anda.
           </p>
         </div>
-        {!editing ? (
-          <button
-            type="button"
-            onClick={bukaEdit}
-            className="ml-auto flex items-center gap-1 md:gap-2 rounded-xl bg-blue-600 px-2 md:px-4 py-1 md:py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
-            <IoPencilOutline />
-            <span className="text-xs">Edit Profil</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            className="ml-auto flex items-center gap-1 md:gap-2 rounded-full bg-blue-600 p-3 text-lg font-semibold text-white transition hover:bg-blue-700">
-            <MdCancel />
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
-          <IoArrowBack />
-        </button>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="group relative">
+            {!editing ? (
+              <button
+                type="button"
+                aria-label="Edit profil"
+                onClick={bukaEdit}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-lg text-white transition hover:bg-blue-700 active:scale-95">
+                <IoPencilOutline />
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-label="Batal edit"
+                onClick={() => setEditing(false)}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-xl text-red-500 transition hover:bg-red-100 active:scale-95">
+                <MdCancel />
+              </button>
+            )}
+            <span className={TOOLTIP}>
+              {!editing ? "Edit profil" : "Batal edit"}
+            </span>
+          </div>
+
+          <div className="group relative">
+            <button
+              type="button"
+              aria-label="Kembali"
+              onClick={() => navigate("/")}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-100 text-xl text-gray-600 transition hover:bg-gray-200 active:scale-95">
+              <IoArrowBack />
+            </button>
+            <span className={TOOLTIP}>Kembali</span>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 text-white shadow-sm">

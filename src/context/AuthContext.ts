@@ -4,6 +4,7 @@ export type User = {
   id: number;
   nama_lengkap: string;
   email: string;
+  email_verified_at?: string | null;
   role: string;
   unit_kerja: { id: number; nama: string } | null;
   sub_unit: { id: number; nama: string } | null;
@@ -39,6 +40,20 @@ export type Permission =
   | "approve.jadwal"
   | "jadwal.kelola";
 
+export type Bawahan = {
+  id: number;
+  email: string;
+  nama: string;
+};
+
+export type HakAkses = {
+  verifikasi_logbook: boolean;
+  buat_jadwal: boolean;
+  verifikasi_ijin: boolean;
+  verifikasi_lembur: boolean;
+  verifikasi_perubahan_jadwal: boolean;
+};
+
 export type AuthContextType = {
   user: User | null;
   lokasi: Lokasi | null;
@@ -48,9 +63,12 @@ export type AuthContextType = {
   setLokasi: (lokasi: Lokasi | null) => void;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
+  bawahan: Bawahan[] | null;
+  setBawahan: (bawahan: Bawahan[] | null) => void;
+  hakAkses: HakAkses | null;
+  setHakAkses: (hakAkses: HakAkses | null) => void;
   can: (permission: Permission) => boolean;
 };
-
 export const AuthContext = createContext<AuthContextType>(
   {} as AuthContextType,
 );

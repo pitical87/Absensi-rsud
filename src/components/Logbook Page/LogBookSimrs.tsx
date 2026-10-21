@@ -93,9 +93,7 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
     );
 
   const toggleAll = (checked: boolean) =>
-    setSelected(
-      checked ? entries.map((_, i) => i) : [],
-    );
+    setSelected(checked ? entries.map((_, i) => i) : []);
 
   const semuaDipilih = entries.length > 0 && selected.length === entries.length;
 
@@ -140,9 +138,7 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
           <BiServer />
         </div>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold text-gray-800">
-            Logbook SIMRS
-          </h1>
+          <h1 className="text-lg font-semibold text-gray-800">Logbook SIMRS</h1>
           <p className="text-sm text-gray-500">
             Ambil aktivitas tindakan & lab dari SIMRS untuk dimasukkan ke
             logbook.
@@ -154,8 +150,8 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
       <div className="flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-700">
         <LuInfo className="shrink-0 text-sm" />
         <p>
-          Data diambil dari database SIMRS untuk akun Anda yang sudah
-          dimapping. Asumsikan akses SIMRS sudah dikonfigurasi admin.
+          Data diambil dari database SIMRS untuk akun Anda yang sudah dimapping.
+          Asumsikan akses SIMRS sudah dikonfigurasi admin.
         </p>
       </div>
 
@@ -188,7 +184,7 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setPreset(offsetHari(-6), new Date())}
@@ -201,20 +197,20 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
             className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50">
             Bulan Ini
           </button>
-          <select
-            value={jenis}
-            onChange={(e) => {
-              setJenis(e.target.value);
-              setLoading(true);
-            }}
-            className="ml-auto rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-            {JENIS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
         </div>
+        <select
+          value={jenis}
+          onChange={(e) => {
+            setJenis(e.target.value);
+            setLoading(true);
+          }}
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+          {JENIS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
 
         <button
           type="button"
@@ -253,9 +249,8 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
       {!loading && entries.length > 0 && (
         <div className="flex items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
           <span>
-            {entries.length} aktivitas ·{" "}
-            <strong>{totalTindakan}</strong> tindakan ·{" "}
-            <strong>{totalLab}</strong> lab
+            {entries.length} aktivitas · <strong>{totalTindakan}</strong>{" "}
+            tindakan · <strong>{totalLab}</strong> lab
           </span>
           <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
             <input

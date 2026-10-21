@@ -50,6 +50,19 @@ export default function PegawaiPickerModal({
             (p.sub_unit_nama ?? "").toLowerCase().includes(query),
         );
 
+  const semuaTercentang =
+    hasil.length > 0 && hasil.every((p) => pilihan.includes(p.id));
+
+  const checkAll = () => {
+    const idHasil = hasil.map((p) => p.id);
+    setPilihan(
+      (prev) =>
+        semuaTercentang
+          ? prev.filter((id) => !idHasil.includes(id)) // lepas semua yang tampil
+          : [...new Set([...prev, ...idHasil])], // tambah yang tampil
+    );
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center"
@@ -70,7 +83,13 @@ export default function PegawaiPickerModal({
             />
           </div>
         </div>
-
+        <button
+          type="button"
+          onClick={checkAll}
+          disabled={hasil.length === 0}
+          className="mx-6 mb-2 self-end text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-gray-400">
+          {semuaTercentang ? "Lepas semua" : "Centang semua"}
+        </button>
         <div className="flex-1 overflow-y-auto px-3 pb-3">
           {hasil.length === 0 ? (
             <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-400">
