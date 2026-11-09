@@ -41,10 +41,13 @@ export default function MonthGrid({
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
-  const hariKe = (d: number): string => HARI[new Date(tahun, bulan - 1, d).getDay()];
+  const hariKe = (d: number): string =>
+    HARI[new Date(tahun, bulan - 1, d).getDay()];
   const tanggal = (d: number): string => `${tahun}-${pad(bulan)}-${pad(d)}`;
 
-  const shiftTerpilih = buka ? shiftList.find((s) => s.id === Number(nilai[buka])) : null;
+  const shiftTerpilih = buka
+    ? shiftList.find((s) => s.id === Number(nilai[buka]))
+    : null;
 
   return (
     <div>
@@ -103,7 +106,7 @@ export default function MonthGrid({
           className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center"
           onClick={() => setBuka(null)}>
           <div
-            className="bg-white rounded-t-3xl sm:rounded-3xl shadow-xl w-full max-w-md mx-auto p-6"
+            className="bg-white max-h-[90vh]  rounded-t-3xl sm:rounded-3xl shadow-xl w-full max-w-md mx-auto p-6 flex flex-col"
             onClick={(e) => e.stopPropagation()}>
             <h3 className="text-center text-sm text-gray-500">
               {hariKe(Number(buka.slice(-2)))}, {buka.slice(8)}.
@@ -112,9 +115,8 @@ export default function MonthGrid({
             <h2 className="mb-4 text-center text-lg font-semibold text-gray-800">
               Pilih Shift
             </h2>
-
             {shiftTerpilih && (
-              <div className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-sm text-blue-700">
+              <div className="mb-3 flex  items-center justify-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-sm text-blue-700">
                 <span className="font-medium">Saat ini:</span>
                 <span className="font-semibold">{shiftTerpilih.kategori}</span>
                 <span className="text-blue-500">
@@ -123,7 +125,7 @@ export default function MonthGrid({
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="min-h-0 flex-1 overflow-y-auto space-y-2">
               {shiftList.map((s) => (
                 <button
                   key={s.id}
@@ -148,20 +150,19 @@ export default function MonthGrid({
                   </span>
                 </button>
               ))}
-
-              {nilai[buka] && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(buka, "");
-                    setBuka(null);
-                  }}
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100 active:scale-[0.99]">
-                  <FaRegCalendarTimes />
-                  Kosongkan tanggal ini
-                </button>
-              )}
             </div>
+            {nilai[buka] && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange(buka, "");
+                  setBuka(null);
+                }}
+                className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100 active:scale-[0.99]">
+                <FaRegCalendarTimes />
+                Kosongkan tanggal ini
+              </button>
+            )}
 
             <button
               type="button"

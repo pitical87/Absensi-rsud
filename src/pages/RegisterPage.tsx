@@ -519,15 +519,6 @@ export default function RegisterPage() {
           </button>
         </Link>
       </form>
-
-      <footer className="w-full px-6 pt-2">
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 text-blue-700">
-          <p className="text-sm leading-relaxed">
-            Akun Anda akan langsung aktif setelah pendaftaran. Hubungi bagian IT
-            jika mengalami kendala.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

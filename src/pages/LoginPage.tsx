@@ -149,24 +149,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </form>
-
-      <footer className="w-full flex flex-col p-4 gap-3">
-        <div className="relative flex items-center justify-center">
-          <span
-            className="relative px-4 text-md font-serif text-slate-400
-            before:absolute before:right-full before:top-1/2 before:mr-4 before:h-px before:w-12 before:-translate-y-1/2 before:bg-gray-300 sm:before:w-40
-            after:absolute after:left-full after:top-1/2 after:ml-4 after:h-px after:w-12 after:-translate-y-1/2 after:bg-gray-300 sm:after:w-40">
-            Info
-          </span>
-        </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 text-blue-700">
-          <p className="text-sm leading-relaxed">
-            Akun Anda didaftarkan oleh admin instansi. Hubungi bagian IT jika
-            mengalami kendala masuk.
-          </p>
-        </div>
-      </footer>
-
       {showForgetForm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center
