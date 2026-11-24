@@ -35,6 +35,22 @@ export const rekapAbsensi = async (bulan: number, tahun: number) => {
   return res.data;
 };
 
+export const rekapBawahanPdf = async (
+  bulan: number,
+  tahun: number,
+  userIds: number[],
+): Promise<Blob> => {
+  const res = await api.get("/rekap/bawahan/pdf", {
+    params: {
+      bulan,
+      tahun,
+      user_ids: userIds.join(","),
+    },
+    responseType: "blob",
+  });
+  return res.data;
+};
+
 export const getJadwalBulanan = async (bulan: number, tahun: number) => {
   const res = await api.get("/jadwal/bulanan", { params: { bulan, tahun } });
   return res.data;

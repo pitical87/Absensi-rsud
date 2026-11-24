@@ -5,7 +5,7 @@ import {
   BiCalendarWeek,
   BiTimeFive,
 } from "react-icons/bi";
-import { HiOutlineDocumentText } from "react-icons/hi";
+import { HiOutlineDocumentReport, HiOutlineDocumentText } from "react-icons/hi";
 import { IoPersonOutline, IoSunny } from "react-icons/io5";
 import { LuInfo } from "react-icons/lu";
 import { PiBuildingOfficeFill } from "react-icons/pi";
@@ -17,6 +17,7 @@ import { getPendingLeavesCount } from "../../utils/api/Leave";
 import { getLemburMenungguTotal } from "../../utils/api/Lembur";
 import { getPerubahanJadwalMenungguTotal } from "../../utils/api/PerubahanJadwal";
 import Skeleton from "../Skeleton";
+import RekapBulananModal from "./RekapBulananModal";
 
 interface ShiftInfo {
   id: number;
@@ -27,7 +28,7 @@ interface ShiftInfo {
 
 export default function SifSection() {
   const navigate = useNavigate();
-  const { user, can } = useAuth();
+  const { user, can, bawahan } = useAuth();
   const [shift, setShift] = useState<ShiftInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalPending, setTotalPending] = useState(0);
@@ -36,6 +37,16 @@ export default function SifSection() {
   const [loadingIzin, setLoadingIzin] = useState(true);
   const [loadingLembur, setLoadingLembur] = useState(true);
   const [loadingJadwal, setLoadingJadwal] = useState(true);
+  const [showRekapBulanan, setShowRekapBulanan] = useState(false);
+
+  const daftarBawahan = bawahan ?? [];
+  const punyaBawahanLain = daftarBawahan.some((b) => b.id !== user?.id);
+  const tampilPersetujuan =
+    can("jadwal.kelola") ||
+    can("approve.izin") ||
+    can("approve.lembur") ||
+    can("approve.jadwal") ||
+    punyaBawahanLain;
 
   useEffect(() => {
     if (!can("approve.izin")) return;
@@ -209,12 +220,7 @@ export default function SifSection() {
       {/* Persetujuan & pengelolaan*/}
       <section
         className={`w-full rounded-2xl border border-gray-200 bg-white p-3 ${
-          !can("jadwal.kelola") &&
-          !can("approve.izin") &&
-          !can("approve.lembur") &&
-          !can("approve.jadwal")
-            ? "hidden"
-            : ""
+          !tampilPersetujuan ? "hidden" : ""
         }`}>
         <div className="flex flex-col gap-3">
           <h3 className="text-base font-semibold text-gray-900">
@@ -277,9 +283,26 @@ export default function SifSection() {
                 )}
               </button>
             )}
+
+            {daftarBawahan.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowRekapBulanan(true)}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-2 py-3 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100">
+                <HiOutlineDocumentReport size={20} />
+                <span>Rekap Bulanan</span>
+              </button>
+            )}
           </div>
         </div>
       </section>
+
+      <RekapBulananModal
+        key={showRekapBulanan ? "open" : "closed"}
+        isOpen={showRekapBulanan}
+        bawahan={daftarBawahan}
+        onClose={() => setShowRekapBulanan(false)}
+      />
     </section>
   );
 }
