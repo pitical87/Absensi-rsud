@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import {
   register,
   getRegisterMaster,
+  STATUS_PEGAWAI_OPTIONS,
   type RegisterMaster,
 } from "../utils/api/Authentication";
 
@@ -105,7 +106,7 @@ export default function RegisterPage() {
     jabatan_id: "",
     posisi: "Staf",
     seksi_pembina_id: "",
-    status_pegawai: false,
+    status_pegawai: "Non-PNS",
     password: "",
     password2: "",
   });
@@ -162,7 +163,7 @@ export default function RegisterPage() {
         seksi_pembina_id: form.seksi_pembina_id
           ? Number(form.seksi_pembina_id)
           : null,
-        status_pegawai: form.status_pegawai ? "PNS" : "Non-PNS",
+        status_pegawai: form.status_pegawai,
         password: form.password,
         password2: form.password2,
       };
@@ -483,15 +484,19 @@ export default function RegisterPage() {
             </Field>
           )}
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-              checked={form.status_pegawai}
-              onChange={(e) => set("status_pegawai")(e.target.checked)}
-            />
-            Pegawai Negeri Sipil (PNS)
-          </label>
+          <Field label="Status Pegawai" required>
+            <select
+              className={selectCls}
+              value={form.status_pegawai}
+              onChange={(e) => set("status_pegawai")(e.target.value)}
+              required>
+              {STATUS_PEGAWAI_OPTIONS.map((sp) => (
+                <option key={sp} value={sp}>
+                  {sp}
+                </option>
+              ))}
+            </select>
+          </Field>
           <p className="-mt-3 text-xs text-gray-400">
             Hanya pegawai berstatus PNS yang dapat mengajukan Cuti (Tahunan,
             Sakit, Melahirkan, Alasan Penting, Besar, atau di Luar Tanggungan

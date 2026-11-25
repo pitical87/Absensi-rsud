@@ -13,6 +13,7 @@ import TopNavbar from "../components/Client Page/TopNavbar";
 import { useAuth } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
 import {
+  STATUS_PEGAWAI_OPTIONS,
   updateProfile,
   type UpdateProfileData,
 } from "../utils/api/Authentication";
@@ -46,6 +47,7 @@ export default function ProfilPage() {
     email: "",
     no_hp: "",
     nip: "",
+    status_pegawai: "Non-PNS",
   });
 
   const set = (key: keyof UpdateProfileData) => (value: string) =>
@@ -69,6 +71,7 @@ export default function ProfilPage() {
       email: user?.email ?? "",
       no_hp: user?.no_hp ?? "",
       nip: user?.nip ?? "",
+      status_pegawai: user?.status_pegawai || "Non-PNS",
     });
     setEditing(true);
   };
@@ -91,6 +94,7 @@ export default function ProfilPage() {
         email: form.email.trim(),
         no_hp: form.no_hp?.trim() || null,
         nip: form.nip?.trim() || null,
+        status_pegawai: form.status_pegawai || user.status_pegawai || "Non-PNS",
       };
       const res = await updateProfile(payload);
       setUser({
@@ -103,6 +107,10 @@ export default function ProfilPage() {
         agama: payload.agama ?? undefined,
         no_hp: payload.no_hp ?? undefined,
         nip: payload.nip ?? undefined,
+        status_pegawai:
+          res?.user?.status_pegawai ??
+          payload.status_pegawai ??
+          user.status_pegawai,
       });
       toast.success(res?.pesan || "Profil berhasil diperbarui.");
       setEditing(false);
@@ -312,6 +320,23 @@ export default function ProfilPage() {
                   placeholder="Nomor induk pegawai"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 after:content-['*'] after:text-red-500 after:ml-1">
+                Status Pegawai
+              </label>
+              <select
+                className={inputCls}
+                value={form.status_pegawai ?? "Non-PNS"}
+                onChange={(e) => set("status_pegawai")(e.target.value)}
+                required>
+                {STATUS_PEGAWAI_OPTIONS.map((sp) => (
+                  <option key={sp} value={sp}>
+                    {sp}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">

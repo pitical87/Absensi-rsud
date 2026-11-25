@@ -68,6 +68,13 @@ export const forgetPassword = async (email: string) => {
   return response.data;
 };
 
+export const STATUS_PEGAWAI_OPTIONS = [
+  "PNS",
+  "Non-PNS",
+  "Honor",
+  "BLUD",
+] as const;
+
 export type UpdateProfileData = {
   nama_lengkap: string;
   tempat_lahir: string | null;
@@ -77,6 +84,7 @@ export type UpdateProfileData = {
   email: string;
   no_hp: string | null;
   nip: string | null;
+  status_pegawai?: string;
 };
 
 export const updateProfile = async (data: UpdateProfileData) => {
