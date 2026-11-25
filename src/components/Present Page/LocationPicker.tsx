@@ -25,8 +25,8 @@ l.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const TARGET_SAMPLES = 3;
-const SAMPLE_WINDOW_MS = 3500;
+const TARGET_SAMPLES = 2;
+const SAMPLE_WINDOW_MS = 2000;
 
 type Props = {
   onLocationReady: (loc: ValidatedLocation | null) => void;

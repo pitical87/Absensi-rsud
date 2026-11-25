@@ -14,6 +14,7 @@ import {
   FaCircleInfo,
 } from "react-icons/fa6";
 import type { ValidatedLocation } from "../utils/GeoLocation";
+import { preloadFaceDetector } from "../utils/FaceDetection";
 
 type PendingData = {
   latitude: number;
@@ -62,6 +63,10 @@ export default function AbsenLemburPage() {
       navigate("/lembur", { replace: true });
     }
   }, [tanggal, navigate]);
+
+  useEffect(() => {
+    preloadFaceDetector();
+  }, []);
 
   return (
     <div>

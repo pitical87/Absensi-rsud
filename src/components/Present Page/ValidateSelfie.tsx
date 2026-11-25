@@ -8,12 +8,13 @@ import { GetCurrentDateString, GetCurrentTime } from "../../utils/DateUtils";
 import {
   detectFaceInVideo,
   getFaceDetector,
+  resetFaceDetectionState,
 } from "../../utils/FaceDetection";
 
 const MAX_SELFIE_WIDTH = 720;
 const SELFIE_JPEG_QUALITY = 0.75;
 const MIN_BRIGHTNESS = 12;
-const DETECT_INTERVAL_MS = 200;
+const DETECT_INTERVAL_MS = 300;
 
 const VIRTUAL_CAMERA_PATTERNS = [
   "obs",
@@ -118,8 +119,8 @@ export default function ValidateSelfie({
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "user",
-            width: { ideal: 720 },
-            height: { ideal: 960 },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
           },
         });
 
@@ -228,7 +229,7 @@ export default function ValidateSelfie({
     const detector = detectorRef.current;
     const adaWajahSaatAmbil =
       detector && detectorStatus === "ready"
-        ? detectFaceInVideo(detector, video)
+        ? detectFaceInVideo(detector, video, true)
         : faceDetected;
     setFaceDetected(adaWajahSaatAmbil);
 
@@ -289,6 +290,7 @@ export default function ValidateSelfie({
   }
 
   function retake() {
+    resetFaceDetectionState();
     setShowNoFacePopup(false);
     setCapturedImage(null);
     setCapturedWithoutFace(false);

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StepWizard from "../components/Present Page/StepWizard";
 import ValidateLocation from "../components/Present Page/ValidateLocation";
 import ValidateSelfie from "../components/Present Page/ValidateSelfie";
@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext";
 import type { ValidatedLocation } from "../utils/GeoLocation";
+import { preloadFaceDetector } from "../utils/FaceDetection";
 
 type PendingData = {
   latitude: number;
@@ -62,6 +63,11 @@ export default function PresentPage() {
     image: null,
   });
   const { isDokter } = useAuth();
+
+  // Muat model deteksi wajah di latar belakang sejak Step 0 agar Step 1 instan
+  useEffect(() => {
+    preloadFaceDetector();
+  }, []);
 
   return (
     <div>
