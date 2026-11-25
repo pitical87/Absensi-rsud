@@ -5,7 +5,10 @@ import { useCallback, useState } from "react";
 import {
   getDistance,
   MAX_ACCEPTABLE_ACCURACY,
+  MAX_DISTANCE,
   MAX_SAMPLE_JUMP_METERS,
+  TARGET_LAT,
+  TARGET_LNG,
   type ValidatedLocation,
 } from "../../utils/GeoLocation";
 
@@ -19,16 +22,20 @@ export default function ValidateLocation({ setCurrentStep, onNext }: Props) {
   const navigate = useNavigate();
   const [location, setLocation] = useState<ValidatedLocation | null>(null);
 
-  const distance =
-    location && lokasi
-      ? getDistance(lokasi.lat, lokasi.lng, location.lat, location.lng)
-      : Infinity;
+  const targetLokasi = lokasi ?? {
+    lat: TARGET_LAT,
+    lng: TARGET_LNG,
+    radius: MAX_DISTANCE,
+  };
+
+  const distance = location
+    ? getDistance(targetLokasi.lat, targetLokasi.lng, location.lat, location.lng)
+    : Infinity;
 
   const canProceed =
     location !== null &&
-    lokasi !== null &&
     location.tamperingReasons.length === 0 &&
-    distance <= lokasi.radius &&
+    distance <= targetLokasi.radius &&
     location.accuracy <= MAX_ACCEPTABLE_ACCURACY &&
     location.maxJumpMeters <= MAX_SAMPLE_JUMP_METERS;
 
@@ -41,9 +48,10 @@ export default function ValidateLocation({ setCurrentStep, onNext }: Props) {
     <div className="bg-white w-full rounded-2xl p-4">
       <h1 className="text-lg mb-3 font-medium">Validasi GPS</h1>
 
-      {lokasi && (
-        <LocationPicker onLocationReady={handleLocationReady} lokasi={lokasi} />
-      )}
+      <LocationPicker
+        onLocationReady={handleLocationReady}
+        lokasi={targetLokasi}
+      />
 
       <div className="flex items-center gap-3 mt-4">
         <button

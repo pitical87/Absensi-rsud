@@ -7,6 +7,7 @@ import {
   getFreshPosition,
   LOCATION_FRESH_MS,
   MAX_ACCEPTABLE_ACCURACY,
+  MAX_DISTANCE,
 } from "../../utils/GeoLocation";
 import { useEffect, useRef, useState } from "react";
 import { absenLemburMasuk, absenLemburPulang } from "../../utils/api/Lembur";
@@ -70,7 +71,7 @@ export default function ConfirmAbsenLembur({
     };
   }, []);
 
-  const radius = lokasi?.radius ?? 0;
+  const radius = lokasi?.radius ?? MAX_DISTANCE;
   const isWithinRadius = data.distance <= radius;
 
   async function handleSubmit() {

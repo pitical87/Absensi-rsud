@@ -7,6 +7,7 @@ import {
   getFreshPosition,
   LOCATION_FRESH_MS,
   MAX_ACCEPTABLE_ACCURACY,
+  MAX_DISTANCE,
 } from "../../utils/GeoLocation";
 import { useEffect, useRef, useState } from "react";
 import { absen } from "../../utils/api/Attendence";
@@ -72,7 +73,7 @@ export default function ConfirmPresent({
       })
     : null;
 
-  const radius = lokasi?.radius ?? 0;
+  const radius = lokasi?.radius ?? MAX_DISTANCE;
   const isWithinRadius = data.distance <= radius;
 
   async function handleSubmit() {
@@ -153,35 +154,42 @@ export default function ConfirmPresent({
             duration: 6000,
           });
         }
-        if (type === "masuk") {
-          if (res.keterlambatan) {
-            localStorage.setItem(
-              "keterlambatan_telat",
-              String(res.keterlambatan.menit_telat ?? 0),
-            );
-            localStorage.setItem(
-              "bintang_masuk",
-              String(res.keterlambatan.bintang_masuk ?? 0),
-            );
+        try {
+          if (type === "masuk") {
+            if (res.keterlambatan) {
+              localStorage.setItem(
+                "keterlambatan_telat",
+                String(res.keterlambatan.menit_telat ?? 0),
+              );
+              localStorage.setItem(
+                "bintang_masuk",
+                String(res.keterlambatan.bintang_masuk ?? 0),
+              );
+            }
+          } else {
+            if (res.keterlambatan) {
+              localStorage.setItem(
+                "menit_pulang_awal",
+                String(res.keterlambatan.menit_pulang_awal ?? 0),
+              );
+              localStorage.setItem(
+                "bintang_pulang",
+                String(res.keterlambatan.bintang_pulang ?? 0),
+              );
+            }
           }
-        } else {
-          if (res.keterlambatan) {
-            localStorage.setItem(
-              "menit_pulang_awal",
-              String(res.keterlambatan.menit_pulang_awal ?? 0),
-            );
-            localStorage.setItem(
-              "bintang_pulang",
-              String(res.keterlambatan.bintang_pulang ?? 0),
-            );
-          }
+        } catch {
+          // Abaikan jika browser membatasi localStorage (mode privat / WebView)
         }
         onSuccess?.(res);
         setCurrentStep(3);
         redirectTimerRef.current = setTimeout(() => navigate("/"), 10000);
         return;
       } else {
-        toast.error(res.pesan);
+        toast.error(
+          res.keterangan ? `${res.pesan} ${res.keterangan}` : res.pesan,
+          { duration: 6000 },
+        );
       }
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;

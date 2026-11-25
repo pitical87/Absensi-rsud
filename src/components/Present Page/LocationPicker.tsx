@@ -30,6 +30,7 @@ l.Icon.Default.mergeOptions({
 
 const TARGET_SAMPLES = 2;
 const SAMPLE_WINDOW_MS = 2000;
+const POOR_ACCURACY_WINDOW_MS = 6000;
 
 type Props = {
   onLocationReady: (loc: ValidatedLocation | null) => void;
@@ -123,25 +124,28 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
         new Set([...tamperingReasons, ...lateTampering]),
       );
 
+      if (allTampering.length > 0) {
+        setTamperingMsg(allTampering[0]);
+        setLocation(null);
+        setStatus("error");
+        setErrorMsg(
+          "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
+        );
+        onLocationReadyRef.current(null);
+        return;
+      }
+
+      // Catat kontradiksi izin hanya sebagai catatan audit (tidak memblokir keras karena
+      // iOS Safari mode "Allow Once" kadang melaporkan permissions.query = denied secara keliru).
       checkGeolocationPermissionDenied()
         .then((denied) => {
           if (cancelled) return;
-          if (denied) {
-            allTampering.push(
-              "Izin lokasi ditolak browser tetapi koordinat tetap dikirim (indikasi Fake GPS).",
-            );
-          }
-          if (allTampering.length > 0) {
-            setTamperingMsg(allTampering[0]);
-            setLocation(null);
-            setStatus("error");
-            setErrorMsg(
-              "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
-            );
-            onLocationReadyRef.current(null);
-            return;
-          }
           const result = analyzeGpsSamples(samples, allTampering);
+          if (denied) {
+            result.suspiciousReasons.push(
+              "Status permissions.query melaporkan denied saat koordinat diterima.",
+            );
+          }
           setTamperingMsg("");
           setLocation(result);
           setStatus("success");
@@ -149,16 +153,6 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
         })
         .catch(() => {
           if (cancelled) return;
-          if (allTampering.length > 0) {
-            setTamperingMsg(allTampering[0]);
-            setLocation(null);
-            setStatus("error");
-            setErrorMsg(
-              "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
-            );
-            onLocationReadyRef.current(null);
-            return;
-          }
           const result = analyzeGpsSamples(samples, allTampering);
           setTamperingMsg("");
           setLocation(result);
@@ -167,68 +161,93 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
         });
     };
 
-    watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        if (cancelled || settled) return;
+    let usedFallback = false;
 
-        const posTampering = inspectGeolocationPosition(pos);
-        if (posTampering.length > 0) {
-          tamperingReasons.push(...posTampering);
+    const startWatch = (highAccuracy: boolean) => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          if (cancelled || settled) return;
+
+          const posTampering = inspectGeolocationPosition(pos);
+          if (posTampering.length > 0) {
+            tamperingReasons.push(...posTampering);
+            settled = true;
+            cleanup();
+            setTamperingMsg(posTampering[0]);
+            setLocation(null);
+            setStatus("error");
+            setErrorMsg(
+              "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
+            );
+            onLocationReadyRef.current(null);
+            return;
+          }
+
+          samples.push({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+            altitude: pos.coords.altitude,
+            speed: pos.coords.speed,
+            timestamp: pos.timestamp,
+          });
+          setSampleProgress(Math.min(samples.length, TARGET_SAMPLES));
+
+          const adaAkurasiBaik = samples.some(
+            (s) => s.accuracy <= MAX_ACCEPTABLE_ACCURACY,
+          );
+
+          if (samples.length === 1) {
+            settleTimer = setTimeout(
+              finalize,
+              adaAkurasiBaik ? SAMPLE_WINDOW_MS : POOR_ACCURACY_WINDOW_MS,
+            );
+          } else if (adaAkurasiBaik && samples.length >= TARGET_SAMPLES) {
+            // Hanya langsung selesai saat sudah ada sampel dengan akurasi memadai;
+            // jika sampel awal masih kasar (menara seluler), beri waktu GPS chip menyempurnakan lock.
+            finalize();
+          }
+        },
+        (err) => {
+          if (cancelled || settled) return;
+          if (samples.length > 0) {
+            finalize();
+            return;
+          }
+          // Di dalam ruangan RSUD sebagian HP gagal lock satelit (code 2/3);
+          // otomatis fallback sekali ke mode lokasi jaringan/Wi-Fi.
+          if (highAccuracy && !usedFallback && (err.code === 2 || err.code === 3)) {
+            usedFallback = true;
+            startWatch(false);
+            return;
+          }
           settled = true;
           cleanup();
-          setTamperingMsg(posTampering[0]);
           setLocation(null);
           setStatus("error");
-          setErrorMsg(
-            "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
-          );
           onLocationReadyRef.current(null);
-          return;
-        }
+          setErrorMsg(
+            err.code === 1
+              ? "Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser."
+              : err.code === 2
+                ? "GPS tidak tersedia. Pastikan layanan lokasi perangkat aktif."
+                : "Waktu permintaan GPS habis. Coba lagi di area dengan sinyal lebih baik.",
+          );
+        },
+        {
+          enableHighAccuracy: highAccuracy,
+          timeout: 15000,
+          maximumAge: highAccuracy ? 0 : 10000,
+        },
+      );
+    };
 
-        samples.push({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-          altitude: pos.coords.altitude,
-          speed: pos.coords.speed,
-          timestamp: pos.timestamp,
-        });
-        setSampleProgress(samples.length);
-
-        if (samples.length === 1) {
-          settleTimer = setTimeout(finalize, SAMPLE_WINDOW_MS);
-        }
-
-        if (samples.length >= TARGET_SAMPLES) {
-          finalize();
-        }
-      },
-      (err) => {
-        if (cancelled || settled) return;
-        if (samples.length > 0) {
-          finalize();
-          return;
-        }
-        settled = true;
-        cleanup();
-        setLocation(null);
-        setStatus("error");
-        onLocationReadyRef.current(null);
-        setErrorMsg(
-          err.code === 1
-            ? "Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser."
-            : err.code === 2
-              ? "GPS tidak tersedia. Pastikan layanan lokasi perangkat aktif."
-              : "Waktu permintaan GPS habis. Coba lagi di area dengan sinyal lebih baik.",
-        );
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      },
-    );
+    startWatch(true);
 
     return () => {
       cancelled = true;

@@ -115,40 +115,63 @@ export default function ValidateSelfie({
         return;
       }
 
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
+      const constraintList: MediaStreamConstraints[] = [
+        {
           video: {
             facingMode: "user",
             width: { ideal: 640 },
             height: { ideal: 480 },
           },
-        });
+          audio: false,
+        },
+        { video: { facingMode: "user" }, audio: false },
+        { video: true, audio: false },
+      ];
 
-        if (cancelled) {
-          mediaStream.getTracks().forEach((track) => track.stop());
-          return;
+      let mediaStream: MediaStream | null = null;
+      let lastErr: unknown = null;
+
+      for (const constraints of constraintList) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch (err: unknown) {
+          lastErr = err;
+          const name = err instanceof Error ? err.name : "";
+          // Jika user menolak izin kamera, tidak perlu mencoba constraint fallback
+          if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+            break;
+          }
         }
+      }
 
-        const videoTrack = mediaStream.getVideoTracks()[0];
-        if (videoTrack && isVirtualCamera(videoTrack.label)) {
-          mediaStream.getTracks().forEach((track) => track.stop());
-          setError(
-            "Kamera virtual terdeteksi. Gunakan kamera asli perangkat Anda untuk absensi.",
-          );
-          return;
-        }
-
-        localStream = mediaStream;
-        setStream(mediaStream);
-      } catch (err: unknown) {
+      if (!mediaStream) {
         if (cancelled) return;
-        const name = err instanceof Error ? err.name : "";
+        const name = lastErr instanceof Error ? lastErr.name : "";
         setError(
-          name === "NotAllowedError"
+          name === "NotAllowedError" || name === "PermissionDeniedError"
             ? "Izin kamera ditolak. Aktifkan izin kamera pada browser Anda."
             : "Kamera tidak tersedia atau sedang digunakan aplikasi lain.",
         );
+        return;
       }
+
+      if (cancelled) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      if (videoTrack && isVirtualCamera(videoTrack.label)) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        setError(
+          "Kamera virtual terdeteksi. Gunakan kamera asli perangkat Anda untuk absensi.",
+        );
+        return;
+      }
+
+      localStream = mediaStream;
+      setStream(mediaStream);
     }
 
     startCamera();
@@ -159,12 +182,37 @@ export default function ValidateSelfie({
     };
   }, [attempt]);
 
+  const markVideoReady = () => {
+    const v = videoRef.current;
+    if (v && v.videoWidth > 0 && v.videoHeight > 0) {
+      setCameraReady(true);
+    }
+  };
+
   useEffect(() => {
     if (capturedImage) return;
-    if (!videoRef.current || !stream) return;
+    const video = videoRef.current;
+    if (!video || !stream) return;
 
-    videoRef.current.srcObject = stream;
-    videoRef.current.play().catch(() => {});
+    video.srcObject = stream;
+    video
+      .play()
+      .then(() => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          setCameraReady(true);
+        }
+      })
+      .catch(() => {});
+
+    // Fallback polling singkat untuk browser Android/iOS yang videoWidth-nya baru terisi setelah play
+    const poll = setInterval(() => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        setCameraReady(true);
+        clearInterval(poll);
+      }
+    }, 200);
+
+    return () => clearInterval(poll);
   }, [capturedImage, stream]);
 
   // Loop deteksi wajah real-time saat live preview kamera aktif
@@ -225,13 +273,18 @@ export default function ValidateSelfie({
       return;
     }
 
-    // Cek deteksi wajah saat ambil foto (sebagai warning, tidak memblokir ambil foto)
+    // Cek deteksi wajah saat ambil foto (sebagai warning, tidak memblokir ambil foto).
+    // Jika model deteksi wajah gagal dimuat di HP lama, jangan blokir atau memunculkan peringatan palsu.
     const detector = detectorRef.current;
-    const adaWajahSaatAmbil =
-      detector && detectorStatus === "ready"
-        ? detectFaceInVideo(detector, video, true)
-        : faceDetected;
-    setFaceDetected(adaWajahSaatAmbil);
+    let adaWajahSaatAmbil = true;
+    if (detector && detectorStatus === "ready") {
+      try {
+        adaWajahSaatAmbil = detectFaceInVideo(detector, video, true);
+      } catch {
+        adaWajahSaatAmbil = faceDetected;
+      }
+      setFaceDetected(adaWajahSaatAmbil);
+    }
 
     const scale = Math.min(1, MAX_SELFIE_WIDTH / video.videoWidth);
     const targetW = Math.round(video.videoWidth * scale);
@@ -369,11 +422,11 @@ export default function ValidateSelfie({
               autoPlay
               playsInline
               muted
-              onLoadedMetadata={() => {
-                if (videoRef.current && videoRef.current.videoWidth > 0) {
-                  setCameraReady(true);
-                }
-              }}
+              onLoadedMetadata={markVideoReady}
+              onLoadedData={markVideoReady}
+              onCanPlay={markVideoReady}
+              onPlaying={markVideoReady}
+              onResize={markVideoReady}
               className={`absolute inset-0 h-full w-full object-cover ${
                 capturedImage ? "hidden" : "block"
               }`}

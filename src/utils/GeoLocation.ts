@@ -10,7 +10,7 @@ export const MAX_ACCEPTABLE_ACCURACY = 150;
 export const MAX_SAMPLE_JUMP_METERS = 150;
 
 /** Masa berlaku koordinat sebelum perlu validasi ulang otomatis saat konfirmasi (ms). */
-export const LOCATION_FRESH_MS = 60_000;
+export const LOCATION_FRESH_MS = 120_000;
 
 export type GpsSample = {
   lat: number;
@@ -84,20 +84,26 @@ function getCleanIntrinsics(): CleanIntrinsics {
 
 function isNativeFunction(
   fn: unknown,
-  expectedName: string,
   cleanFnToString: typeof Function.prototype.toString,
 ): boolean {
   if (typeof fn !== "function") return false;
+  let src: string;
   try {
-    const src = cleanFnToString.call(fn).trim();
-    const escaped = expectedName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(
-      `^function\\s+(?:get\\s+)?${escaped}\\s*\\(\\)\\s*\\{\\s*\\[native code\\]\\s*\\}$`,
-    );
-    return pattern.test(src);
+    src = cleanFnToString.call(fn).trim();
   } catch {
-    return false;
+    try {
+      src = Function.prototype.toString.call(fn).trim();
+    } catch {
+      // Beberapa WebView/Safari mobile dapat menolak cross-realm toString pada objek WebIDL asli.
+      return true;
+    }
   }
+  // Terima format Chrome/Firefox (`function getCurrentPosition() { [native code] }`,
+  // `function get latitude() { [native code] }`) maupun WebKit/iOS Safari yang kadang
+  // menuliskan getter native tanpa nama (`function () { [native code] }`).
+  return /^function\s*(?:(?:get\s+)?[\w$]+)?\s*\([^)]*\)\s*\{\s*\[native code\]\s*\}$/.test(
+    src,
+  );
 }
 
 type NativeCtor = { prototype: object };
@@ -110,6 +116,10 @@ function getWindowCtor(name: string): NativeCtor | undefined {
 /**
  * Deteksi manipulasi / monkey-patch pada Geolocation API oleh ekstensi browser
  * (seperti Location Changer, Location Guard, Spoof Geolocation, dll.).
+ *
+ * Dirancang aman untuk seluruh browser mobile (iOS Safari/WebKit, Chrome Android,
+ * Samsung Internet, MIUI, WebView): hanya memblokir jika terdeteksi fungsi JS
+ * non-native yang menimpa implementasi bawaan browser.
  */
 export function detectGeolocationTampering(): string[] {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
@@ -122,47 +132,46 @@ export function detectGeolocationTampering(): string[] {
   const { fnToString, getOwnPropDesc, cleanup } = getCleanIntrinsics();
 
   try {
-    // 1. Cek apakah Function.prototype.toString di window utama ikut dimanipulasi
-    if (!isNativeFunction(Function.prototype.toString, "toString", fnToString)) {
+    // 1. Cek apakah Function.prototype.toString di window utama ikut dimodifikasi oleh ekstensi
+    if (!isNativeFunction(Function.prototype.toString, fnToString)) {
       reasons.push("Fungsi bawaan browser (Function.toString) telah dimodifikasi.");
     }
 
-    // 2. Cek apakah navigator.geolocation benar-benar instance native Geolocation
+    // 2. Cek apakah navigator.geolocation diganti objek palsu atau metode prototipenya di-patch
     const GeoCtor = getWindowCtor("Geolocation");
     if (GeoCtor) {
-      if (!(geo instanceof (GeoCtor as unknown as new () => object))) {
-        reasons.push("Objek navigator.geolocation bukan instance native browser.");
+      try {
+        if (!(geo instanceof (GeoCtor as unknown as new () => object))) {
+          reasons.push("Objek navigator.geolocation bukan instance native browser.");
+        }
+      } catch {
+        // abaikan jika browser tidak mendukung instanceof pada host object
       }
 
       const proto = GeoCtor.prototype as Geolocation;
       for (const method of ["getCurrentPosition", "watchPosition", "clearWatch"] as const) {
-        if (!isNativeFunction(proto[method], method, fnToString)) {
+        if (typeof proto[method] === "function" && !isNativeFunction(proto[method], fnToString)) {
           reasons.push(`Geolocation.prototype.${method} terdeteksi dimodifikasi.`);
         }
-        if (geo[method] !== proto[method]) {
-          reasons.push(`navigator.geolocation.${method} telah ditimpa oleh skrip/ekstensi.`);
-        }
       }
     }
 
-    // 3. Cek fungsi langsung pada navigator.geolocation
+    // 3. Cek metode aktif pada navigator.geolocation (harus tetap native code)
     for (const method of ["getCurrentPosition", "watchPosition", "clearWatch"] as const) {
-      if (!isNativeFunction(geo[method], method, fnToString)) {
+      if (!isNativeFunction(geo[method], fnToString)) {
         reasons.push(`Fungsi GPS ${method} bukan implementasi asli browser.`);
       }
-      if (getOwnPropDesc(geo, method)) {
-        reasons.push(`Properti ${method} disisipkan langsung pada objek geolocation.`);
-      }
     }
 
-    // 4. Cek properti geolocation pada navigator & Navigator.prototype
-    if (getOwnPropDesc(navigator, "geolocation")) {
-      reasons.push("Properti navigator.geolocation telah ditimpa.");
+    // 4. Cek getter geolocation pada navigator & Navigator.prototype
+    const ownNavGeo = getOwnPropDesc(navigator, "geolocation");
+    if (ownNavGeo?.get && !isNativeFunction(ownNavGeo.get, fnToString)) {
+      reasons.push("Getter navigator.geolocation terdeteksi dimodifikasi.");
     }
     const NavCtor = getWindowCtor("Navigator");
     if (NavCtor) {
       const navGeoDesc = getOwnPropDesc(NavCtor.prototype, "geolocation");
-      if (navGeoDesc?.get && !isNativeFunction(navGeoDesc.get, "geolocation", fnToString)) {
+      if (navGeoDesc?.get && !isNativeFunction(navGeoDesc.get, fnToString)) {
         reasons.push("Getter Navigator.prototype.geolocation terdeteksi dimodifikasi.");
       }
     }
@@ -172,7 +181,7 @@ export function detectGeolocationTampering(): string[] {
     if (PosCtor) {
       for (const prop of ["coords", "timestamp"] as const) {
         const desc = getOwnPropDesc(PosCtor.prototype, prop);
-        if (desc?.get && !isNativeFunction(desc.get, prop, fnToString)) {
+        if (desc?.get && !isNativeFunction(desc.get, fnToString)) {
           reasons.push(`Getter GeolocationPosition.${prop} terdeteksi dimodifikasi.`);
         }
       }
@@ -182,7 +191,7 @@ export function detectGeolocationTampering(): string[] {
     if (CoordsCtor) {
       for (const prop of ["latitude", "longitude", "accuracy"] as const) {
         const desc = getOwnPropDesc(CoordsCtor.prototype, prop);
-        if (desc?.get && !isNativeFunction(desc.get, prop, fnToString)) {
+        if (desc?.get && !isNativeFunction(desc.get, fnToString)) {
           reasons.push(`Getter GeolocationCoordinates.${prop} terdeteksi dimodifikasi.`);
         }
       }
@@ -209,14 +218,27 @@ export function inspectGeolocationPosition(pos: GeolocationPosition): string[] {
     const CoordsCtor = getWindowCtor("GeolocationCoordinates");
 
     if (PosCtor) {
-      if (!(pos instanceof (PosCtor as unknown as new () => object))) {
+      let validInstance = true;
+      try {
+        validInstance = pos instanceof (PosCtor as unknown as new () => object);
+      } catch {
+        validInstance = true;
+      }
+
+      if (!validInstance) {
         reasons.push("Objek posisi GPS palsu (bukan GeolocationPosition asli).");
       } else {
         const coordsGetter = getOwnPropDesc(PosCtor.prototype, "coords")?.get;
         if (coordsGetter) {
           try {
-            const nativeCoords = coordsGetter.call(pos);
-            if (nativeCoords !== pos.coords) {
+            const nativeCoords = coordsGetter.call(pos) as GeolocationCoordinates | undefined;
+            // Bandingkan nilai koordinat (bukan referensi objek) karena sebagian
+            // WebKit/iOS Safari dapat membuat wrapper baru saat getter dipanggil.
+            if (
+              !nativeCoords ||
+              !Object.is(nativeCoords.latitude, pos.coords.latitude) ||
+              !Object.is(nativeCoords.longitude, pos.coords.longitude)
+            ) {
               reasons.push("Properti coords pada posisi GPS telah ditimpa.");
             }
           } catch {
@@ -226,11 +248,16 @@ export function inspectGeolocationPosition(pos: GeolocationPosition): string[] {
       }
     }
 
-    if (CoordsCtor) {
-      if (
-        !pos.coords ||
-        !(pos.coords instanceof (CoordsCtor as unknown as new () => object))
-      ) {
+    if (CoordsCtor && pos.coords) {
+      let validCoords = true;
+      try {
+        validCoords =
+          pos.coords instanceof (CoordsCtor as unknown as new () => object);
+      } catch {
+        validCoords = true;
+      }
+
+      if (!validCoords) {
         reasons.push("Objek koordinat GPS palsu (bukan GeolocationCoordinates asli).");
       } else {
         for (const prop of ["latitude", "longitude", "accuracy"] as const) {
@@ -238,7 +265,7 @@ export function inspectGeolocationPosition(pos: GeolocationPosition): string[] {
           if (getter) {
             try {
               const nativeVal = getter.call(pos.coords);
-              if (nativeVal !== pos.coords[prop]) {
+              if (!Object.is(nativeVal, pos.coords[prop])) {
                 reasons.push(`Nilai ${prop} pada koordinat GPS telah ditimpa.`);
               }
             } catch {
@@ -373,7 +400,7 @@ export function analyzeGpsSamples(
   };
 }
 
-export function getFreshPosition(timeout = 10_000): Promise<GpsSample> {
+export function getFreshPosition(timeout = 12_000): Promise<GpsSample> {
   return new Promise((resolve, reject) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       reject(new Error("Browser tidak mendukung GPS."));
@@ -390,61 +417,51 @@ export function getFreshPosition(timeout = 10_000): Promise<GpsSample> {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const posTampering = inspectGeolocationPosition(pos);
-        if (posTampering.length > 0) {
-          reject(
-            new Error(
-              "Terdeteksi lokasi GPS tiruan dari ekstensi browser. Nonaktifkan ekstensi Fake GPS lalu coba lagi.",
-            ),
-          );
-          return;
-        }
-        checkGeolocationPermissionDenied()
-          .then((denied) => {
-            if (denied) {
-              reject(
-                new Error(
-                  "Izin lokasi ditolak browser tetapi koordinat tetap dikirim (indikasi Fake GPS).",
-                ),
-              );
-              return;
-            }
-            resolve({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: Math.round(pos.coords.accuracy * 100) / 100,
-              altitude: pos.coords.altitude,
-              speed: pos.coords.speed,
-              timestamp: pos.timestamp,
-            });
-          })
-          .catch(() => {
-            resolve({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: Math.round(pos.coords.accuracy * 100) / 100,
-              altitude: pos.coords.altitude,
-              speed: pos.coords.speed,
-              timestamp: pos.timestamp,
-            });
-          });
-      },
-      (err) => {
-        const msg =
-          err.code === 1
-            ? "Izin lokasi ditolak."
-            : err.code === 2
-              ? "GPS tidak tersedia."
-              : "Waktu permintaan GPS habis.";
-        reject(new Error(msg));
-      },
-      {
-        enableHighAccuracy: true,
-        timeout,
-        maximumAge: 0,
-      },
-    );
+    const handleSuccess = (pos: GeolocationPosition) => {
+      const posTampering = inspectGeolocationPosition(pos);
+      if (posTampering.length > 0) {
+        reject(
+          new Error(
+            "Terdeteksi lokasi GPS tiruan dari ekstensi browser. Nonaktifkan ekstensi Fake GPS lalu coba lagi.",
+          ),
+        );
+        return;
+      }
+      resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: Math.round(pos.coords.accuracy * 100) / 100,
+        altitude: pos.coords.altitude,
+        speed: pos.coords.speed,
+        timestamp: pos.timestamp,
+      });
+    };
+
+    const requestPosition = (highAccuracy: boolean) => {
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        (err) => {
+          // Di dalam ruangan RSUD sebagian HP gagal lock GPS satelit; coba ulang mode fused/jaringan.
+          if (highAccuracy && (err.code === 2 || err.code === 3)) {
+            requestPosition(false);
+            return;
+          }
+          const msg =
+            err.code === 1
+              ? "Izin lokasi ditolak."
+              : err.code === 2
+                ? "GPS tidak tersedia."
+                : "Waktu permintaan GPS habis.";
+          reject(new Error(msg));
+        },
+        {
+          enableHighAccuracy: highAccuracy,
+          timeout,
+          maximumAge: highAccuracy ? 0 : 15_000,
+        },
+      );
+    };
+
+    requestPosition(true);
   });
 }
