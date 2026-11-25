@@ -1,17 +1,26 @@
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useState } from "react";
 import StepWizard from "../components/Present Page/StepWizard";
 import ValidateLocation from "../components/Present Page/ValidateLocation";
 import ValidateSelfie from "../components/Present Page/ValidateSelfie";
 import ConfirmPresent from "../components/Present Page/ConfirmPresent";
 import TopNavbar from "../components/Client Page/TopNavbar";
-import { FaStar, FaRegStar, FaTriangleExclamation, FaCircleInfo } from "react-icons/fa6";
+import {
+  FaStar,
+  FaRegStar,
+  FaTriangleExclamation,
+  FaCircleInfo,
+} from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext";
+import type { ValidatedLocation } from "../utils/GeoLocation";
 
 type PendingData = {
   latitude: number;
   longitude: number;
+  accuracy: number;
   distance: number;
+  capturedAt: number;
+  suspiciousReasons: string[];
   image: string | null;
 };
 
@@ -40,12 +49,16 @@ function BintangSukses({ nilai }: { nilai?: number }) {
 
 export default function PresentPage() {
   const { type } = useParams();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [hasil, setHasil] = useState<HasilAbsen | null>(null);
   const [pendingData, setPendingData] = useState<PendingData>({
     latitude: 0,
     longitude: 0,
+    accuracy: 0,
     distance: 0,
+    capturedAt: 0,
+    suspiciousReasons: [],
     image: null,
   });
   const { isDokter } = useAuth();
@@ -54,8 +67,10 @@ export default function PresentPage() {
     <div>
       <TopNavbar />
       {/* steps wizard */}
-      <section className="bg-white border-b border-gray-300 px-4 py-1 flex flex-col gap-3">
-        <h1 className="text-lg font-bold">Absen {type}</h1>
+      <section className="bg-white border-b border-gray-300 px-4 py-3 flex flex-col gap-3">
+        <h1 className="text-lg font-bold text-center capitalize">
+          Absen {type}
+        </h1>
         <div className="w-full">
           <StepWizard currentStep={currentStep} steps={steps} />
         </div>
@@ -66,11 +81,14 @@ export default function PresentPage() {
         {currentStep === 0 && (
           <ValidateLocation
             setCurrentStep={setCurrentStep}
-            onNext={(lat, lng, distance) =>
+            onNext={(loc: ValidatedLocation, distance: number) =>
               setPendingData((prev) => ({
                 ...prev,
-                latitude: lat,
-                longitude: lng,
+                latitude: loc.lat,
+                longitude: loc.lng,
+                accuracy: loc.accuracy,
+                capturedAt: loc.capturedAt,
+                suspiciousReasons: loc.suspiciousReasons,
                 distance,
               }))
             }
@@ -79,6 +97,11 @@ export default function PresentPage() {
         {currentStep === 1 && (
           <ValidateSelfie
             setCurrentStep={setCurrentStep}
+            locationMeta={{
+              latitude: pendingData.latitude,
+              longitude: pendingData.longitude,
+              accuracy: pendingData.accuracy,
+            }}
             onNext={(image) => setPendingData((prev) => ({ ...prev, image }))}
           />
         )}
@@ -149,6 +172,12 @@ export default function PresentPage() {
             <p className="text-sm text-gray-500">
               Mengalihkan ke halaman utama...
             </p>
+            <button
+              type="button"
+              onClick={() => navigate("/", { replace: true })}
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
+              Kembali ke Beranda
+            </button>
           </div>
         )}
       </section>

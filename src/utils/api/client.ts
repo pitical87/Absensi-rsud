@@ -3,6 +3,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: "/api/mobile",
   withCredentials: true,
+  timeout: 30000,
 });
 
 api.interceptors.response.use(

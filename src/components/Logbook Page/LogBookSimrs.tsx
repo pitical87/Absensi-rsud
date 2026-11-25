@@ -131,21 +131,7 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
   };
 
   return (
-    <section className="px-6 py-3 flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="w-11 h-11 shrink-0 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
-          <BiServer />
-        </div>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold text-gray-800">Logbook SIMRS</h1>
-          <p className="text-sm text-gray-500">
-            Ambil aktivitas tindakan & lab dari SIMRS untuk dimasukkan ke
-            logbook.
-          </p>
-        </div>
-      </div>
-
+    <div className="flex flex-col gap-2">
       {/* Info */}
       <div className="flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-700">
         <LuInfo className="shrink-0 text-sm" />
@@ -156,7 +142,21 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
       </div>
 
       {/* Filter */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm flex flex-col gap-3">
+      <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 shrink-0 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+            <BiServer />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold text-gray-800">
+              Logbook SIMRS
+            </h2>
+            <p className="text-xs text-gray-500">
+              Ambil aktivitas tindakan & lab dari SIMRS untuk dimasukkan ke
+              logbook.
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="block text-xs font-medium text-gray-600">
@@ -330,6 +330,6 @@ export default function LogBookSimrs({ onSaved }: { onSaved: () => void }) {
           memeriksa catatan yang baru masuk.
         </p>
       )}
-    </section>
+    </div>
   );
 }

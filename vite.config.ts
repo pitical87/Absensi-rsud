@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => {
             if (id.includes("axios")) return "axios";
             if (id.includes("react-hook-form")) return "react-hook-form";
             if (id.includes("leaflet")) return "leaflet";
+            if (id.includes("@mediapipe/tasks-vision")) return "mediapipe";
             if (id.includes("react-hot-toast")) return "toast";
             if (id.includes("react-icons")) return "icons";
             return "vendor";

@@ -3,6 +3,7 @@ import {
   BiCalendar,
   BiCalendarEdit,
   BiCalendarWeek,
+  BiServer,
   BiTimeFive,
 } from "react-icons/bi";
 import { HiOutlineDocumentReport, HiOutlineDocumentText } from "react-icons/hi";
@@ -18,6 +19,7 @@ import { getLemburMenungguTotal } from "../../utils/api/Lembur";
 import { getPerubahanJadwalMenungguTotal } from "../../utils/api/PerubahanJadwal";
 import Skeleton from "../Skeleton";
 import RekapBulananModal from "./RekapBulananModal";
+import MappingSimrsModal from "./MappingSimrsModal";
 
 interface ShiftInfo {
   id: number;
@@ -38,6 +40,7 @@ export default function SifSection() {
   const [loadingLembur, setLoadingLembur] = useState(true);
   const [loadingJadwal, setLoadingJadwal] = useState(true);
   const [showRekapBulanan, setShowRekapBulanan] = useState(false);
+  const [showMappingSimrs, setShowMappingSimrs] = useState(false);
 
   const daftarBawahan = bawahan ?? [];
   const punyaBawahanLain = daftarBawahan.some((b) => b.id !== user?.id);
@@ -188,12 +191,14 @@ export default function SifSection() {
           </div>
         </div>
       </div>
-      {/* Pengajuan */}
+      {/* Pengajuan & Mapping */}
       <section className="w-full rounded-2xl border border-gray-200 bg-white p-3">
         <div className="flex flex-col gap-3">
-          <h3 className="text-base font-semibold text-gray-900">Pengajuan</h3>
+          <h3 className="text-base font-semibold text-gray-900">
+            Pengajuan & Mapping
+          </h3>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
               onClick={() => navigate("/izin")}
               className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
@@ -213,6 +218,14 @@ export default function SifSection() {
               className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-3 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100">
               <BiCalendarEdit size={20} />
               <span>Perubahan Shift</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowMappingSimrs(true)}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-2 py-3 text-sm font-medium text-teal-600 transition hover:bg-teal-100">
+              <BiServer size={20} />
+              <span>Mapping SIMRS</span>
             </button>
           </div>
         </div>
@@ -302,6 +315,12 @@ export default function SifSection() {
         isOpen={showRekapBulanan}
         bawahan={daftarBawahan}
         onClose={() => setShowRekapBulanan(false)}
+      />
+
+      <MappingSimrsModal
+        key={showMappingSimrs ? "mapping-open" : "mapping-closed"}
+        isOpen={showMappingSimrs}
+        onClose={() => setShowMappingSimrs(false)}
       />
     </section>
   );

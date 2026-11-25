@@ -9,13 +9,13 @@ import {
   IoPersonOutline,
   IoSaveOutline,
 } from "react-icons/io5";
+import TopNavbar from "../components/Client Page/TopNavbar";
 import { useAuth } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
 import {
   updateProfile,
   type UpdateProfileData,
 } from "../utils/api/Authentication";
-import { MdCancel } from "react-icons/md";
 
 const AGAMA = ["Katolik", "Kristen", "Islam", "Hindu", "Budha", "Lainnya"];
 
@@ -112,7 +112,7 @@ export default function ProfilPage() {
           response?: { data?: { pesan?: string } };
         }
       )?.response?.data?.pesan;
-      toast.error(pesan || "Fitur simpan profil belum tersedia di server.");
+      toast.error(pesan || "Gagal memperbarui profil. Silakan coba lagi.");
     } finally {
       setSubmitting(false);
     }
@@ -140,278 +140,285 @@ export default function ProfilPage() {
     { label: "Status Pegawai", value: user?.status_pegawai || "-" },
   ];
 
-  const TOOLTIP =
-    "pointer-events-none absolute right-0 top-full z-10 mt-1 hidden whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 sm:block";
-
   return (
-    <section
-      className="px-6 py-2 flex flex-col gap-4"
-      style={{ paddingBottom: "80px" }}>
-      <div className="flex items-center gap-3 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-semibold text-gray-800">
-            Profil Saya
-          </h1>
-          <p className="text-sm text-gray-500">
-            Informasi akun dan data pribadi Anda.
-          </p>
+    <>
+      <TopNavbar />
+
+      <section className="px-6 py-2 pb-10 flex flex-col gap-2">
+        {/* Header — seragam dengan Lembur / Perubahan Jadwal / Kelola Jadwal */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
+            <IoPersonOutline />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold text-gray-800">Profil Saya</h1>
+            <p className="text-sm text-gray-500">
+              Informasi akun dan data pribadi Anda.
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Kembali"
+            onClick={() => navigate("/")}
+            className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
+            <IoArrowBack />
+          </button>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="group relative">
-            {!editing ? (
-              <button
-                type="button"
-                aria-label="Edit profil"
-                onClick={bukaEdit}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-lg text-white transition hover:bg-blue-700 active:scale-95">
-                <IoPencilOutline />
-              </button>
-            ) : (
+        {/* Kartu Identitas Ringkas */}
+        <div className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 p-5 text-white shadow-sm">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-lg font-bold">
+            {userInitials}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-bold leading-tight break-words">
+              {user?.nama_lengkap}
+            </h2>
+
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {user?.posisi && (
+                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
+                  {user.posisi}
+                </span>
+              )}
+              {user?.status_pegawai && (
+                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
+                  {user.status_pegawai}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-1.5 truncate text-xs text-blue-100">
+              {user?.email}
+            </p>
+          </div>
+        </div>
+
+        {editing ? (
+          <form
+            onSubmit={simpan}
+            className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                  <IoPencilOutline />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-gray-800">
+                    Edit Data Pribadi
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Perbarui informasi pribadi Anda.
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 aria-label="Batal edit"
-                onClick={() => setEditing(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-xl text-red-500 transition hover:bg-red-100 active:scale-95">
-                <MdCancel />
+                onClick={batalEdit}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition hover:bg-gray-200 shrink-0">
+                <IoCloseOutline className="text-xl" />
               </button>
-            )}
-            <span className={TOOLTIP}>
-              {!editing ? "Edit profil" : "Batal edit"}
-            </span>
-          </div>
-
-          <div className="group relative">
-            <button
-              type="button"
-              aria-label="Kembali"
-              onClick={() => navigate("/")}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-100 text-xl text-gray-600 transition hover:bg-gray-200 active:scale-95">
-              <IoArrowBack />
-            </button>
-            <span className={TOOLTIP}>Kembali</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 text-white shadow-sm">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold">
-          {userInitials}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h2 className="text-base font-bold leading-tight break-words">
-            {user?.nama_lengkap}
-          </h2>
-
-          <div className="mt-2 flex flex-wrap gap-2">
-            {user?.posisi && (
-              <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-medium">
-                {user.posisi}
-              </span>
-            )}
-            {user?.status_pegawai && (
-              <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-medium">
-                {user.status_pegawai}
-              </span>
-            )}
-          </div>
-
-          <p className="mt-2 truncate text-sm text-blue-100">{user?.email}</p>
-        </div>
-      </div>
-
-      {editing ? (
-        <form
-          onSubmit={simpan}
-          className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-              <IoPersonOutline />
             </div>
-            <h2 className="text-base font-semibold text-gray-800">
-              Edit Data Pribadi
-            </h2>
-          </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Nama Lengkap <span className="text-red-500">*</span>
-            </label>
-            <input
-              className={inputCls}
-              value={form.nama_lengkap}
-              onChange={(e) => set("nama_lengkap")(e.target.value)}
-              placeholder="Nama lengkap"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Tempat Lahir
+              <label className="block text-sm font-medium text-gray-700 after:content-['*'] after:text-red-500 after:ml-1">
+                Nama Lengkap
               </label>
               <input
                 className={inputCls}
-                value={form.tempat_lahir ?? ""}
-                onChange={(e) => set("tempat_lahir")(e.target.value)}
-                placeholder="Kota lahir"
+                value={form.nama_lengkap}
+                onChange={(e) => set("nama_lengkap")(e.target.value)}
+                placeholder="Nama lengkap"
+                required
               />
             </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Tanggal Lahir
-              </label>
-              <input
-                type="date"
-                className={inputCls}
-                value={form.tanggal_lahir?.slice(0, 10) ?? ""}
-                onChange={(e) => set("tanggal_lahir")(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Jenis Kelamin
-              </label>
-              <select
-                className={inputCls}
-                value={form.jenis_kelamin ?? ""}
-                onChange={(e) => set("jenis_kelamin")(e.target.value)}>
-                <option value="">Pilih</option>
-                {JK.map((jk) => (
-                  <option key={jk} value={jk}>
-                    {jk}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Agama
-              </label>
-              <select
-                className={inputCls}
-                value={form.agama ?? ""}
-                onChange={(e) => set("agama")(e.target.value)}>
-                <option value="">Pilih</option>
-                {AGAMA.map((agama) => (
-                  <option key={agama} value={agama}>
-                    {agama}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                No. HP
-              </label>
-              <input
-                className={inputCls}
-                value={form.no_hp ?? ""}
-                onChange={(e) => set("no_hp")(e.target.value)}
-                placeholder="08xxxx"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                NIP
-              </label>
-              <input
-                className={inputCls}
-                value={form.nip ?? ""}
-                onChange={(e) => set("nip")(e.target.value)}
-                placeholder="Nomor induk pegawai"
-              />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              className={inputCls}
-              value={form.email}
-              onChange={(e) => set("email")(e.target.value)}
-              placeholder="nama@email.com"
-              required
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={batalEdit}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50">
-              <IoCloseOutline />
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">
-              {submitting ? (
-                <Spinner />
-              ) : (
-                <>
-                  <IoSaveOutline />
-                  Simpan
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <>
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                <IoPersonOutline />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Tempat Lahir
+                </label>
+                <input
+                  className={inputCls}
+                  value={form.tempat_lahir ?? ""}
+                  onChange={(e) => set("tempat_lahir")(e.target.value)}
+                  placeholder="Kota lahir"
+                />
               </div>
-              <h2 className="text-base font-semibold text-gray-800">
-                Data Pribadi
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-              {nilaiPribadi.map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-gray-800">
-                    {item.value || "-"}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                <IoBusinessOutline />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Tanggal Lahir
+                </label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={form.tanggal_lahir?.slice(0, 10) ?? ""}
+                  onChange={(e) => set("tanggal_lahir")(e.target.value)}
+                />
               </div>
-              <h2 className="text-base font-semibold text-gray-800">
-                Struktur & Pekerjaan
-              </h2>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Jenis Kelamin
+                </label>
+                <select
+                  className={inputCls}
+                  value={form.jenis_kelamin ?? ""}
+                  onChange={(e) => set("jenis_kelamin")(e.target.value)}>
+                  <option value="">Pilih</option>
+                  {JK.map((jk) => (
+                    <option key={jk} value={jk}>
+                      {jk}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Agama
+                </label>
+                <select
+                  className={inputCls}
+                  value={form.agama ?? ""}
+                  onChange={(e) => set("agama")(e.target.value)}>
+                  <option value="">Pilih</option>
+                  {AGAMA.map((agama) => (
+                    <option key={agama} value={agama}>
+                      {agama}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  No. HP
+                </label>
+                <input
+                  className={inputCls}
+                  value={form.no_hp ?? ""}
+                  onChange={(e) => set("no_hp")(e.target.value)}
+                  placeholder="08xxxx"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  NIP
+                </label>
+                <input
+                  className={inputCls}
+                  value={form.nip ?? ""}
+                  onChange={(e) => set("nip")(e.target.value)}
+                  placeholder="Nomor induk pegawai"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-              {nilaiStruktur.map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-gray-800">
-                    {item.value}
-                  </p>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 after:content-['*'] after:text-red-500 after:ml-1">
+                Email
+              </label>
+              <input
+                type="email"
+                className={inputCls}
+                value={form.email}
+                onChange={(e) => set("email")(e.target.value)}
+                placeholder="nama@email.com"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={batalEdit}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50">
+                <IoCloseOutline className="text-lg" />
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500">
+                {submitting ? (
+                  <Spinner />
+                ) : (
+                  <>
+                    <IoSaveOutline className="text-lg" />
+                    Simpan
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            {/* Data Pribadi */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                    <IoPersonOutline />
+                  </div>
+                  <h2 className="text-base font-semibold text-gray-800">
+                    Data Pribadi
+                  </h2>
                 </div>
-              ))}
+                <button
+                  type="button"
+                  onClick={bukaEdit}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-100 active:scale-95">
+                  <IoPencilOutline className="text-sm" />
+                  Edit
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {nilaiPribadi.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-gray-800 break-words">
+                      {item.value || "-"}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </>
-      )}
-    </section>
+
+            {/* Struktur & Pekerjaan */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                  <IoBusinessOutline />
+                </div>
+                <h2 className="text-base font-semibold text-gray-800">
+                  Struktur & Pekerjaan
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {nilaiStruktur.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-gray-800 break-words">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+    </>
   );
 }

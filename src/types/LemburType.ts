@@ -112,6 +112,7 @@ export type AbsenLemburPayload = {
   lng: number;
   akurasi?: number;
   foto?: string;
+  gps_anomali?: string[];
 };
 
 export type AbsenLemburMasukData = {

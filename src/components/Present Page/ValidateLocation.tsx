@@ -2,26 +2,37 @@ import { useNavigate } from "react-router";
 import LocationPicker from "./LocationPicker";
 import { useAuth } from "../../context/AuthContext";
 import { useCallback, useState } from "react";
-import { getDistance } from "../../utils/GeoLocation";
+import {
+  getDistance,
+  MAX_ACCEPTABLE_ACCURACY,
+  MAX_SAMPLE_JUMP_METERS,
+  type ValidatedLocation,
+} from "../../utils/GeoLocation";
 
-type props = {
+type Props = {
   setCurrentStep: (step: number) => void;
-  onNext: (lat: number, lng: number, jarak: number) => void;
+  onNext: (loc: ValidatedLocation, jarak: number) => void;
 };
 
-export default function ValidateLocation({ setCurrentStep, onNext }: props) {
-  const { lokasi } = useAuth(); //office location from backend
+export default function ValidateLocation({ setCurrentStep, onNext }: Props) {
+  const { lokasi } = useAuth();
   const navigate = useNavigate();
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
+  const [location, setLocation] = useState<ValidatedLocation | null>(null);
+
   const distance =
     location && lokasi
       ? getDistance(lokasi.lat, lokasi.lng, location.lat, location.lng)
       : Infinity;
 
+  const canProceed =
+    location !== null &&
+    lokasi !== null &&
+    distance <= lokasi.radius &&
+    location.accuracy <= MAX_ACCEPTABLE_ACCURACY &&
+    location.maxJumpMeters <= MAX_SAMPLE_JUMP_METERS;
+
   const handleLocationReady = useCallback(
-    (loc: { lat: number; lng: number }) => setLocation(loc),
+    (loc: ValidatedLocation | null) => setLocation(loc),
     [],
   );
 
@@ -29,37 +40,27 @@ export default function ValidateLocation({ setCurrentStep, onNext }: props) {
     <div className="bg-white w-full rounded-2xl p-4">
       <h1 className="text-lg mb-3 font-medium">Validasi GPS</h1>
 
-      {/* show map */}
       {lokasi && (
         <LocationPicker onLocationReady={handleLocationReady} lokasi={lokasi} />
       )}
 
-      {/* Next button — enable only if location is ready */}
       <div className="flex items-center gap-3 mt-4">
         <button
+          type="button"
           onClick={() => navigate("/")}
-          className="w-full rounded-xl bg-red-600 py-3 text-white font-semibold cursor-pointer 
-                  hover:bg-red-700 transition-colors">
+          className="w-full rounded-xl bg-red-600 py-3 text-white font-semibold cursor-pointer hover:bg-red-700 transition-colors">
           Kembali
         </button>
 
         <button
-          disabled={!location || distance > (lokasi?.radius ?? 100)}
+          type="button"
+          disabled={!canProceed}
           onClick={() => {
-            if (!location) return;
-            onNext(location?.lat, location?.lng, distance);
+            if (!location || !canProceed) return;
+            onNext(location, distance);
             setCurrentStep(1);
           }}
-          className="
-                     w-full rounded-xl py-3 font-semibold transition-colors
-                    disabled:cursor-not-allowed
-                    disabled:bg-gray-300
-                    disabled:text-gray-500
-                    enabled:bg-blue-600
-                    enabled:text-white
-                    enabled:hover:bg-blue-700
-                    enabled:cursor-pointer
-      ">
+          className="w-full rounded-xl py-3 font-semibold transition-colors disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 enabled:bg-blue-600 enabled:text-white enabled:hover:bg-blue-700 enabled:cursor-pointer">
           Lanjut
         </button>
       </div>

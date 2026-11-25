@@ -1,6 +1,13 @@
 import api from "./client";
 
-export const absen = async (data: { tipe: "datang" | "pulang"; lat: number; lng: number; akurasi?: number; foto?: string }) => {
+export const absen = async (data: {
+  tipe: "datang" | "pulang";
+  lat: number;
+  lng: number;
+  akurasi?: number;
+  foto?: string;
+  gps_anomali?: string[];
+}) => {
   const response = await api.post("/absen", data);
   return response.data;
 };

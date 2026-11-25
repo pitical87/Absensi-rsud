@@ -20,16 +20,17 @@ export default function StepWizard({ currentStep, steps }: StepperProps) {
           <div
             className={`
               z-10 flex h-10 w-10 items-center justify-center rounded-full border-2
-              transition-all duration-300
+              text-sm font-semibold transition-all duration-300
               ${
                 index < currentStep
-                  ? "border-blue-600 bg-blue-600"
+                  ? "border-blue-600 bg-blue-600 text-white"
                   : index === currentStep
-                    ? "border-blue-600 bg-white"
-                    : "border-gray-300 bg-white"
+                    ? "border-blue-600 bg-white text-blue-600"
+                    : "border-gray-300 bg-white text-gray-400"
               }
-            `}
-          />
+            `}>
+            {index + 1}
+          </div>
 
           {/* Label */}
           <span

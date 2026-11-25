@@ -3,14 +3,25 @@ import { useEffect, useState } from "react";
 import StepWizard from "../components/Present Page/StepWizard";
 import ValidateLocation from "../components/Present Page/ValidateLocation";
 import ValidateSelfie from "../components/Present Page/ValidateSelfie";
-import ConfirmAbsenLembur, { type HasilAbsenLembur } from "../components/Present Page/ConfirmAbsenLembur";
+import ConfirmAbsenLembur, {
+  type HasilAbsenLembur,
+} from "../components/Present Page/ConfirmAbsenLembur";
 import TopNavbar from "../components/Client Page/TopNavbar";
-import { FaStar, FaRegStar, FaTriangleExclamation, FaCircleInfo } from "react-icons/fa6";
+import {
+  FaStar,
+  FaRegStar,
+  FaTriangleExclamation,
+  FaCircleInfo,
+} from "react-icons/fa6";
+import type { ValidatedLocation } from "../utils/GeoLocation";
 
 type PendingData = {
   latitude: number;
   longitude: number;
+  accuracy: number;
   distance: number;
+  capturedAt: number;
+  suspiciousReasons: string[];
   image: string | null;
 };
 
@@ -19,7 +30,13 @@ const steps: string[] = ["Lokasi", "Selfie", "Konfirmasi"];
 function BintangSukses({ nilai }: { nilai?: number }) {
   if (nilai === undefined) return null;
   const bulat = Math.round(nilai);
-  return <span className="flex gap-1 text-amber-400 text-2xl">{[1, 2, 3, 4, 5].map((i) => (i <= bulat ? <FaStar key={i} /> : <FaRegStar key={i} />))}</span>;
+  return (
+    <span className="flex gap-1 text-amber-400 text-2xl">
+      {[1, 2, 3, 4, 5].map((i) =>
+        i <= bulat ? <FaStar key={i} /> : <FaRegStar key={i} />,
+      )}
+    </span>
+  );
 }
 
 export default function AbsenLemburPage() {
@@ -33,7 +50,10 @@ export default function AbsenLemburPage() {
   const [pendingData, setPendingData] = useState<PendingData>({
     latitude: 0,
     longitude: 0,
+    accuracy: 0,
     distance: 0,
+    capturedAt: 0,
+    suspiciousReasons: [],
     image: null,
   });
 
@@ -47,9 +67,13 @@ export default function AbsenLemburPage() {
     <div>
       <TopNavbar />
       {/* steps wizard */}
-      <section className="bg-white border-b border-gray-300 px-4 py-1 flex flex-col gap-3">
-        <h1 className="text-lg font-bold">Absen <span>{mode === "masuk" ? "Masuk" : "Pulang"}</span> Lembur</h1>
-        <span className="-mt-1 text-sm text-gray-500">Tanggal: {tanggal || "—"}</span>
+      <section className="bg-white border-b border-gray-300 px-4 py-3 flex flex-col gap-3">
+        <h1 className="text-lg font-bold text-center">
+          Absen <span>{mode === "masuk" ? "Masuk" : "Pulang"}</span> Lembur
+        </h1>
+        <span className="-mt-2 text-sm text-gray-500 text-center">
+          Tanggal: {tanggal || "—"}
+        </span>
         <div className="w-full">
           <StepWizard currentStep={currentStep} steps={steps} />
         </div>
@@ -60,26 +84,58 @@ export default function AbsenLemburPage() {
         {currentStep === 0 && (
           <ValidateLocation
             setCurrentStep={setCurrentStep}
-            onNext={(lat, lng, distance) =>
+            onNext={(loc: ValidatedLocation, distance: number) =>
               setPendingData((prev) => ({
                 ...prev,
-                latitude: lat,
-                longitude: lng,
+                latitude: loc.lat,
+                longitude: loc.lng,
+                accuracy: loc.accuracy,
+                capturedAt: loc.capturedAt,
+                suspiciousReasons: loc.suspiciousReasons,
                 distance,
               }))
             }
           />
         )}
-        {currentStep === 1 && <ValidateSelfie setCurrentStep={setCurrentStep} onNext={(image) => setPendingData((prev) => ({ ...prev, image }))} />}
-        {currentStep === 2 && <ConfirmAbsenLembur tipe={mode} tanggal={tanggal} setCurrentStep={setCurrentStep} onSuccess={(res) => setHasil(res)} data={pendingData} />}
+        {currentStep === 1 && (
+          <ValidateSelfie
+            setCurrentStep={setCurrentStep}
+            locationMeta={{
+              latitude: pendingData.latitude,
+              longitude: pendingData.longitude,
+              accuracy: pendingData.accuracy,
+            }}
+            onNext={(image) => setPendingData((prev) => ({ ...prev, image }))}
+          />
+        )}
+        {currentStep === 2 && (
+          <ConfirmAbsenLembur
+            tipe={mode}
+            tanggal={tanggal}
+            setCurrentStep={setCurrentStep}
+            onSuccess={(res) => setHasil(res)}
+            data={pendingData}
+          />
+        )}
         {currentStep === 3 && (
           <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-8">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-green-700">Absen Lembur Berhasil!</h2>
+            <h2 className="text-xl font-bold text-green-700">
+              Absen Lembur Berhasil!
+            </h2>
             {hasil?.tipe === "masuk" && (hasil?.menit ?? 0) > 0 && (
               <div className="flex w-full items-center gap-3 rounded-xl bg-amber-100 px-4 py-3 text-sm font-medium text-amber-800">
                 <FaTriangleExclamation className="shrink-0 text-amber-600" />
@@ -94,10 +150,24 @@ export default function AbsenLemburPage() {
                 <span>Durasi lembur: {hasil.durasiTeks}</span>
               </div>
             )}
-            {hasil?.pesan && <p className="text-sm text-gray-600 text-center">{hasil.pesan}</p>}
+            {hasil?.pesan && (
+              <p className="text-sm text-gray-600 text-center">{hasil.pesan}</p>
+            )}
             <BintangSukses nilai={hasil?.bintang} />
-            <p className="text-xs text-gray-400">{hasil?.bintang !== undefined ? `Bintang ketepatan lembur hari ini: ${hasil.bintang}/5` : "Bintang ketepatan dihitung dari ketepatan waktu lembur."}</p>
-            <p className="text-sm text-gray-500">Mengalihkan ke halaman utama...</p>
+            <p className="text-xs text-gray-400">
+              {hasil?.bintang !== undefined
+                ? `Bintang ketepatan lembur hari ini: ${hasil.bintang}/5`
+                : "Bintang ketepatan dihitung dari ketepatan waktu lembur."}
+            </p>
+            <p className="text-sm text-gray-500">
+              Mengalihkan ke halaman utama...
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/", { replace: true })}
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
+              Kembali ke Beranda
+            </button>
           </div>
         )}
       </section>
