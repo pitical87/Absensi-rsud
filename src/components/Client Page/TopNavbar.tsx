@@ -223,7 +223,7 @@ export default function TopNavbar() {
                     Rekap Kehadiran
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Daftar hadir 1 bulan ({user?.nama_lengkap})
+                    Daftar hadir &amp; logbook 1 bulan ({user?.nama_lengkap})
                   </p>
                 </div>
               </div>

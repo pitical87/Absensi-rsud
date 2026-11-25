@@ -148,7 +148,7 @@ export default function RekapBulananModal({ isOpen, bawahan, onClose }: Props) {
                 Rekap Bulanan
               </h2>
               <p className="text-xs text-gray-500">
-                Daftar hadir 1 bulan (PDF per pegawai)
+                Daftar hadir &amp; logbook 1 bulan (PDF per pegawai)
               </p>
             </div>
           </div>
