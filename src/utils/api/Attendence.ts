@@ -42,6 +42,17 @@ export const rekapAbsensi = async (bulan: number, tahun: number) => {
   return res.data;
 };
 
+export const rekapSayaPdf = async (
+  bulan: number,
+  tahun: number,
+): Promise<Blob> => {
+  const res = await api.get("/rekap/pdf", {
+    params: { bulan, tahun },
+    responseType: "blob",
+  });
+  return res.data;
+};
+
 export const rekapBawahanPdf = async (
   bulan: number,
   tahun: number,
