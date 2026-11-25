@@ -45,3 +45,29 @@ export type SimrsLogbookResponse = {
   total_lab?: number;
   data: SimrsEntry[];
 };
+
+export type BawahanLogbookEntry = {
+  id: number;
+  jam: string;
+  isi: string;
+  is_verified: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
+};
+
+export type BawahanLogbookDetailResponse = {
+  sukses: boolean;
+  pesan?: string;
+  bulan: number;
+  tahun: number;
+  bawahan: {
+    id: number;
+    nama: string;
+    nip: string | null;
+  };
+  total_hari: number;
+  total_entri: number;
+  terverifikasi: number;
+  belum: number;
+  data: Record<string, BawahanLogbookEntry[]>;
+};

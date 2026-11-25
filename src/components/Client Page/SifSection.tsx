@@ -6,7 +6,11 @@ import {
   BiServer,
   BiTimeFive,
 } from "react-icons/bi";
-import { HiOutlineDocumentReport, HiOutlineDocumentText } from "react-icons/hi";
+import {
+  HiOutlineClipboardList,
+  HiOutlineDocumentReport,
+  HiOutlineDocumentText,
+} from "react-icons/hi";
 import { IoPersonOutline, IoSunny } from "react-icons/io5";
 import { LuInfo } from "react-icons/lu";
 import { PiBuildingOfficeFill } from "react-icons/pi";
@@ -19,6 +23,7 @@ import { getLemburMenungguTotal } from "../../utils/api/Lembur";
 import { getPerubahanJadwalMenungguTotal } from "../../utils/api/PerubahanJadwal";
 import Skeleton from "../Skeleton";
 import RekapBulananModal from "./RekapBulananModal";
+import RekapLogbookModal from "./RekapLogbookModal";
 import MappingSimrsModal from "./MappingSimrsModal";
 
 interface ShiftInfo {
@@ -30,7 +35,7 @@ interface ShiftInfo {
 
 export default function SifSection() {
   const navigate = useNavigate();
-  const { user, can, bawahan, atasan, lemburAktif } = useAuth();
+  const { user, can, bawahan, atasan, hakAkses, lemburAktif } = useAuth();
   const [shift, setShift] = useState<ShiftInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalPending, setTotalPending] = useState(0);
@@ -40,16 +45,26 @@ export default function SifSection() {
   const [loadingLembur, setLoadingLembur] = useState(true);
   const [loadingJadwal, setLoadingJadwal] = useState(true);
   const [showRekapBulanan, setShowRekapBulanan] = useState(false);
+  const [showRekapLogbook, setShowRekapLogbook] = useState(false);
   const [showMappingSimrs, setShowMappingSimrs] = useState(false);
 
   const daftarBawahan = bawahan ?? [];
-  const punyaBawahanLain = daftarBawahan.some((b) => b.id !== user?.id);
+  const daftarBawahanLain = daftarBawahan.filter((b) => b.id !== user?.id);
+  const punyaBawahanLain = daftarBawahanLain.length > 0;
   const tampilPersetujuan =
     can("jadwal.kelola") ||
     can("approve.izin") ||
     can("approve.lembur") ||
     can("approve.jadwal") ||
     punyaBawahanLain;
+  const jumlahMenuPersetujuan = [
+    can("jadwal.kelola"),
+    can("approve.izin"),
+    lemburAktif && can("approve.lembur"),
+    can("approve.jadwal"),
+    daftarBawahan.length > 0,
+    punyaBawahanLain,
+  ].filter(Boolean).length;
 
   useEffect(() => {
     if (!can("approve.izin")) return;
@@ -264,7 +279,10 @@ export default function SifSection() {
             Persetujuan & Pengelolaan
           </h3>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          <div
+            className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${
+              jumlahMenuPersetujuan <= 4 ? "lg:grid-cols-4" : ""
+            }`}>
             {can("jadwal.kelola") && (
               <button
                 onClick={() => navigate("/kelola-jadwal")}
@@ -331,6 +349,16 @@ export default function SifSection() {
                 <span>Rekap Bulanan</span>
               </button>
             )}
+
+            {punyaBawahanLain && (
+              <button
+                type="button"
+                onClick={() => setShowRekapLogbook(true)}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-2 py-3 text-sm font-medium text-violet-600 transition hover:bg-violet-100">
+                <HiOutlineClipboardList size={20} />
+                <span>Rekap Logbook</span>
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -340,6 +368,14 @@ export default function SifSection() {
         isOpen={showRekapBulanan}
         bawahan={daftarBawahan}
         onClose={() => setShowRekapBulanan(false)}
+      />
+
+      <RekapLogbookModal
+        key={showRekapLogbook ? "logbook-open" : "logbook-closed"}
+        isOpen={showRekapLogbook}
+        bawahan={daftarBawahanLain}
+        bisaVerifikasi={Boolean(hakAkses?.verifikasi_logbook)}
+        onClose={() => setShowRekapLogbook(false)}
       />
 
       <MappingSimrsModal

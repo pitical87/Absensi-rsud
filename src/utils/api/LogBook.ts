@@ -1,4 +1,8 @@
-import type { LogbookResponse, SimrsLogbookResponse } from "../../types/LogBookType";
+import type {
+  BawahanLogbookDetailResponse,
+  LogbookResponse,
+  SimrsLogbookResponse,
+} from "../../types/LogBookType";
 import api from "./client";
 
 export const saveLogBulk = async (data: { entri: { tanggal: string; jam: string; isi: string }[] }) => {
@@ -51,5 +55,29 @@ export const deleteTemplate = async (id: number) => {
 export const getLogbookSimrs = async (dari: string, sampai: string, jenis?: string): Promise<SimrsLogbookResponse> => {
   const path = jenis ? `/logbook/simrs/${jenis}` : "/logbook/simrs";
   const res = await api.get(`${path}?dari=${dari}&sampai=${sampai}`);
+  return res.data;
+};
+
+export const getLogbookBawahanDetail = async (
+  userId: number,
+  bulan: number,
+  tahun: number,
+): Promise<BawahanLogbookDetailResponse> => {
+  const res = await api.get(`/logbook/bawahan/${userId}`, {
+    params: { bulan, tahun },
+  });
+  return res.data;
+};
+
+export const verifikasiLogbookBawahan = async (
+  ids: number[],
+  aksi: "verifikasi" | "batal",
+  userId?: number,
+): Promise<{ sukses: boolean; pesan: string; jumlah: number }> => {
+  const res = await api.post("/logbook/verifikasi", {
+    ids,
+    aksi,
+    ...(userId ? { user_id: userId } : {}),
+  });
   return res.data;
 };
