@@ -4,6 +4,9 @@ const api = axios.create({
   baseURL: "/api/mobile",
   withCredentials: true,
   timeout: 30000,
+  headers: {
+    "X-Requested-With": "XMLHttpRequest",
+  },
 });
 
 api.interceptors.response.use(
