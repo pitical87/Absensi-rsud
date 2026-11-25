@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { GetCurrentTime } from "../../utils/DateUtils";
 import {
+  detectGeolocationTampering,
   formatDistance,
   getDistance,
   getFreshPosition,
@@ -82,6 +83,15 @@ export default function ConfirmAbsenLembur({
     setSubmitting(true);
     let sukses = false;
     try {
+      const tampering = detectGeolocationTampering();
+      if (tampering.length > 0) {
+        toast.error(
+          "Terdeteksi ekstensi Fake GPS pada browser. Nonaktifkan ekstensi lalu muat ulang halaman.",
+        );
+        setCurrentStep(0);
+        return;
+      }
+
       let lat = data.latitude;
       let lng = data.longitude;
       let akurasi = data.accuracy;
@@ -115,10 +125,12 @@ export default function ConfirmAbsenLembur({
           lat = fresh.lat;
           lng = fresh.lng;
           akurasi = fresh.accuracy;
-        } catch {
-          toast.error(
-            "Sesi lokasi sudah kedaluwarsa. Silakan validasi ulang GPS Anda.",
-          );
+        } catch (geoErr) {
+          const geoMsg =
+            geoErr instanceof Error && geoErr.message
+              ? geoErr.message
+              : "Sesi lokasi sudah kedaluwarsa. Silakan validasi ulang GPS Anda.";
+          toast.error(geoMsg);
           setCurrentStep(0);
           return;
         }

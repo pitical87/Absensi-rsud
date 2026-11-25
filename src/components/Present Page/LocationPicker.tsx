@@ -9,8 +9,11 @@ import { FiRefreshCw } from "react-icons/fi";
 import { MdLocationOff } from "react-icons/md";
 import {
   analyzeGpsSamples,
+  checkGeolocationPermissionDenied,
+  detectGeolocationTampering,
   formatDistance,
   getDistance,
+  inspectGeolocationPosition,
   MAX_ACCEPTABLE_ACCURACY,
   MAX_SAMPLE_JUMP_METERS,
   type GpsSample,
@@ -43,6 +46,7 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
   );
   const [sampleProgress, setSampleProgress] = useState(0);
   const [location, setLocation] = useState<ValidatedLocation | null>(null);
+  const [tamperingMsg, setTamperingMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState(
     geolocationAvailable ? "" : "Browser tidak mendukung GPS",
   );
@@ -59,6 +63,9 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
     ? getDistance(lokasi.lat, lokasi.lng, location.lat, location.lng)
     : Infinity;
 
+  const hasTampering =
+    tamperingMsg !== "" ||
+    (location !== null && location.tamperingReasons.length > 0);
   const accuracyTooLow =
     location !== null && location.accuracy > MAX_ACCEPTABLE_ACCURACY;
   const jumpAnomaly =
@@ -66,6 +73,7 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
   const isValid =
     status === "success" &&
     location !== null &&
+    !hasTampering &&
     distance <= lokasi.radius &&
     !accuracyTooLow &&
     !jumpAnomaly;
@@ -73,9 +81,24 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
   useEffect(() => {
     if (!geolocationAvailable) return;
 
+    const initialTampering = detectGeolocationTampering();
+    if (initialTampering.length > 0) {
+      const t = setTimeout(() => {
+        setTamperingMsg(initialTampering[0]);
+        setLocation(null);
+        setStatus("error");
+        setErrorMsg(
+          "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
+        );
+        onLocationReadyRef.current(null);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+
     let cancelled = false;
     let settled = false;
     const samples: GpsSample[] = [];
+    const tamperingReasons: string[] = [];
     let watchId: number | null = null;
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -94,15 +117,74 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
       if (cancelled || settled || samples.length === 0) return;
       settled = true;
       cleanup();
-      const result = analyzeGpsSamples(samples);
-      setLocation(result);
-      setStatus("success");
-      onLocationReadyRef.current(result);
+
+      const lateTampering = detectGeolocationTampering();
+      const allTampering = Array.from(
+        new Set([...tamperingReasons, ...lateTampering]),
+      );
+
+      checkGeolocationPermissionDenied()
+        .then((denied) => {
+          if (cancelled) return;
+          if (denied) {
+            allTampering.push(
+              "Izin lokasi ditolak browser tetapi koordinat tetap dikirim (indikasi Fake GPS).",
+            );
+          }
+          if (allTampering.length > 0) {
+            setTamperingMsg(allTampering[0]);
+            setLocation(null);
+            setStatus("error");
+            setErrorMsg(
+              "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
+            );
+            onLocationReadyRef.current(null);
+            return;
+          }
+          const result = analyzeGpsSamples(samples, allTampering);
+          setTamperingMsg("");
+          setLocation(result);
+          setStatus("success");
+          onLocationReadyRef.current(result);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          if (allTampering.length > 0) {
+            setTamperingMsg(allTampering[0]);
+            setLocation(null);
+            setStatus("error");
+            setErrorMsg(
+              "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
+            );
+            onLocationReadyRef.current(null);
+            return;
+          }
+          const result = analyzeGpsSamples(samples, allTampering);
+          setTamperingMsg("");
+          setLocation(result);
+          setStatus("success");
+          onLocationReadyRef.current(result);
+        });
     };
 
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
         if (cancelled || settled) return;
+
+        const posTampering = inspectGeolocationPosition(pos);
+        if (posTampering.length > 0) {
+          tamperingReasons.push(...posTampering);
+          settled = true;
+          cleanup();
+          setTamperingMsg(posTampering[0]);
+          setLocation(null);
+          setStatus("error");
+          setErrorMsg(
+            "Terdeteksi ekstensi/skrip pengubah lokasi (Fake GPS) pada browser. Nonaktifkan ekstensi tersebut lalu muat ulang halaman.",
+          );
+          onLocationReadyRef.current(null);
+          return;
+        }
 
         samples.push({
           lat: pos.coords.latitude,
@@ -158,6 +240,7 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
     if (!geolocationAvailable) return;
     setStatus("loading");
     setLocation(null);
+    setTamperingMsg("");
     setSampleProgress(0);
     setErrorMsg("");
     onLocationReadyRef.current(null);
@@ -254,7 +337,9 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
             ) : status === "error" ? (
               <>
                 <span className="text-sm font-semibold text-red-800">
-                  Gagal mendapat lokasi
+                  {hasTampering
+                    ? "Terdeteksi Fake GPS / Ekstensi Browser"
+                    : "Gagal mendapat lokasi"}
                 </span>
                 <span className="text-red-700 text-xs">{errorMsg}</span>
               </>
@@ -340,18 +425,24 @@ export default function LocationPicker({ onLocationReady, lokasi }: Props) {
         <div className="flex h-64 w-full flex-col items-center justify-center rounded-xl border border-dashed border-red-300 bg-red-50 px-6 text-center">
           <MdLocationOff className="mb-3 text-5xl text-red-400" />
           <h3 className="text-base font-semibold text-red-700">
-            Gagal mendeteksi lokasi
+            {hasTampering
+              ? "Manipulasi GPS Terdeteksi"
+              : "Gagal mendeteksi lokasi"}
           </h3>
           <p className="mt-1 text-sm text-red-600">
-            Pastikan GPS aktif dan izin lokasi telah diberikan, lalu coba lagi.
+            {hasTampering
+              ? "Nonaktifkan ekstensi Fake GPS (seperti Location Changer) di browser Anda, lalu muat ulang halaman ini."
+              : "Pastikan GPS aktif dan izin lokasi telah diberikan, lalu coba lagi."}
           </p>
           {geolocationAvailable && (
             <button
               type="button"
-              onClick={handleRefresh}
+              onClick={
+                hasTampering ? () => window.location.reload() : handleRefresh
+              }
               className="mt-4 inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700">
               <FiRefreshCw />
-              Coba Lagi
+              {hasTampering ? "Muat Ulang Halaman" : "Coba Lagi"}
             </button>
           )}
         </div>

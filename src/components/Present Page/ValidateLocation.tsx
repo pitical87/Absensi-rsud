@@ -27,6 +27,7 @@ export default function ValidateLocation({ setCurrentStep, onNext }: Props) {
   const canProceed =
     location !== null &&
     lokasi !== null &&
+    location.tamperingReasons.length === 0 &&
     distance <= lokasi.radius &&
     location.accuracy <= MAX_ACCEPTABLE_ACCURACY &&
     location.maxJumpMeters <= MAX_SAMPLE_JUMP_METERS;
