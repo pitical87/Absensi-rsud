@@ -14,6 +14,26 @@ import {
   type User,
 } from "./AuthContext";
 
+function resolusiLemburAktif(
+  lemburAktifApi: unknown,
+  hakAkses?: HakAkses | null,
+): boolean {
+  if (typeof lemburAktifApi === "boolean") {
+    return lemburAktifApi;
+  }
+  if (hakAkses) {
+    const punyaHakAtasanLain =
+      hakAkses.verifikasi_logbook ||
+      hakAkses.buat_jadwal ||
+      hakAkses.verifikasi_ijin ||
+      hakAkses.verifikasi_perubahan_jadwal;
+    if (punyaHakAtasanLain && hakAkses.verifikasi_lembur === false) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [lokasi, setLokasi] = useState<Lokasi | null>(null);
@@ -22,11 +42,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
   const [bawahan, setBawahan] = useState<Bawahan[] | null>([]);
+  const [atasan, setAtasan] = useState<Bawahan[] | null>([]);
   const [hakAkses, setHakAkses] = useState<HakAkses | null>(null);
+  const [lemburAktif, setLemburAktif] = useState(true);
 
   const can = useCallback(
     (permission: Permission) => {
       if (!user) return false;
+      if (permission === "approve.lembur" && !lemburAktif) {
+        return false;
+      }
       if (user.role === "admin") return true;
       switch (permission) {
         case "jadwal.kelola":
@@ -41,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return true;
       }
     },
-    [user, hakAkses],
+    [user, hakAkses, lemburAktif],
   );
 
   const navigate = useNavigate();
@@ -57,7 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(res.user);
           setLokasi(res.lokasi);
           setBawahan(res.bawahan ?? []);
+          setAtasan(res.atasan_langsung ?? res.atasan ?? []);
           setHakAkses(res.hak_akses ?? null);
+          setLemburAktif(resolusiLemburAktif(res.lembur_aktif, res.hak_akses));
         }
       })
       .catch(() => {
@@ -90,8 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     can,
     bawahan,
     setBawahan,
+    atasan,
+    setAtasan,
     hakAkses,
     setHakAkses,
+    lemburAktif,
+    setLemburAktif,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -16,7 +16,14 @@ export default function LoginPage() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser, setLokasi, setBawahan, setHakAkses } = useAuth();
+  const {
+    setUser,
+    setLokasi,
+    setBawahan,
+    setAtasan,
+    setHakAkses,
+    setLemburAktif,
+  } = useAuth();
 
   const [showForgetForm, setShowForgetForm] = useState(false);
   const [forgetEmail, setForgetEmail] = useState("");
@@ -29,7 +36,22 @@ export default function LoginPage() {
       setUser(res.user);
       setLokasi(res.lokasi);
       setBawahan(res.bawahan ?? []);
+      setAtasan(res.atasan_langsung ?? res.atasan ?? []);
       setHakAkses(res.hak_akses ?? null);
+      if (typeof res.lembur_aktif === "boolean") {
+        setLemburAktif(res.lembur_aktif);
+      } else if (res.hak_akses) {
+        const punyaHakAtasanLain =
+          res.hak_akses.verifikasi_logbook ||
+          res.hak_akses.buat_jadwal ||
+          res.hak_akses.verifikasi_ijin ||
+          res.hak_akses.verifikasi_perubahan_jadwal;
+        setLemburAktif(
+          !(punyaHakAtasanLain && res.hak_akses.verifikasi_lembur === false),
+        );
+      } else {
+        setLemburAktif(true);
+      }
       navigate("/");
     } catch (err: unknown) {
       const pesan = (err as ApiErrorShape).response?.data?.pesan;

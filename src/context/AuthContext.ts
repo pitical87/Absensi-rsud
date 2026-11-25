@@ -65,8 +65,12 @@ export type AuthContextType = {
   logout: () => Promise<void>;
   bawahan: Bawahan[] | null;
   setBawahan: (bawahan: Bawahan[] | null) => void;
+  atasan: Bawahan[] | null;
+  setAtasan: (atasan: Bawahan[] | null) => void;
   hakAkses: HakAkses | null;
   setHakAkses: (hakAkses: HakAkses | null) => void;
+  lemburAktif: boolean;
+  setLemburAktif: (aktif: boolean) => void;
   can: (permission: Permission) => boolean;
 };
 export const AuthContext = createContext<AuthContextType>(

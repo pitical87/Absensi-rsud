@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { HiOutlineChartPie } from "react-icons/hi";
-import { LuClock3 } from "react-icons/lu";
 import { FaRegStar, FaStar } from "react-icons/fa6";
 import { getStatistic, getStatus } from "../../utils/api/Attendence";
 import { FaStarHalfAlt } from "react-icons/fa";
@@ -40,6 +38,152 @@ function Bintang({ nilai }: { nilai: number }) {
   );
 }
 
+function clampPersen(nilai: number): number {
+  if (!Number.isFinite(nilai)) return 0;
+  return Math.max(0, Math.min(100, nilai));
+}
+
+function GrafikRingkasan({
+  stat,
+  isDokter,
+}: {
+  stat: Statistic;
+  isDokter: boolean;
+}) {
+  const kehadiranPersen = clampPersen(stat.kehadiran.persen);
+  const jamPersen =
+    stat.jam_kerja.target_jam > 0
+      ? Math.round(
+        (stat.jam_kerja.total_jam / stat.jam_kerja.target_jam) * 1000,
+      ) / 10
+      : 0;
+
+  const radius = 34;
+  const keliling = 2 * Math.PI * radius;
+  const offset = keliling - (kehadiranPersen / 100) * keliling;
+  const warnaDonut =
+    kehadiranPersen >= 80
+      ? "#10b981"
+      : kehadiranPersen >= 60
+        ? "#f59e0b"
+        : "#ef4444";
+
+  const bars: {
+    label: string;
+    nilai: number;
+    teks: string;
+    warna: string;
+  }[] = [
+      {
+        label: "Kehadiran",
+        nilai: kehadiranPersen,
+        teks: `${stat.kehadiran.persen}%`,
+        warna: "bg-emerald-500",
+      },
+      ...(!isDokter
+        ? [
+          {
+            label: "Target Jam",
+            nilai: clampPersen(jamPersen),
+            teks: `${Math.round(jamPersen)}%`,
+            warna: "bg-blue-500",
+          },
+          {
+            label: "Tepat Masuk",
+            nilai: clampPersen(stat.ketepatan.tepat_masuk),
+            teks: `${stat.ketepatan.tepat_masuk}%`,
+            warna: "bg-indigo-500",
+          },
+          {
+            label: "Tepat Pulang",
+            nilai: clampPersen(stat.ketepatan.tepat_pulang),
+            teks: `${stat.ketepatan.tepat_pulang}%`,
+            warna: "bg-teal-500",
+          },
+        ]
+        : []),
+    ];
+
+  return (
+    <div className="mt-3 rounded-xl border border-gray-300 bg-white p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Grafik Capaian Bulan Ini
+        </p>
+        <span className="text-[11px] text-gray-400">Skala 0–100%</span>
+      </div>
+
+      <div className="flex items-center gap-4">
+        {/* Ring / Donut Kehadiran */}
+        <div className="flex shrink-0 flex-col items-center">
+          <div className="relative h-22 w-22">
+            <svg
+              viewBox="0 0 84 84"
+              className="h-full w-full -rotate-90"
+              role="img"
+              aria-label={`Grafik kehadiran ${stat.kehadiran.persen}%`}>
+              <circle
+                cx="42"
+                cy="42"
+                r={radius}
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="8"
+              />
+              <circle
+                cx="42"
+                cy="42"
+                r={radius}
+                fill="none"
+                stroke={warnaDonut}
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={keliling}
+                strokeDashoffset={offset}
+                className="transition-all duration-500 ease-out"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-sm font-bold text-gray-800">
+                {Math.round(stat.kehadiran.persen)}%
+              </span>
+              <span className="text-[10px] text-gray-400">Hadir</span>
+            </div>
+          </div>
+          <span className="mt-1 text-[11px] text-gray-500">
+            {stat.kehadiran.hadir}/{stat.kehadiran.target} hari
+          </span>
+        </div>
+
+        {/* Simple Horizontal Bar Chart */}
+        <div className="flex-1 min-w-0 space-y-2.5">
+          {bars.map((item) => (
+            <div key={item.label} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-gray-600">{item.label}</span>
+                <span className="font-semibold text-gray-800 tabular-nums">
+                  {item.teks}
+                </span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${item.warna}`}
+                  style={{ width: `${item.nilai}%` }}
+                />
+              </div>
+            </div>
+          ))}
+          <div className="flex justify-between pt-0.5 text-[10px] text-gray-400 tabular-nums">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PresentStatistic() {
   const [stat, setStat] = useState<Statistic | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,9 +210,9 @@ export default function PresentStatistic() {
           <IoIosStats />
           Statistik Bulan Ini
         </h1>
-        <div className="mt-4 flex justify-between items-center gap-3 sm:gap-5">
+        {/* <div className="mt-4 flex justify-between items-center gap-3 sm:gap-5">
           <div
-            className="flex flex-col items-start bg-white border 
+            className="flex flex-col items-start bg-white border
                   border-gray-300 rounded-xl p-3 sm:p-4 gap-1 w-full min-w-0"
           >
             <span className="text-sm sm:text-md text-gray-500 flex items-center gap-1 w-full">
@@ -78,7 +222,7 @@ export default function PresentStatistic() {
             {loading ? <Skeleton className="h-4 w-24" /> : <span className="text-xs sm:text-md text-gray-500 flex items-center gap-1 w-full">{stat ? `${stat.kehadiran.hadir}/${stat.kehadiran.target} hari kerja` : "Memuat..."}</span>}
           </div>
           <div
-            className="flex flex-col items-start bg-white border 
+            className="flex flex-col items-start bg-white border
                   border-gray-300 rounded-xl p-3 sm:p-4 gap-1 w-full min-w-0"
           >
             <span className="text-sm sm:text-md text-gray-500 flex items-center gap-1 w-full">
@@ -92,7 +236,7 @@ export default function PresentStatistic() {
               <span className="text-xs sm:text-md text-gray-500 flex items-center gap-1 w-full">{isDokter ? "Jam kerja fleksibel" : stat ? `target ${stat.jam_kerja.target_jam} jam` : "Memuat..."}</span>
             )}
           </div>
-        </div>
+        </div> */}
 
         {isDokter && (
           <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -100,9 +244,8 @@ export default function PresentStatistic() {
           </div>
         )}
 
-        {!isDokter && (
+        {/* {!isDokter && (
           <>
-            {/* Ketepatan waktu masuk & pulang */}
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div className="bg-white border border-gray-300 rounded-xl p-3 sm:p-4">
                 <p className="text-sm text-gray-500">Tepat Masuk</p>
@@ -113,7 +256,28 @@ export default function PresentStatistic() {
                 {loading ? <Skeleton className="mt-1 h-7 w-16" /> : <p className="mt-1 text-xl sm:text-2xl font-bold">{stat ? `${stat.ketepatan.tepat_pulang}%` : "-"}</p>}
               </div>
             </div>
+          </>
+        )} */}
 
+        {/* Grafik simple capaian bulan ini */}
+        {loading ? (
+          <div className="mt-3 rounded-xl border border-gray-300 bg-white p-4">
+            <Skeleton className="h-3.5 w-40 mb-3" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-20 w-20 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2.5">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+                <Skeleton className="h-3 w-4/6" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          stat && <GrafikRingkasan stat={stat} isDokter={isDokter} />
+        )}
+
+        {!isDokter && (
+          <>
             {/* Bintang ketepatan bulan ini */}
             <div className="mt-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
               <div>

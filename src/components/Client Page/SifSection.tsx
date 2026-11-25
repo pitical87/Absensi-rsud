@@ -30,7 +30,7 @@ interface ShiftInfo {
 
 export default function SifSection() {
   const navigate = useNavigate();
-  const { user, can, bawahan } = useAuth();
+  const { user, can, bawahan, atasan, lemburAktif } = useAuth();
   const [shift, setShift] = useState<ShiftInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalPending, setTotalPending] = useState(0);
@@ -181,11 +181,13 @@ export default function SifSection() {
           </div>
 
           <div className="flex items-center gap-2">
-            <IoPersonOutline className="text-lg text-sky-600" />
-            <div>
+            <IoPersonOutline className="text-lg text-sky-600 shrink-0" />
+            <div className="min-w-0">
               <p className="text-[11px] text-gray-500">Atasan</p>
-              <p className="text-sm font-semibold">
-                {user?.jabatan?.nama ?? "—"}
+              <p className="text-sm font-semibold break-words">
+                {atasan && atasan.length > 0
+                  ? atasan.map((a) => a.nama).join(", ")
+                  : "—"}
               </p>
             </div>
           </div>
@@ -198,7 +200,10 @@ export default function SifSection() {
             Pengajuan & Mapping
           </h3>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div
+            className={`grid gap-2 ${
+              lemburAktif ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"
+            }`}>
             <button
               onClick={() => navigate("/izin")}
               className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
@@ -206,12 +211,15 @@ export default function SifSection() {
               <span>Izin/Cuti</span>
             </button>
 
-            <button
-              onClick={() => navigate("/lembur")}
-              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
-              <BiTimeFive size={20} />
-              <span>Lembur</span>
-            </button>
+            {lemburAktif && (
+              <button
+                type="button"
+                onClick={() => navigate("/lembur")}
+                className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
+                <BiTimeFive size={20} />
+                <span>Lembur</span>
+              </button>
+            )}
 
             <button
               onClick={() => navigate("/ubah-jadwal")}
@@ -269,8 +277,9 @@ export default function SifSection() {
               </button>
             )}
 
-            {can("approve.lembur") && (
+            {lemburAktif && can("approve.lembur") && (
               <button
+                type="button"
                 onClick={() => navigate("/persetujuan-lembur")}
                 className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
                 <FaFileCircleCheck size={20} />
