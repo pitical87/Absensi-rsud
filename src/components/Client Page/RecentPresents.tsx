@@ -51,7 +51,11 @@ function getRows(record: RecordItem[], isDokter: boolean): RowItem[] {
 
 type RiwayatRes = { sukses: boolean; riwayat: RecordItem[] };
 
-export default function RecentPresents() {
+export default function RecentPresents({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { user } = useAuth();
   const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
 
@@ -61,16 +65,18 @@ export default function RecentPresents() {
 
   return (
     <>
-      <section className="px-4 sm:px-6 py-4 w-full">
-        <h1 className="text-lg w-full font-bold flex items-center gap-3">
-          <MdWorkHistory />
-          Riwayat Terakhir
-        </h1>
-        <div className="mt-4">
-          <ul className="flex flex-col bg-white border border-gray-300 rounded-xl max-h-70 overflow-y-auto">
+      <section className={embedded ? "w-full" : "px-4 sm:px-6 py-4 w-full"}>
+        {!embedded && (
+          <h1 className="text-lg w-full font-bold flex items-center gap-3">
+            <MdWorkHistory />
+            Riwayat Terakhir
+          </h1>
+        )}
+        <div className={embedded ? "mt-3" : "mt-4"}>
+          <ul className="flex flex-col bg-white border border-gray-300 rounded-xl max-h-80 overflow-y-auto">
             {loading ? (
               [0, 1, 2, 3].map((i) => (
-                <li key={i} className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
+                <li key={i} className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-200 last:border-b-0">
                   <div className="flex min-w-0 flex-col gap-1.5">
                     <Skeleton className="h-4 w-28" />
                     <Skeleton className="h-3 w-20" />
@@ -85,7 +91,7 @@ export default function RecentPresents() {
               <li className="p-4 text-center text-gray-400 text-sm">Belum ada riwayat absensi</li>
             ) : (
               rows.map((r) => (
-                <li key={r.key} className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-300">
+                <li key={r.key} className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-200 last:border-b-0">
                   <div className="flex min-w-0 flex-col">
                     <span className="text-md font-medium ">{r.hari}</span>
                     <span className="text-sm text-gray-500">{r.tanggal_label}</span>

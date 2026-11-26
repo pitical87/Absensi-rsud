@@ -72,6 +72,9 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function PerubahanJadwalPage() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"pengajuan" | "riwayat">(
+    "pengajuan",
+  );
   const [loading, setLoading] = useState(true);
   const [batasJam, setBatasJam] = useState<number | null>(null);
   const [jadwal, setJadwal] = useState<JadwalMendatang[]>([]);
@@ -132,6 +135,7 @@ export default function PerubahanJadwalPage() {
         setBuatUntuk(null);
         reset();
         refetch();
+        setActiveTab("riwayat");
       } else {
         toast.error(res.pesan);
       }
@@ -176,13 +180,13 @@ export default function PerubahanJadwalPage() {
         onCancel={() => setConfirmDeleteId(null)}
       />
 
-      <section className="px-6 py-2 flex flex-col gap-2">
+      <section className="px-4 sm:px-6 py-2 flex flex-col gap-3 pb-6">
         {/* Header */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex items-center gap-3">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-6 flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
             <BiCalendarEdit />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h1 className="text-lg font-semibold text-gray-800">
               Perubahan Jadwal Shift
             </h1>
@@ -193,34 +197,80 @@ export default function PerubahanJadwalPage() {
           <button
             type="button"
             onClick={() => navigate("/")}
+            aria-label="Kembali ke beranda"
             className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
             <IoArrowBack />
           </button>
         </div>
 
-        {/* Info */}
-        {batasJam !== null && (
-          <div className="bg-blue-50 rounded-2xl border border-blue-200 px-4 py-3 flex items-center gap-2 text-sm text-blue-700">
-            <HiOutlineClock className="shrink-0" />
-            <p>
-              Perubahan jadwal paling lambat{" "}
-              <strong>{batasJam} jam</strong> sebelum shift dimulai, untuk 30
-              hari ke depan.
-            </p>
-          </div>
-        )}
+        {/* Tab Switcher: Pengajuan & Riwayat */}
+        <div
+          role="tablist"
+          aria-label="Menu Perubahan Jadwal"
+          className="grid grid-cols-2 gap-1.5 rounded-2xl border border-gray-200 bg-gray-100 p-1">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "pengajuan"}
+            onClick={() => setActiveTab("pengajuan")}
+            className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              activeTab === "pengajuan"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <BiCalendarEdit className="text-base shrink-0" />
+            <span>Pengajuan</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "riwayat"}
+            onClick={() => setActiveTab("riwayat")}
+            className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              activeTab === "riwayat"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <RiFileHistoryLine className="text-base shrink-0" />
+            <span>Riwayat</span>
+            {!loading && riwayat.length > 0 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === "riwayat"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-200 text-gray-600"
+                }`}>
+                {riwayat.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-        {/* Jadwal Mendatang */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
-          <h1 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
-            <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-              <BiCalendarEdit />
-            </div>
-            Jadwal Mendatang
-          </h1>
-          <p className="text-sm text-gray-500">
-            Pilih tanggal untuk mengajukan perubahan shift.
-          </p>
+        {/* Tab Pengajuan */}
+        {activeTab === "pengajuan" && (
+          <>
+            {/* Info */}
+            {batasJam !== null && (
+              <div className="bg-blue-50 rounded-2xl border border-blue-200 px-4 py-3 flex items-center gap-2 text-xs sm:text-sm text-blue-700">
+                <HiOutlineClock className="shrink-0 text-base" />
+                <p>
+                  Perubahan jadwal paling lambat{" "}
+                  <strong>{batasJam} jam</strong> sebelum shift dimulai, untuk
+                  30 hari ke depan.
+                </p>
+              </div>
+            )}
+
+            {/* Jadwal Mendatang */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-5">
+              <div className="space-y-1">
+                <h2 className="text-base font-semibold text-gray-800">
+                  Jadwal Mendatang
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Pilih tanggal untuk mengajukan perubahan shift.
+                </p>
+              </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -364,99 +414,109 @@ export default function PerubahanJadwalPage() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Riwayat */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
-          <h1 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
-            <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-              <RiFileHistoryLine />
             </div>
-            Riwayat Pengajuan
-          </h1>
+          </>
+        )}
 
-          <div className="overflow-x-auto rounded-xl border border-gray-200">
-            <table className="min-w-[900px] w-full border-collapse">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
-                    Tanggal
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">
-                    Shift
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
-                    Alasan
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">
-                    Catatan Keputusan
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase text-gray-600">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {riwayat.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-6 text-center text-sm text-gray-400">
-                      Belum ada pengajuan perubahan jadwal.
-                    </td>
-                  </tr>
-                ) : (
-                  riwayat.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-t hover:bg-gray-50 transition">
-                      <td className="px-4 py-3">
-                        <span className="font-medium text-gray-800">
+        {/* Tab Riwayat — Mobile Portrait Card List */}
+        {activeTab === "riwayat" && (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg shrink-0">
+                  <RiFileHistoryLine />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-gray-800">
+                    Riwayat Pengajuan
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Daftar pengajuan perubahan shift Anda
+                  </p>
+                </div>
+              </div>
+              {!loading && riwayat.length > 0 && (
+                <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
+                  {riwayat.length}
+                </span>
+              )}
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+              </div>
+            ) : riwayat.length === 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center space-y-3">
+                <p className="text-sm text-gray-400">
+                  Belum ada pengajuan perubahan jadwal.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("pengajuan")}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700">
+                  <BiCalendarEdit className="text-sm" />
+                  Buat Pengajuan
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {riwayat.map((r) => (
+                  <article
+                    key={r.id}
+                    className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 space-y-3">
+                    {/* Baris Atas: Tanggal & Status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-gray-900">
                           {tglId(r.tanggal)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center whitespace-nowrap">
-                        <span className="text-gray-600">
-                          {r.shift_lama || "—"}
-                        </span>
-                        <span className="mx-2 text-gray-400">→</span>
-                        <span className="font-medium text-gray-800">
-                          {r.shift_baru || "—"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">{r.alasan}</td>
-                      <td className="px-4 py-3 text-center">
-                        {r.catatan_keputusan ? (
-                          <span className="text-sm text-gray-600">
-                            {r.catatan_keputusan}
+                        </h3>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                          <span className="rounded-md bg-white px-2 py-0.5 font-medium text-gray-600 ring-1 ring-gray-200">
+                            {r.shift_lama || "—"}
                           </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <StatusBadge status={r.status} />
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {r.status === "Menunggu" && (
-                          <button
-                            onClick={() => setConfirmDeleteId(r.id)}
-                            className="group flex items-center justify-center w-10 h-10 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all duration-200 cursor-pointer"
-                            title="Batalkan pengajuan">
-                            <FaRegTrashAlt className="text-xl transition-transform duration-200 group-hover:scale-110" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                          <span className="text-gray-400">→</span>
+                          <span className="rounded-md bg-blue-50 px-2 py-0.5 font-semibold text-blue-700 ring-1 ring-blue-200">
+                            {r.shift_baru || "—"}
+                          </span>
+                        </div>
+                      </div>
+                      <StatusBadge status={r.status} />
+                    </div>
+
+                    {/* Alasan & Catatan Keputusan */}
+                    <div className="space-y-1 rounded-xl border border-gray-100 bg-white px-3 py-2.5">
+                      <p className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">
+                        {r.alasan}
+                      </p>
+                      {r.catatan_keputusan && (
+                        <p className="text-xs text-gray-500 break-words">
+                          <span className="font-medium text-gray-600">
+                            Catatan:
+                          </span>{" "}
+                          {r.catatan_keputusan}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Tombol Batalkan */}
+                    {r.status === "Menunggu" && (
+                      <div className="flex justify-end border-t border-gray-200/80 pt-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(r.id)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100 active:scale-95">
+                          <FaRegTrashAlt className="text-xs" />
+                          Batalkan
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </section>
     </>
   );

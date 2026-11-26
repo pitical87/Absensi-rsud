@@ -184,7 +184,11 @@ function GrafikRingkasan({
   );
 }
 
-export default function PresentStatistic() {
+export default function PresentStatistic({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const [stat, setStat] = useState<Statistic | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -205,11 +209,13 @@ export default function PresentStatistic() {
 
   return (
     <>
-      <section className="px-4 sm:px-6 py-2 w-full">
-        <h1 className="text-lg w-full font-bold flex items-center gap-3">
-          <IoIosStats />
-          Statistik Bulan Ini
-        </h1>
+      <section className={embedded ? "w-full" : "px-4 sm:px-6 py-2 w-full"}>
+        {!embedded && (
+          <h1 className="text-lg w-full font-bold flex items-center gap-3">
+            <IoIosStats />
+            Statistik Bulan Ini
+          </h1>
+        )}
         {/* <div className="mt-4 flex justify-between items-center gap-3 sm:gap-5">
           <div
             className="flex flex-col items-start bg-white border

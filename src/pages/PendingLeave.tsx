@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { IoArrowBack } from "react-icons/io5";
 import { BiCheckCircle } from "react-icons/bi";
-import { FiFileText } from "react-icons/fi";
+import {
+  HiOutlineCalendar,
+  HiOutlineInformationCircle,
+  HiOutlinePaperClip,
+} from "react-icons/hi";
+import { RiFileHistoryLine } from "react-icons/ri";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
 import {
   getPendingLeaveDetails,
   getRiwayatPersetujuan,
@@ -26,6 +30,7 @@ type PendingIzin = {
   alamat_izin?: string | null;
   lampiran: string | null;
   tahap_aktif: number;
+  posisi_tahap?: string | null;
   created_at: string;
   user: {
     id: number;
@@ -51,50 +56,59 @@ type RiwayatItem = {
   };
 };
 
-const BULAN = [
+const BULAN_SINGKAT = [
   "",
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
   "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
 ];
 
-function tglId(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getDate()} ${BULAN[d.getMonth() + 1]} ${d.getFullYear()}`;
+function formatTanggal(iso: string): string {
+  const bersih = iso.slice(0, 10);
+  const parts = bersih.split("-").map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return iso;
+  const [y, m, d] = parts;
+  return `${d} ${BULAN_SINGKAT[m] ?? m} ${y}`;
 }
 
-function tglWaktu(iso: string): string {
+function formatTanggalWaktu(iso: string): string {
   const d = new Date(iso);
-  return `${d.getDate()} ${BULAN[d.getMonth() + 1]} ${d.getFullYear()} · ${String(d.getHours()).padStart(2, "0")}.${String(d.getMinutes()).padStart(2, "0")}`;
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${d.getDate()} ${BULAN_SINGKAT[d.getMonth() + 1] ?? d.getMonth() + 1} ${d.getFullYear()} · ${String(d.getHours()).padStart(2, "0")}.${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function hitungDurasiHari(mulai: string, selesai: string): number {
+  const start = new Date(`${mulai.slice(0, 10)}T00:00:00`);
+  const end = new Date(`${selesai.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 1;
+  return Math.max(
+    1,
+    Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1,
+  );
 }
 
 const STATUS_BADGE: Record<string, string> = {
   Disetujui: "bg-green-100 text-green-700",
   Ditolak: "bg-red-100 text-red-700",
-  Menunggu: "bg-amber-100 text-amber-700",
+  Menunggu: "bg-yellow-100 text-yellow-700",
   Dilewati: "bg-gray-100 text-gray-500",
 };
 
-const TAHAP_LABEL: Record<number, string> = {
-  1: "Koordinator",
-  2: "Kepala Seksi",
-  3: "Kepala Bidang",
-  4: "HRD",
-};
-
 export default function PendingLeave() {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState<"menunggu" | "riwayat">(
+    "menunggu",
+  );
   const [daftar, setDaftar] = useState<PendingIzin[]>([]);
   const [riwayat, setRiwayat] = useState<RiwayatItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,44 +120,78 @@ export default function PendingLeave() {
     putusan: "setuju" | "tolak";
   }>({ open: false, id: 0, putusan: "setuju" });
 
-  const fetchData = async () => {
-    try {
-      const [detailRes, riwayatRes] = await Promise.all([
-        getPendingLeaveDetails(),
-        getRiwayatPersetujuan(),
-      ]);
-      if (detailRes.sukses) setDaftar(detailRes.izin ?? []);
-      if (riwayatRes.sukses) setRiwayat(riwayatRes.riwayat ?? []);
-    } catch {
-      toast.error("Gagal memuat data persetujuan.");
-    } finally {
-      setLoading(false);
+  const refreshData = async () => {
+    const [detailSettled, riwayatSettled] = await Promise.allSettled([
+      getPendingLeaveDetails(),
+      getRiwayatPersetujuan(),
+    ]);
+
+    if (detailSettled.status === "fulfilled" && detailSettled.value.sukses) {
+      setDaftar(detailSettled.value.izin ?? []);
+    }
+    if (riwayatSettled.status === "fulfilled" && riwayatSettled.value.sukses) {
+      setRiwayat(riwayatSettled.value.riwayat ?? []);
+    }
+    if (
+      detailSettled.status === "rejected" &&
+      riwayatSettled.status === "rejected"
+    ) {
+      const pesan = (detailSettled.reason as ApiErrorShape)?.response?.data
+        ?.pesan;
+      toast.error(pesan || "Gagal memuat data persetujuan.");
+    } else if (detailSettled.status === "rejected") {
+      const pesan = (detailSettled.reason as ApiErrorShape)?.response?.data
+        ?.pesan;
+      toast.error(pesan || "Gagal memuat daftar persetujuan menunggu.");
+    } else if (riwayatSettled.status === "rejected") {
+      const pesan = (riwayatSettled.reason as ApiErrorShape)?.response?.data
+        ?.pesan;
+      toast.error(pesan || "Gagal memuat riwayat keputusan.");
     }
   };
 
   useEffect(() => {
     let aktif = true;
-    (async () => {
-      try {
-        const [detailRes, riwayatRes] = await Promise.all([
-          getPendingLeaveDetails(),
-          getRiwayatPersetujuan(),
-        ]);
+    Promise.allSettled([getPendingLeaveDetails(), getRiwayatPersetujuan()])
+      .then(([detailSettled, riwayatSettled]) => {
         if (!aktif) return;
-        if (detailRes.sukses) setDaftar(detailRes.izin ?? []);
-        if (riwayatRes.sukses) setRiwayat(riwayatRes.riwayat ?? []);
-      } catch {
-        if (!aktif) return;
-        toast.error("Gagal memuat data persetujuan.");
-      } finally {
+        if (detailSettled.status === "fulfilled" && detailSettled.value.sukses) {
+          setDaftar(detailSettled.value.izin ?? []);
+        }
+        if (
+          riwayatSettled.status === "fulfilled" &&
+          riwayatSettled.value.sukses
+        ) {
+          setRiwayat(riwayatSettled.value.riwayat ?? []);
+        }
+        if (
+          detailSettled.status === "rejected" &&
+          riwayatSettled.status === "rejected"
+        ) {
+          const pesan = (detailSettled.reason as ApiErrorShape)?.response?.data
+            ?.pesan;
+          toast.error(pesan || "Gagal memuat data persetujuan.");
+        } else if (detailSettled.status === "rejected") {
+          const pesan = (detailSettled.reason as ApiErrorShape)?.response?.data
+            ?.pesan;
+          toast.error(pesan || "Gagal memuat daftar persetujuan menunggu.");
+        } else if (riwayatSettled.status === "rejected") {
+          const pesan = (riwayatSettled.reason as ApiErrorShape)?.response?.data
+            ?.pesan;
+          toast.error(pesan || "Gagal memuat riwayat keputusan.");
+        }
+      })
+      .finally(() => {
         if (aktif) setLoading(false);
-      }
-    })();
+      });
 
     return () => {
       aktif = false;
     };
   }, []);
+
+  const getLampiranUrl = (path: string) =>
+    `${import.meta.env.VITE_API_URL?.replace("/api/mobile", "") || ""}/storage/${path}`;
 
   const handleProses = async () => {
     const { id, putusan } = confirm;
@@ -162,7 +210,7 @@ export default function PendingLeave() {
         return next;
       });
       setDaftar((prev) => prev.filter((i) => i.id !== id));
-      fetchData();
+      await refreshData();
     } catch (err: unknown) {
       const pesan = (err as ApiErrorShape).response?.data?.pesan;
       toast.error(pesan || "Gagal memproses pengajuan.");
@@ -173,255 +221,349 @@ export default function PendingLeave() {
 
   return (
     <>
-      {/* Navbar */}
       <TopNavbar />
 
-      <div className="space-y-6 p-5">
-        {/* Loading */}
-        {loading && (
-          <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+      <section className="px-4 sm:px-6 py-2 flex flex-col gap-3 pb-6">
+        {/* Header Card (seragam dengan /izin & /ubah-jadwal) */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-6 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
+            <BiCheckCircle />
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold text-gray-800">
+              Persetujuan Izin
+            </h1>
+            <p className="text-sm text-gray-500">
+              Setujui atau tolak pengajuan izin bawahan.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            aria-label="Kembali ke beranda"
+            className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
+            <IoArrowBack />
+          </button>
+        </div>
 
-        {!loading && (
+        {/* 2-Tab Switcher: Menunggu & Riwayat */}
+        <div
+          role="tablist"
+          aria-label="Menu Persetujuan Izin"
+          className="grid grid-cols-2 gap-1.5 rounded-2xl border border-gray-200 bg-gray-100 p-1">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "menunggu"}
+            onClick={() => setActiveTab("menunggu")}
+            className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              activeTab === "menunggu"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <BiCheckCircle className="text-base shrink-0" />
+            <span>Menunggu</span>
+            {!loading && daftar.length > 0 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === "menunggu"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-amber-100/80 text-amber-700"
+                }`}>
+                {daftar.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "riwayat"}
+            onClick={() => setActiveTab("riwayat")}
+            className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+              activeTab === "riwayat"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <RiFileHistoryLine className="text-base shrink-0" />
+            <span>Riwayat</span>
+            {!loading && riwayat.length > 0 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === "riwayat"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-200 text-gray-600"
+                }`}>
+                {riwayat.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Tab Menunggu */}
+        {activeTab === "menunggu" && (
           <>
-            <section className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4">
-              <h1 className="text-lg font-bold text-gray-900">
-                Persetujuan Izin
-              </h1>
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl hover:bg-gray-200 transition shrink-0">
-                <IoArrowBack />
-              </button>
-            </section>
-            {/* ===== SECTION: Menunggu Persetujuan ===== */}
-            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-1">
-                    <BiCheckCircle className="h-4 w-4 text-blue-600" />
-                    <h2 className="font-bold text-slate-800">
-                      Menunggu Persetujuan Saya
-                    </h2>
-                  </div>
-                  <p className="mt-3 max-w-5xl text-sm leading-7 text-slate-500">
-                    Anda melihat halaman ini karena posisi Anda{" "}
-                    <span className="font-semibold text-slate-700">
-                      ({user?.posisi})
-                    </span>{" "}
-                    berperan dalam alur persetujuan izin/cuti pegawai.
+            <div className="bg-blue-50 rounded-2xl border border-blue-200 px-4 py-3 flex items-start gap-2.5 text-xs sm:text-sm text-blue-700">
+              <HiOutlineInformationCircle className="shrink-0 mt-0.5 text-base" />
+              <p className="leading-relaxed">
+                Sebagai <strong>atasan langsung</strong>, Anda dapat menyetujui
+                atau menolak pengajuan izin/cuti bawahan Anda.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="space-y-0.5">
+                  <h2 className="text-base font-semibold text-gray-800">
+                    Menunggu Persetujuan
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Pengajuan bawahan yang perlu diputuskan
                   </p>
                 </div>
-                <span className="flex shrink-0 items-center rounded-full bg-amber-100 px-4 py-1.5 text-sm font-semibold text-amber-700">
-                  {daftar.length} Pengajuan
-                </span>
+                {!loading && (
+                  <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                    {daftar.length} pengajuan
+                  </span>
+                )}
               </div>
 
-              {/* Table */}
-              <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
-                <table className="min-w-[900px] w-full">
-                  <thead className="bg-slate-50">
-                    <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      <th className="px-5 py-4">Pegawai</th>
-                      <th className="px-5 py-4">Jenis</th>
-                      <th className="px-5 py-4">Tanggal</th>
-                      <th className="px-5 py-4">Lama</th>
-                      <th className="px-5 py-4">Alamat</th>
-                      <th className="px-5 py-4">Alasan</th>
-                      <th className="px-5 py-4 min-w-[260px]">Tindakan</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {daftar.map((item) => (
-                      <tr
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+                </div>
+              ) : daftar.length === 0 ? (
+                <p className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
+                  Tidak ada pengajuan yang menunggu keputusan Anda saat ini.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {daftar.map((item) => {
+                    const samaHari =
+                      item.tanggal_mulai.slice(0, 10) ===
+                      item.tanggal_selesai.slice(0, 10);
+                    const durasi =
+                      item.lama_hari ??
+                      hitungDurasiHari(
+                        item.tanggal_mulai,
+                        item.tanggal_selesai,
+                      );
+                    const labelJenis = item.jenis_cuti || item.jenis;
+                    const busy = submittingId === item.id;
+
+                    return (
+                      <article
                         key={item.id}
-                        className="border-t border-slate-100 align-top text-sm text-slate-700">
-                        <td className="px-5 py-5">
-                          <strong className="text-slate-800">
-                            {item.user.nama_lengkap}
-                          </strong>
-                          {item.user.nip && (
-                            <p className="mt-1 text-xs text-slate-400">
-                              NIP {item.user.nip}
+                        className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 space-y-3">
+                        {/* Identitas Pegawai & Jenis */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-semibold text-gray-900 break-words">
+                              {item.user.nama_lengkap}
+                            </h3>
+                            <p className="mt-0.5 text-xs text-gray-500 break-words">
+                              {item.user.unit_kerja?.nama ?? "—"}
+                              {item.user.sub_unit?.nama
+                                ? ` — ${item.user.sub_unit.nama}`
+                                : ""}
+                            </p>
+                            {item.user.nip && (
+                              <p className="text-[11px] text-gray-400">
+                                NIP {item.user.nip}
+                              </p>
+                            )}
+                          </div>
+                          <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                            {labelJenis}
+                          </span>
+                        </div>
+
+                        {/* Tanggal & Durasi */}
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                            <HiOutlineCalendar className="shrink-0 text-blue-500 text-sm" />
+                            {samaHari
+                              ? formatTanggal(item.tanggal_mulai)
+                              : `${formatTanggal(item.tanggal_mulai)} – ${formatTanggal(item.tanggal_selesai)}`}
+                          </span>
+                          <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-gray-700 ring-1 ring-gray-200 whitespace-nowrap">
+                            {durasi} {item.lama_hari ? "hr kerja" : "hari"}
+                          </span>
+                        </div>
+
+                        {/* Alasan, Alamat & Lampiran */}
+                        <div className="space-y-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5">
+                          <p className="text-xs sm:text-sm text-gray-700 leading-relaxed break-words">
+                            {item.keterangan}
+                          </p>
+                          {item.alamat_izin && (
+                            <p className="text-xs text-gray-500 break-words">
+                              <span className="font-medium text-gray-600">
+                                Alamat:
+                              </span>{" "}
+                              {item.alamat_izin}
                             </p>
                           )}
-                          <p className="mt-1 text-xs text-slate-400">
-                            {item.user.unit_kerja?.nama ?? "—"}
-                            {item.user.sub_unit?.nama
-                              ? ` — ${item.user.sub_unit.nama}`
-                              : ""}
-                          </p>
-                          <span className="mt-1.5 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-600">
-                            Tahap {item.tahap_aktif}:{" "}
-                            {TAHAP_LABEL[item.tahap_aktif] ?? "—"}
-                          </span>
-                        </td>
-                        <td className="px-5 py-5 font-semibold">
-                          {item.jenis_cuti || item.jenis}
-                        </td>
-                        <td className="px-5 py-5 text-right whitespace-nowrap">
-                          {tglId(item.tanggal_mulai)}
-                          {item.tanggal_mulai !== item.tanggal_selesai && (
-                            <>
-                              <br />
-                              s.d. {tglId(item.tanggal_selesai)}
-                            </>
-                          )}
-                        </td>
-                        <td className="px-5 py-5 text-right">
-                          {item.lama_hari} hr kerja
-                        </td>
-                        <td className="px-5 py-5 text-xs">
-                          {item.alamat_izin || "—"}
-                        </td>
-                        <td className="px-5 py-5 text-xs">
-                          {item.keterangan}
                           {item.lampiran && (
-                            <>
-                              <br />
+                            <div className="pt-1">
                               <a
-                                href={`/storage/${item.lampiran}`}
+                                href={getLampiranUrl(item.lampiran)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-1 inline-block text-blue-600 hover:underline">
-                                Lihat lampiran
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-100">
+                                <HiOutlinePaperClip className="text-sm" />
+                                Lihat Lampiran
                               </a>
-                            </>
-                          )}
-                        </td>
-                        <td className="px-5 py-5">
-                          <div className="flex flex-col gap-2">
-                            <textarea
-                              rows={2}
-                              placeholder="Catatan (opsional)…"
-                              value={catatanMap[item.id] ?? ""}
-                              onChange={(e) =>
-                                setCatatanMap((prev) => ({
-                                  ...prev,
-                                  [item.id]: e.target.value,
-                                }))
-                              }
-                              disabled={submittingId === item.id}
-                              className="w-full min-w-[120px] resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
-                            />
-                            <div className="flex gap-3">
-                              <button
-                                disabled={submittingId === item.id}
-                                onClick={() =>
-                                  setConfirm({
-                                    open: true,
-                                    id: item.id,
-                                    putusan: "setuju",
-                                  })
-                                }
-                                className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50">
-                                Setujui
-                              </button>
-                              <button
-                                disabled={submittingId === item.id}
-                                onClick={() =>
-                                  setConfirm({
-                                    open: true,
-                                    id: item.id,
-                                    putusan: "tolak",
-                                  })
-                                }
-                                className="rounded-xl bg-red-100 px-6 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-200 disabled:opacity-50">
-                                Tolak
-                              </button>
                             </div>
+                          )}
+                        </div>
+
+                        {/* Catatan & Tombol Aksi */}
+                        <div className="space-y-2.5 pt-0.5">
+                          <textarea
+                            rows={2}
+                            placeholder="Catatan keputusan (opsional)..."
+                            value={catatanMap[item.id] ?? ""}
+                            onChange={(e) =>
+                              setCatatanMap((prev) => ({
+                                ...prev,
+                                [item.id]: e.target.value,
+                              }))
+                            }
+                            disabled={busy}
+                            className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
+                          />
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() =>
+                                setConfirm({
+                                  open: true,
+                                  id: item.id,
+                                  putusan: "tolak",
+                                })
+                              }
+                              className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100 active:scale-[0.98] disabled:opacity-50">
+                              Tolak
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() =>
+                                setConfirm({
+                                  open: true,
+                                  id: item.id,
+                                  putusan: "setuju",
+                                })
+                              }
+                              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50">
+                              Setujui
+                            </button>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-
-                    {daftar.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="py-10 text-center text-sm text-slate-500">
-                          Tidak ada pengajuan yang menunggu keputusan Anda saat
-                          ini.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* ===== SECTION: Riwayat Keputusan ===== */}
-            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-              <div className="flex items-center gap-3">
-                <FiFileText className="h-6 w-6 text-blue-600" />
-                <h2 className="text-2xl font-bold text-slate-800">
-                  Riwayat Keputusan Saya
-                </h2>
-              </div>
-
-              <div className="mt-6 overflow-auto rounded-xl border border-slate-200">
-                <table className="w-full">
-                  <thead className="bg-slate-50">
-                    <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      <th className="px-5 py-4">Waktu</th>
-                      <th className="px-5 py-4">Pegawai</th>
-                      <th className="px-5 py-4">Jenis</th>
-                      <th className="px-5 py-4">Tanggal</th>
-                      <th className="px-5 py-4">Putusan</th>
-                      <th className="px-5 py-4">Catatan</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {riwayat.map((r) => (
-                      <tr
-                        key={r.id}
-                        className="border-t border-slate-100 text-sm text-slate-700">
-                        <td className="px-5 py-4 text-xs text-slate-500 whitespace-nowrap">
-                          {r.waktu ? tglWaktu(r.waktu) : "—"}
-                        </td>
-                        <td className="px-5 py-4">
-                          {r.pengajuan.nama_pemohon}
-                        </td>
-                        <td className="px-5 py-4 font-semibold">
-                          {r.pengajuan.jenis_cuti || r.pengajuan.jenis}
-                        </td>
-                        <td className="px-5 py-4 text-right whitespace-nowrap">
-                          {tglId(r.pengajuan.tanggal_mulai)}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                              STATUS_BADGE[r.status] ??
-                              "bg-gray-100 text-gray-500"
-                            }`}>
-                            {r.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-xs">
-                          {r.catatan || "—"}
-                        </td>
-                      </tr>
-                    ))}
-
-                    {riwayat.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="py-10 text-center text-sm text-slate-500">
-                          Belum ada riwayat keputusan.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </>
         )}
-      </div>
+
+        {/* Tab Riwayat */}
+        {activeTab === "riwayat" && (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg shrink-0">
+                  <RiFileHistoryLine />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-gray-800">
+                    Riwayat Keputusan Saya
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Daftar pengajuan yang telah Anda putuskan
+                  </p>
+                </div>
+              </div>
+              {!loading && riwayat.length > 0 && (
+                <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
+                  {riwayat.length}
+                </span>
+              )}
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+              </div>
+            ) : riwayat.length === 0 ? (
+              <p className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
+                Belum ada riwayat keputusan.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {riwayat.map((r) => {
+                  const samaHari =
+                    r.pengajuan.tanggal_mulai.slice(0, 10) ===
+                    r.pengajuan.tanggal_selesai.slice(0, 10);
+                  const labelJenis = r.pengajuan.jenis_cuti || r.pengajuan.jenis;
+
+                  return (
+                    <article
+                      key={r.id}
+                      className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 space-y-2.5">
+                      {/* Pemohon & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-semibold text-gray-900 break-words">
+                            {r.pengajuan.nama_pemohon}
+                          </h3>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
+                            <span className="rounded-md bg-blue-50 px-2 py-0.5 font-semibold text-blue-700 ring-1 ring-blue-200">
+                              {labelJenis}
+                            </span>
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                              <HiOutlineCalendar className="shrink-0 text-blue-500 text-sm" />
+                              {samaHari
+                                ? formatTanggal(r.pengajuan.tanggal_mulai)
+                                : `${formatTanggal(r.pengajuan.tanggal_mulai)} – ${formatTanggal(r.pengajuan.tanggal_selesai)}`}
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                            STATUS_BADGE[r.status] ??
+                            "bg-gray-100 text-gray-500"
+                          }`}>
+                          {r.status}
+                        </span>
+                      </div>
+
+                      {r.catatan && (
+                        <p className="rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs text-gray-700 break-words">
+                          <span className="font-medium text-gray-500">
+                            Catatan:
+                          </span>{" "}
+                          {r.catatan}
+                        </p>
+                      )}
+
+                      {r.waktu && (
+                        <p className="text-[11px] text-gray-400">
+                          Diputus pada {formatTanggalWaktu(r.waktu)}
+                        </p>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       {/* Confirm Modal */}
       <ConfirmModal
@@ -433,8 +575,8 @@ export default function PendingLeave() {
         }
         message={
           confirm.putusan === "setuju"
-            ? "Pengajuan akan disetujui dan diteruskan ke tahap berikutnya."
-            : "Tolak pengajuan ini? Seluruh tahap berikutnya akan dibatalkan."
+            ? "Pengajuan izin ini akan disetujui."
+            : "Tolak pengajuan izin ini?"
         }
         confirmLabel={
           confirm.putusan === "setuju" ? "Ya, Setujui" : "Ya, Tolak"

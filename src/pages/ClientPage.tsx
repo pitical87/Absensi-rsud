@@ -2,11 +2,15 @@ import HeroCard from "../components/Client Page/HeroCard";
 import Absensi from "../components/Client Page/Absensi";
 import PresentStatistic from "../components/Client Page/PresentStatistic";
 import RecentPresents from "../components/Client Page/RecentPresents";
+import PegawaiTeladan from "../components/Client Page/PegawaiTeladan";
 import TopNavbar from "../components/Client Page/TopNavbar";
 import SifSection from "../components/Client Page/SifSection";
 import PerformaBanner from "../components/Client Page/PerformaBanner";
 import VerifikasiEmailBanner from "../components/Client Page/VerifikasiEmailBanner";
 import { useEffect, useState } from "react";
+import { FaTrophy } from "react-icons/fa6";
+import { IoIosStats } from "react-icons/io";
+import { MdWorkHistory } from "react-icons/md";
 import { getStatus } from "../utils/api/Attendence";
 import { getTodayLeave } from "../utils/api/Leave";
 import LogBookSection from "../components/Client Page/LogBookSection";
@@ -30,6 +34,9 @@ type StatusRes = {
 export default function ClientPage() {
   const [hasLeave, setHasLeave] = useState(false);
   const [todayLeave, setTodayLeave] = useState(null);
+  const [activeBottomTab, setActiveBottomTab] = useState<
+    "statistik" | "riwayat" | "teladan"
+  >("statistik");
   const { isDokter } = useAuth();
 
   const todaySession = useTodaySession(isDokter);
@@ -144,10 +151,61 @@ export default function ClientPage() {
       />
       {/* sif & absensi section */}
       <SifSection />
-      {/* statistic section */}
-      <PresentStatistic />
-      {/* history section */}
-      <RecentPresents />
+      {/* Tab Statistik, Riwayat & Pegawai Teladan */}
+      <section className="px-4 sm:px-6 pt-2 pb-6 w-full">
+        <div
+          role="tablist"
+          aria-label="Statistik, Riwayat, dan Pegawai Teladan"
+          className="grid grid-cols-3 gap-1 rounded-2xl border border-gray-200 bg-gray-100 p-1">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeBottomTab === "statistik"}
+            onClick={() => setActiveBottomTab("statistik")}
+            className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs sm:text-sm font-semibold transition ${
+              activeBottomTab === "statistik"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <IoIosStats className="text-sm sm:text-base shrink-0" />
+            <span>Statistik</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeBottomTab === "riwayat"}
+            onClick={() => setActiveBottomTab("riwayat")}
+            className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs sm:text-sm font-semibold transition ${
+              activeBottomTab === "riwayat"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <MdWorkHistory className="text-sm sm:text-base shrink-0" />
+            <span>Riwayat</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeBottomTab === "teladan"}
+            onClick={() => setActiveBottomTab("teladan")}
+            className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs sm:text-sm font-semibold transition ${
+              activeBottomTab === "teladan"
+                ? "bg-white text-blue-600 shadow-xs"
+                : "text-gray-600 hover:text-gray-800"
+            }`}>
+            <FaTrophy className="text-xs sm:text-sm shrink-0" />
+            <span>Teladan</span>
+          </button>
+        </div>
+
+        {activeBottomTab === "statistik" ? (
+          <PresentStatistic embedded />
+        ) : activeBottomTab === "riwayat" ? (
+          <RecentPresents embedded />
+        ) : (
+          <PegawaiTeladan embedded />
+        )}
+      </section>
     </div>
   );
 }

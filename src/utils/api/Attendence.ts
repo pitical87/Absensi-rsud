@@ -73,3 +73,33 @@ export const getJadwalBulanan = async (bulan: number, tahun: number) => {
   const res = await api.get("/jadwal/bulanan", { params: { bulan, tahun } });
   return res.data;
 };
+
+export type PegawaiTeladanItem = {
+  peringkat: number;
+  pegawai_id: number;
+  nama: string;
+  unit: string | null;
+  hari_tercatat: number;
+  total_bintang: number;
+  rata_bintang: number;
+  jumlah_telat: number;
+  hari_bintang_lima: number;
+};
+
+export type PegawaiTeladanRes = {
+  sukses: boolean;
+  periode: {
+    bulan: number;
+    tahun: number;
+    label: string;
+  };
+  daftar: PegawaiTeladanItem[];
+};
+
+export const getPegawaiTeladan = async (params?: {
+  bulan?: number;
+  tahun?: number;
+}): Promise<PegawaiTeladanRes> => {
+  const res = await api.get("/pegawai-teladan", { params });
+  return res.data;
+};
