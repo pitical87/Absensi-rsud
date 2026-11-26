@@ -14,6 +14,7 @@ import type { LogbookEntry } from "../../types/LogBookType";
 import toast from "react-hot-toast";
 import ConfirmModal from "../ConfirmModal";
 import LogBookEditModal from "./LogBookEditModal";
+import Skeleton, { CardListSkeleton } from "../Skeleton";
 
 type Props = {
   open: boolean;
@@ -136,11 +137,13 @@ export default function LogBookRiwayat({ open, refreshKey, onClose }: Props) {
                   className="text-base font-semibold text-gray-900">
                   Riwayat Logbook
                 </h2>
-                <p className="text-xs text-gray-500">
-                  {entriesLoading
-                    ? "Memuat catatan..."
-                    : `${entries.length} catatan ditemukan`}
-                </p>
+                {entriesLoading ? (
+                  <Skeleton className="mt-1 h-3 w-28 rounded" />
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    {entries.length} catatan ditemukan
+                  </p>
+                )}
               </div>
             </div>
             <button
@@ -202,9 +205,7 @@ export default function LogBookRiwayat({ open, refreshKey, onClose }: Props) {
           {/* Daftar Riwayat */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {entriesLoading ? (
-              <div className="flex justify-center py-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
-              </div>
+              <CardListSkeleton count={3} />
             ) : entries.length === 0 ? (
               <p className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
                 Belum ada catatan logbook.

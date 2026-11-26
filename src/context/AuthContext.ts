@@ -72,6 +72,7 @@ export type AuthContextType = {
   lemburAktif: boolean;
   setLemburAktif: (aktif: boolean) => void;
   can: (permission: Permission) => boolean;
+  refreshAuth: () => Promise<void>;
 };
 export const AuthContext = createContext<AuthContextType>(
   {} as AuthContextType,

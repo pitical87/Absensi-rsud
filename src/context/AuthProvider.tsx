@@ -53,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
       if (user.role === "admin") return true;
+      const hasRealBawahan = (bawahan ?? []).some((b) => b.id !== user.id);
+      if (!hasRealBawahan) return false;
       switch (permission) {
         case "jadwal.kelola":
           return hakAkses?.buat_jadwal ?? false;
@@ -66,10 +68,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return true;
       }
     },
-    [user, hakAkses, lemburAktif],
+    [user, bawahan, hakAkses, lemburAktif],
   );
 
   const navigate = useNavigate();
+
+  const refreshAuth = useCallback(async () => {
+    try {
+      const res = await fetchMe();
+      if (res.sukses) {
+        setUser(res.user);
+        setLokasi(res.lokasi);
+        setBawahan(res.bawahan ?? []);
+        setAtasan(res.atasan_langsung ?? res.atasan ?? []);
+        setHakAkses(res.hak_akses ?? null);
+        setLemburAktif(resolusiLemburAktif(res.lembur_aktif, res.hak_akses));
+      }
+    } catch {
+      // Abaikan kegagalan jaringan sementara saat sinkronisasi ulang
+    }
+  }, []);
 
   useEffect(() => {
     if (window.location.pathname === "/login") return;
@@ -102,6 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await apiLogout();
     setUser(null);
+    setLokasi(null);
+    setBawahan([]);
+    setAtasan([]);
+    setHakAkses(null);
     navigate("/login");
   };
 
@@ -115,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser,
     logout,
     can,
+    refreshAuth,
     bawahan,
     setBawahan,
     atasan,

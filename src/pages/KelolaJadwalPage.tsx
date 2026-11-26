@@ -6,6 +6,7 @@ import { BiCalendarWeek, BiCalendarCheck } from "react-icons/bi";
 import { FaRegCheckCircle, FaRegTrashAlt } from "react-icons/fa";
 import TopNavbar from "../components/Client Page/TopNavbar";
 import ConfirmModal from "../components/ConfirmModal";
+import Skeleton, { CardListSkeleton } from "../components/Skeleton";
 import JadwalGridTable from "../components/Jadwal Page/JadwalGridTable";
 import PegawaiPickerModal from "../components/Jadwal Page/PegawaiPickerModal";
 import { useAuth, type Bawahan } from "../context/AuthContext";
@@ -87,10 +88,18 @@ export default function KelolaJadwalPage() {
           });
           setDirty(false);
         })
-        .catch(() => toast.error("Gagal memuat data jadwal."))
+        .catch((err: unknown) => {
+          const status = (err as { response?: { status?: number } })?.response
+            ?.status;
+          if (status === 403) {
+            navigate("/", { replace: true });
+            return;
+          }
+          toast.error("Gagal memuat data jadwal.");
+        })
         .finally(() => setLoading(false));
     },
-    [bulan, tahun, sumber, bawahan],
+    [bulan, tahun, sumber, bawahan, navigate],
   );
 
   useEffect(() => {
@@ -296,8 +305,21 @@ export default function KelolaJadwalPage() {
         </div>
 
         {loading && !periode ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+          <div className="space-y-4" aria-busy="true">
+            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-24 rounded-md" />
+                <Skeleton className="h-11 w-11 rounded-2xl" />
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+            </div>
+            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+              <CardListSkeleton count={2} />
+            </div>
           </div>
         ) : (
           <>

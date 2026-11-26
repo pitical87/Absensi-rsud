@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { HiOutlineChevronRight } from "react-icons/hi";
 import { IoArrowBack, IoDocumentTextOutline } from "react-icons/io5";
@@ -7,8 +7,34 @@ import TopNavbar from "../components/Client Page/TopNavbar";
 import LogBookForm from "../components/Logbook Page/LogBookForm";
 import LogBookRiwayat from "../components/Logbook Page/LogBookRiwayat";
 import LogBookSimrs from "../components/Logbook Page/LogBookSimrs";
+import { PageSkeleton } from "../components/Skeleton";
+import { useAuth } from "../context/AuthContext";
+import { getAttRecords, getStatus } from "../utils/api/Attendence";
+import { getTodayLeave } from "../utils/api/Leave";
+import type { SessionRecord } from "../hooks/useOpenSession";
+import useSessionShift from "../hooks/useSessionShift";
+import { GetTodayKey, isSesiTerlupakan } from "../utils/DateUtils";
 
 type Tab = "manual" | "simrs";
+
+type GuardStatus = {
+  key: string;
+  riwayat: SessionRecord[];
+  hasMasukNonDokter: boolean;
+  hasPulangNonDokter: boolean;
+  hasLeave: boolean;
+};
+
+type StatusRes = {
+  sukses?: boolean;
+  absen_masuk?: { waktu: string; status: string } | null;
+  absen_pulang?: { waktu: string } | null;
+};
+
+type RiwayatRes = {
+  sukses?: boolean;
+  riwayat?: SessionRecord[];
+};
 
 const TAB_LABEL: Record<Tab, string> = {
   manual: "Entri Manual",
@@ -17,9 +43,94 @@ const TAB_LABEL: Record<Tab, string> = {
 
 export default function LogbookPage() {
   const navigate = useNavigate();
+  const { isDokter } = useAuth();
   const [tab, setTab] = useState<Tab>("manual");
   const [refreshKey, setRefreshKey] = useState(0);
   const [riwayatOpen, setRiwayatOpen] = useState(false);
+  const [guardStatus, setGuardStatus] = useState<GuardStatus | null>(null);
+
+  const checkKey = isDokter ? "1" : "0";
+
+  // Pastikan /logbook hanya bisa diakses jika sudah absen masuk, belum absen pulang, dan tidak sedang izin/cuti
+  useEffect(() => {
+    let aktif = true;
+    Promise.all([
+      getAttRecords().catch(() => null) as Promise<RiwayatRes | null>,
+      !isDokter
+        ? (getStatus().catch(() => null) as Promise<StatusRes | null>)
+        : Promise.resolve(null),
+      getTodayLeave().catch(() => ({ hasLeave: false })),
+    ]).then(([riwayatRes, statusRes, leaveRes]) => {
+      if (!aktif) return;
+      setGuardStatus({
+        key: checkKey,
+        riwayat: riwayatRes?.riwayat ?? [],
+        hasMasukNonDokter: !!statusRes?.absen_masuk,
+        hasPulangNonDokter: !!statusRes?.absen_pulang,
+        hasLeave: !!leaveRes?.hasLeave,
+      });
+    });
+
+    return () => {
+      aktif = false;
+    };
+  }, [checkKey, isDokter]);
+
+  const guardReady = guardStatus?.key === checkKey;
+  const openSession = guardReady
+    ? (guardStatus.riwayat.find((r) => r.jam_pulang == null) ?? null)
+    : null;
+  const crossDay = !!openSession && openSession.tanggal < GetTodayKey();
+  const { shift: sessionShift, loading: loadingSessionShift } = useSessionShift(
+    openSession,
+    guardReady && !isDokter && crossDay,
+  );
+
+  const sesiTerlupakan =
+    guardReady &&
+    !isDokter &&
+    !loadingSessionShift &&
+    isSesiTerlupakan(openSession, sessionShift);
+
+  const stillChecking =
+    !guardReady || (!isDokter && crossDay && loadingSessionShift);
+
+  const openSesiBerlaku = openSession && !sesiTerlupakan ? openSession : null;
+  const todaySessions = guardReady
+    ? guardStatus.riwayat
+        .filter((r) => r.tanggal === GetTodayKey() || r.jam_pulang == null)
+        .sort((a, b) =>
+          a.tanggal === b.tanggal
+            ? a.jam_masuk.localeCompare(b.jam_masuk)
+            : a.tanggal.localeCompare(b.tanggal),
+        )
+    : [];
+  const latestToday =
+    todaySessions.length > 0 ? todaySessions[todaySessions.length - 1] : null;
+
+  const hasMasuk = openSesiBerlaku
+    ? true
+    : isDokter
+      ? todaySessions.length > 0
+      : guardReady && guardStatus.hasMasukNonDokter;
+  const hasPulang = openSesiBerlaku
+    ? false
+    : isDokter
+      ? todaySessions.length > 0 && latestToday?.jam_pulang != null
+      : guardReady && guardStatus.hasPulangNonDokter;
+  const hasLeave = guardReady ? guardStatus.hasLeave : false;
+
+  const bolehAkses = !stillChecking && hasMasuk && !hasPulang && !hasLeave;
+
+  useEffect(() => {
+    if (!stillChecking && !bolehAkses) {
+      navigate("/", { replace: true });
+    }
+  }, [bolehAkses, navigate, stillChecking]);
+
+  if (stillChecking || !bolehAkses) {
+    return <PageSkeleton />;
+  }
 
   const keManual = () => {
     setTab("manual");

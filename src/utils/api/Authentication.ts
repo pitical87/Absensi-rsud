@@ -37,8 +37,22 @@ export const register = async (data: RegisterData) => {
 
 export type RegisterMaster = {
   sukses: boolean;
-  unit: { id: number; nama: string; punya_sub: boolean }[];
-  sub: Record<number, { id: number; nama: string }[]>;
+  unit: {
+    id: number;
+    nama: string;
+    punya_sub: boolean;
+    atasan_id?: number | null;
+    atasan_nama?: string | null;
+  }[];
+  sub: Record<
+    number,
+    {
+      id: number;
+      nama: string;
+      atasan_id?: number | null;
+      atasan_nama?: string | null;
+    }[]
+  >;
   profesi: { id: number; nama: string }[];
   jabatan: Record<string, { id: number; nama: string }[]>;
   kategori_jabatan: string[];

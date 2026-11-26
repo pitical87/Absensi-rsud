@@ -12,7 +12,7 @@ import {
   getLogbookBawahanDetail,
   verifikasiLogbookBawahan,
 } from "../../utils/api/LogBook";
-import Spinner from "../Spinner";
+import { CardListSkeleton } from "../Skeleton";
 
 const BULAN_ID = [
   "Januari",
@@ -382,10 +382,7 @@ export default function RekapLogbookModal({
               Belum ada bawahan langsung yang terdaftar.
             </p>
           ) : loading ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-12 text-gray-400">
-              <Spinner className="h-6 w-6 text-violet-600" />
-              <span className="text-xs">Memuat logbook...</span>
-            </div>
+            <CardListSkeleton count={3} />
           ) : errorMsg ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
               <p className="text-xs font-medium text-red-700">{errorMsg}</p>

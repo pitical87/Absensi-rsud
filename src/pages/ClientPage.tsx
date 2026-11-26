@@ -1,6 +1,8 @@
 import HeroCard from "../components/Client Page/HeroCard";
 import Absensi from "../components/Client Page/Absensi";
-import PresentStatistic from "../components/Client Page/PresentStatistic";
+import PresentStatistic, {
+  BintangKetepatanCard,
+} from "../components/Client Page/PresentStatistic";
 import RecentPresents from "../components/Client Page/RecentPresents";
 import PegawaiTeladan from "../components/Client Page/PegawaiTeladan";
 import TopNavbar from "../components/Client Page/TopNavbar";
@@ -24,6 +26,7 @@ import {
   isSesiTerlupakan,
   isShiftLintasHari,
 } from "../utils/DateUtils";
+import { prefetchMainMenus } from "../routes/prefetchRoutes";
 
 type StatusRes = {
   sukses: boolean;
@@ -37,7 +40,29 @@ export default function ClientPage() {
   const [activeBottomTab, setActiveBottomTab] = useState<
     "statistik" | "riwayat" | "teladan"
   >("statistik");
-  const { isDokter } = useAuth();
+  const { isDokter, can, lemburAktif } = useAuth();
+
+  const canKelolaJadwal = can("jadwal.kelola");
+  const canApproveIzin = can("approve.izin");
+  const canApproveLembur = can("approve.lembur");
+  const canApproveJadwal = can("approve.jadwal");
+
+  // Prefetch chunk halaman menu utama saat idle agar perpindahan menu instan
+  useEffect(() => {
+    return prefetchMainMenus({
+      lemburAktif,
+      canKelolaJadwal,
+      canApproveIzin,
+      canApproveLembur,
+      canApproveJadwal,
+    });
+  }, [
+    lemburAktif,
+    canKelolaJadwal,
+    canApproveIzin,
+    canApproveLembur,
+    canApproveJadwal,
+  ]);
 
   const todaySession = useTodaySession(isDokter);
   const { openSession } = useOpenSession();
@@ -153,6 +178,7 @@ export default function ClientPage() {
       <SifSection />
       {/* Tab Statistik, Riwayat & Pegawai Teladan */}
       <section className="px-4 sm:px-6 pt-2 pb-6 w-full">
+        <BintangKetepatanCard className="mb-3" />
         <div
           role="tablist"
           aria-label="Statistik, Riwayat, dan Pegawai Teladan"

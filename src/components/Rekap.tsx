@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { getJadwalBulanan, rekapAbsensi } from "../utils/api/Attendence";
+import { PageSkeleton } from "./Skeleton";
 
 type RekapResponse = {
   sukses: boolean;
@@ -123,7 +124,7 @@ export default function Rekap() {
 
   return (
     <div>
-      {loading && <div className="p-8 text-center text-sm text-gray-500">Memuat data rekap...</div>}
+      {loading && <PageSkeleton />}
 
       {error && <div className="p-8 text-center text-sm text-red-600">{error}</div>}
 

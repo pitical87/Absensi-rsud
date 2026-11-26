@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import useNotifications from "../hooks/useNotifications";
 import type { NotifikasiItem, NotifikasiTipe } from "../types/NotifikasiType";
 import { mapNotifUrl } from "../utils/NotifUrl";
+import Skeleton from "./Skeleton";
 import {
   dukungNotifikasiOs,
   izinNotifikasi,
@@ -130,8 +131,17 @@ export default function NotificationBell() {
 
             <div className="max-h-80 divide-y divide-gray-100 overflow-y-auto">
               {loading && items.length === 0 ? (
-                <div className="p-6 text-center text-sm text-gray-400">
-                  Memuat...
+                <div className="divide-y divide-gray-100">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-start gap-3 px-4 py-3">
+                      <Skeleton className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-3 w-full rounded" />
+                        <Skeleton className="h-3 w-2/3 rounded" />
+                        <Skeleton className="h-2.5 w-24 rounded" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : items.length === 0 ? (
                 <div className="p-6 text-center text-sm text-gray-400">

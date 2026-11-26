@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { absen } from "../../utils/api/Attendence";
 import { useAuth } from "../../context/AuthContext";
+import { invalidateSharedQuery } from "../../hooks/useSharedQuery";
 import toast from "react-hot-toast";
 import Spinner from "../Spinner";
 import { HiOutlineChevronDown } from "react-icons/hi";
@@ -181,9 +182,13 @@ export default function ConfirmPresent({
         } catch {
           // Abaikan jika browser membatasi localStorage (mode privat / WebView)
         }
+        invalidateSharedQuery("status", "riwayat");
         onSuccess?.(res);
         setCurrentStep(3);
-        redirectTimerRef.current = setTimeout(() => navigate("/"), 10000);
+        redirectTimerRef.current = setTimeout(
+          () => navigate("/", { replace: true }),
+          10000,
+        );
         return;
       } else {
         toast.error(

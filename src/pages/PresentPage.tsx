@@ -5,6 +5,7 @@ import ValidateLocation from "../components/Present Page/ValidateLocation";
 import ValidateSelfie from "../components/Present Page/ValidateSelfie";
 import ConfirmPresent from "../components/Present Page/ConfirmPresent";
 import TopNavbar from "../components/Client Page/TopNavbar";
+import Skeleton from "../components/Skeleton";
 import {
   FaStar,
   FaRegStar,
@@ -14,6 +15,29 @@ import {
 import { useAuth } from "../context/AuthContext";
 import type { ValidatedLocation } from "../utils/GeoLocation";
 import { preloadFaceDetector } from "../utils/FaceDetection";
+import { getAttRecords, getStatus } from "../utils/api/Attendence";
+import { getTodayLeave } from "../utils/api/Leave";
+import type { SessionRecord } from "../hooks/useOpenSession";
+import useSessionShift from "../hooks/useSessionShift";
+import { GetTodayKey, isSesiTerlupakan } from "../utils/DateUtils";
+
+type GuardStatus = {
+  key: string;
+  riwayat: SessionRecord[];
+  hasMasukNonDokter: boolean;
+  hasLeave: boolean;
+};
+
+type StatusRes = {
+  sukses?: boolean;
+  absen_masuk?: { waktu: string; status: string } | null;
+  absen_pulang?: { waktu: string } | null;
+};
+
+type RiwayatRes = {
+  sukses?: boolean;
+  riwayat?: SessionRecord[];
+};
 
 type PendingData = {
   latitude: number;
@@ -63,11 +87,113 @@ export default function PresentPage() {
     image: null,
   });
   const { isDokter } = useAuth();
+  const [guardStatus, setGuardStatus] = useState<GuardStatus | null>(null);
+
+  const isValidType = type === "masuk" || type === "pulang";
+  const checkKey = `${type ?? ""}:${isDokter ? "1" : "0"}`;
+
+  // Periksa status absensi terbaru agar URL /present/masuk atau /present/pulang
+  // tidak bisa diakses bila sudah absen, belum absen masuk, atau sedang izin/cuti.
+  useEffect(() => {
+    if (!isValidType || currentStep >= 3) return;
+
+    let aktif = true;
+    Promise.all([
+      getAttRecords().catch(() => null) as Promise<RiwayatRes | null>,
+      !isDokter
+        ? (getStatus().catch(() => null) as Promise<StatusRes | null>)
+        : Promise.resolve(null),
+      getTodayLeave().catch(() => ({ hasLeave: false })),
+    ]).then(([riwayatRes, statusRes, leaveRes]) => {
+      if (!aktif) return;
+      setGuardStatus({
+        key: checkKey,
+        riwayat: riwayatRes?.riwayat ?? [],
+        hasMasukNonDokter: !!statusRes?.absen_masuk,
+        hasLeave: !!leaveRes?.hasLeave,
+      });
+    });
+
+    return () => {
+      aktif = false;
+    };
+  }, [checkKey, currentStep, isDokter, isValidType]);
+
+  const guardReady = isValidType && guardStatus?.key === checkKey;
+  const openSession = guardReady
+    ? (guardStatus.riwayat.find((r) => r.jam_pulang == null) ?? null)
+    : null;
+  const crossDay = !!openSession && openSession.tanggal < GetTodayKey();
+  const { shift: sessionShift, loading: loadingSessionShift } = useSessionShift(
+    openSession,
+    guardReady && !isDokter && crossDay,
+  );
+
+  const sesiTerlupakan =
+    guardReady &&
+    !isDokter &&
+    !loadingSessionShift &&
+    isSesiTerlupakan(openSession, sessionShift);
+
+  const stillChecking =
+    !isValidType || !guardReady || (!isDokter && crossDay && loadingSessionShift);
+
+  const adaSesiTerbuka = !!openSession;
+  const hasLeave = guardReady ? guardStatus.hasLeave : false;
+  const hasMasuk =
+    openSession && !sesiTerlupakan
+      ? true
+      : isDokter
+        ? guardReady &&
+          guardStatus.riwayat.some(
+            (r) => r.tanggal === GetTodayKey() || r.jam_pulang == null,
+          )
+        : guardReady && guardStatus.hasMasukNonDokter;
+
+  const bolehAkses = !stillChecking
+    ? type === "masuk"
+      ? !hasLeave && !(adaSesiTerbuka && !sesiTerlupakan) && (isDokter || !hasMasuk)
+      : !hasLeave && adaSesiTerbuka && !sesiTerlupakan
+    : false;
+
+  useEffect(() => {
+    if (currentStep >= 3) return;
+    if (!isValidType || (!stillChecking && !bolehAkses)) {
+      navigate("/", { replace: true });
+    }
+  }, [bolehAkses, currentStep, isValidType, navigate, stillChecking]);
 
   // Muat model deteksi wajah di latar belakang sejak Step 0 agar Step 1 instan
   useEffect(() => {
-    preloadFaceDetector();
-  }, []);
+    if (!stillChecking && bolehAkses) {
+      preloadFaceDetector();
+    }
+  }, [bolehAkses, stillChecking]);
+
+  if (currentStep < 3 && (stillChecking || !bolehAkses)) {
+    return (
+      <div>
+        <TopNavbar />
+        <section className="bg-white border-b border-gray-200 px-4 py-3 flex flex-col items-center gap-3">
+          <Skeleton className="h-5 w-32 rounded-md" />
+          <div className="flex w-full max-w-sm items-center justify-between gap-2">
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-1 flex-1 rounded-full" />
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-1 flex-1 rounded-full" />
+            <Skeleton className="h-8 w-20 rounded-full" />
+          </div>
+        </section>
+        <section className="p-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-4 w-2/3 rounded-md" />
+            <Skeleton className="h-11 w-full rounded-xl" />
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div>

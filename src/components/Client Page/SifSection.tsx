@@ -25,6 +25,7 @@ import Skeleton from "../Skeleton";
 import RekapBulananModal from "./RekapBulananModal";
 import RekapLogbookModal from "./RekapLogbookModal";
 import MappingSimrsModal from "./MappingSimrsModal";
+import { prefetchRoute } from "../../routes/prefetchRoutes";
 
 interface ShiftInfo {
   id: number;
@@ -36,8 +37,17 @@ interface ShiftInfo {
 export default function SifSection() {
   const navigate = useNavigate();
   const { user, can, bawahan, atasan, hakAkses, lemburAktif } = useAuth();
-  const [shift, setShift] = useState<ShiftInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [shift, setShift] = useState<ShiftInfo | null>(() =>
+    user?.shift
+      ? {
+          id: user.shift.id,
+          kategori: user.shift.kategori,
+          jam_masuk: user.shift.jam_masuk,
+          jam_pulang: user.shift.jam_pulang,
+        }
+      : null,
+  );
+  const [loading, setLoading] = useState(() => !user?.shift);
   const [totalPending, setTotalPending] = useState(0);
   const [totalLemburPending, setTotalLemburPending] = useState(0);
   const [totalJadwalPending, setTotalJadwalPending] = useState(0);
@@ -237,6 +247,8 @@ export default function SifSection() {
             }`}>
             <button
               onClick={() => navigate("/izin")}
+              onPointerEnter={() => prefetchRoute("izin")}
+              onTouchStart={() => prefetchRoute("izin")}
               className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
               <HiOutlineDocumentText size={20} />
               <span>Izin/Cuti</span>
@@ -246,6 +258,8 @@ export default function SifSection() {
               <button
                 type="button"
                 onClick={() => navigate("/lembur")}
+                onPointerEnter={() => prefetchRoute("lembur")}
+                onTouchStart={() => prefetchRoute("lembur")}
                 className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
                 <BiTimeFive size={20} />
                 <span>Lembur</span>
@@ -254,6 +268,8 @@ export default function SifSection() {
 
             <button
               onClick={() => navigate("/ubah-jadwal")}
+              onPointerEnter={() => prefetchRoute("ubahJadwal")}
+              onTouchStart={() => prefetchRoute("ubahJadwal")}
               className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-3 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100">
               <BiCalendarEdit size={20} />
               <span>Perubahan Shift</span>
@@ -286,6 +302,8 @@ export default function SifSection() {
             {can("jadwal.kelola") && (
               <button
                 onClick={() => navigate("/kelola-jadwal")}
+                onPointerEnter={() => prefetchRoute("kelolaJadwal")}
+                onTouchStart={() => prefetchRoute("kelolaJadwal")}
                 className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-2 py-3 text-sm font-medium text-sky-600 transition hover:bg-sky-100">
                 <BiCalendarWeek size={20} />
                 <span>Kelola Jadwal</span>
@@ -300,6 +318,8 @@ export default function SifSection() {
             {can("approve.izin") && (
               <button
                 onClick={() => navigate("/persetujuan")}
+                onPointerEnter={() => prefetchRoute("persetujuan")}
+                onTouchStart={() => prefetchRoute("persetujuan")}
                 className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-2 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100">
                 <FaFileCircleCheck size={20} />
                 <span>Izin</span>
@@ -315,6 +335,8 @@ export default function SifSection() {
               <button
                 type="button"
                 onClick={() => navigate("/persetujuan-lembur")}
+                onPointerEnter={() => prefetchRoute("persetujuanLembur")}
+                onTouchStart={() => prefetchRoute("persetujuanLembur")}
                 className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-3 text-sm font-medium text-blue-600 transition hover:bg-blue-100">
                 <FaFileCircleCheck size={20} />
                 <span>Lembur</span>
@@ -329,6 +351,8 @@ export default function SifSection() {
             {can("approve.jadwal") && (
               <button
                 onClick={() => navigate("/persetujuan-jadwal")}
+                onPointerEnter={() => prefetchRoute("persetujuanJadwal")}
+                onTouchStart={() => prefetchRoute("persetujuanJadwal")}
                 className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-3 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100">
                 <FaFileCircleCheck size={20} />
                 <span>Perubahan Jadwal</span>

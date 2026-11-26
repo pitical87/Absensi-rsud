@@ -12,6 +12,13 @@ const DEFAULT_TTL_MS = 5_000;
 function get<T>(key: string): Entry<T> | undefined {
   return store.get(key) as Entry<T> | undefined;
 }
+
+export function invalidateSharedQuery(...keys: string[]): void {
+  for (const key of keys) {
+    store.delete(key);
+  }
+}
+
 export type SharedQueryOptions = { ttl?: number; enabled?: boolean };
 
 export default function useSharedQuery<T>(key: string, fetcher: () => Promise<T>, options: SharedQueryOptions = {}): { data: T | null; loading: boolean } {

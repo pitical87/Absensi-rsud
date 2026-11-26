@@ -1,6 +1,7 @@
 import { BiPencil } from "react-icons/bi";
 import { TfiWrite } from "react-icons/tfi";
 import { useNavigate } from "react-router";
+import { prefetchRoute } from "../../routes/prefetchRoutes";
 
 type props = {
   hasMasuk: boolean;
@@ -28,6 +29,8 @@ export default function LogBookSection({ hasMasuk, hasPulang, hasLeave }: props)
         <div className="mt-5">
           <button
             onClick={() => navigate("/logbook")}
+            onPointerEnter={() => aktif && prefetchRoute("logbook")}
+            onTouchStart={() => aktif && prefetchRoute("logbook")}
             type="button"
             disabled={!aktif}
             className="
@@ -53,6 +56,10 @@ export default function LogBookSection({ hasMasuk, hasPulang, hasLeave }: props)
               <>
                 <BiPencil className="text-lg" /> Tulis Logbook
               </>
+            ) : hasLeave ? (
+              "Sedang izin/cuti hari ini."
+            ) : hasPulang ? (
+              "Anda sudah absen pulang hari ini."
             ) : (
               "Absen masuk dulu untuk mengisi logbook hari ini."
             )}

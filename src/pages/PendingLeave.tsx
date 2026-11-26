@@ -16,8 +16,11 @@ import {
 } from "../utils/api/Leave";
 import ConfirmModal from "../components/ConfirmModal";
 import TopNavbar from "../components/Client Page/TopNavbar";
+import { CardListSkeleton } from "../components/Skeleton";
 
-type ApiErrorShape = { response?: { data?: { pesan?: string } } };
+type ApiErrorShape = {
+  response?: { status?: number; data?: { pesan?: string } };
+};
 
 type PendingIzin = {
   id: number;
@@ -165,6 +168,15 @@ export default function PendingLeave() {
           setRiwayat(riwayatSettled.value.riwayat ?? []);
         }
         if (
+          (detailSettled.status === "rejected" &&
+            (detailSettled.reason as ApiErrorShape)?.response?.status === 403) ||
+          (riwayatSettled.status === "rejected" &&
+            (riwayatSettled.reason as ApiErrorShape)?.response?.status === 403)
+        ) {
+          navigate("/", { replace: true });
+          return;
+        }
+        if (
           detailSettled.status === "rejected" &&
           riwayatSettled.status === "rejected"
         ) {
@@ -188,7 +200,7 @@ export default function PendingLeave() {
     return () => {
       aktif = false;
     };
-  }, []);
+  }, [navigate]);
 
   const getLampiranUrl = (path: string) =>
     `${import.meta.env.VITE_API_URL?.replace("/api/mobile", "") || ""}/storage/${path}`;
@@ -329,9 +341,7 @@ export default function PendingLeave() {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
-                </div>
+                <CardListSkeleton count={2} />
               ) : daftar.length === 0 ? (
                 <p className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
                   Tidak ada pengajuan yang menunggu keputusan Anda saat ini.
@@ -496,9 +506,7 @@ export default function PendingLeave() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
-              </div>
+              <CardListSkeleton count={3} />
             ) : riwayat.length === 0 ? (
               <p className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
                 Belum ada riwayat keputusan.

@@ -11,6 +11,7 @@ import {
 } from "../../utils/api/LogBook";
 import type { LogTemplate } from "../../types/LogBookType";
 import Spinner from "../Spinner";
+import Skeleton from "../Skeleton";
 
 type Props = {
   open: boolean;
@@ -181,9 +182,16 @@ export default function LogBookTemplateModal({
         {/* Daftar */}
         <div className="mt-3 flex-1 space-y-2 overflow-y-auto sm:mt-4">
           {loadingTemplates ? (
-            <p className="py-6 text-center text-sm text-gray-400">
-              Memuat template...
-            </p>
+            <div className="space-y-2 py-1" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3">
+                  <Skeleton className="h-4 flex-1 rounded-md" />
+                  <Skeleton className="h-7 w-16 shrink-0 rounded-lg" />
+                </div>
+              ))}
+            </div>
           ) : templates.length === 0 ? (
             <p className="py-6 text-center text-sm text-gray-400">
               Belum ada template.

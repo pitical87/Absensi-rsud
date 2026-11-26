@@ -38,6 +38,40 @@ function Bintang({ nilai }: { nilai: number }) {
   );
 }
 
+export function BintangKetepatanCard({
+  className = "mt-3",
+}: {
+  className?: string;
+}) {
+  const { isDokter } = useAuth();
+  const { data: statusRes } = useSharedQuery<StatusRes>("status", getStatus, {
+    enabled: !isDokter,
+  });
+
+  if (isDokter) return null;
+
+  const bintang = statusRes?.bintang_harian ?? null;
+  const hasPulang = statusRes?.absen_pulang != null;
+
+  return (
+    <div
+      className={`${className} bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between`}>
+      <div>
+        <p className="text-sm font-medium text-amber-800 flex items-center gap-1">
+          <FaRegStar /> Bintang Ketepatan{" "}
+          <span>{hasPulang ? "Hari ini" : "Masuk"}</span>
+        </p>
+        <p className="text-xs text-amber-600 mt-1">
+          {bintang === null
+            ? "Belum ada penilaian hari ini"
+            : `Rata-rata ${bintang} dari 5 bintang`}
+        </p>
+      </div>
+      {bintang !== null && <Bintang nilai={bintang} />}
+    </div>
+  );
+}
+
 function clampPersen(nilai: number): number {
   if (!Number.isFinite(nilai)) return 0;
   return Math.max(0, Math.min(100, nilai));
@@ -191,12 +225,7 @@ export default function PresentStatistic({
 }) {
   const [stat, setStat] = useState<Statistic | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-  const isDokter = user?.profesi?.nama.toLocaleLowerCase() == "dokter";
-
-  const { data: statusRes } = useSharedQuery<StatusRes>("status", getStatus);
-  const bintang = statusRes?.bintang_harian ?? null;
-  const hasPulang = statusRes?.absen_pulang != null;
+  const { isDokter } = useAuth();
 
   useEffect(() => {
     getStatistic()
@@ -282,20 +311,7 @@ export default function PresentStatistic({
           stat && <GrafikRingkasan stat={stat} isDokter={isDokter} />
         )}
 
-        {!isDokter && (
-          <>
-            {/* Bintang ketepatan bulan ini */}
-            <div className="mt-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-amber-800 flex items-center gap-1">
-                  <FaRegStar /> Bintang Ketepatan <span>{hasPulang ? "Hari ini" : "Masuk"}</span>
-                </p>
-                <p className="text-xs text-amber-600 mt-1">{bintang === null ? "Belum ada penilaian hari ini" : `Rata-rata ${bintang} dari 5 bintang`}</p>
-              </div>
-              {bintang !== null && <Bintang nilai={bintang} />}
-            </div>
-          </>
-        )}
+        {!embedded && <BintangKetepatanCard />}
       </section>
     </>
   );

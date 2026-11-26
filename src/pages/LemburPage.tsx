@@ -13,6 +13,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
+import Skeleton from "../components/Skeleton";
 import {
   ajukanLembur,
   batalLembur,
@@ -441,9 +442,7 @@ export default function LemburPage() {
                 </div>
               ))}
 
-            {!status && (
-              <p className="text-sm text-gray-400">Memuat status absen...</p>
-            )}
+            {!status && <Skeleton className="h-11 w-full rounded-xl" />}
 
             {status && status.absen_masuk === null && (
               <button

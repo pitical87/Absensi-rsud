@@ -7,26 +7,26 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ClientPage from "../pages/ClientPage";
 import RequirePermission from "../components/RequirePermission";
+import { PageSkeleton } from "../components/Skeleton";
+import { routeLoaders } from "./prefetchRoutes";
 
-const PresentPage = lazy(() => import("../pages/PresentPage"));
-const IzinPage = lazy(() => import("../pages/IzinPage"));
-const PendingLeave = lazy(() => import("../pages/PendingLeave"));
-const LogbookPage = lazy(() => import("../pages/LogbookPage"));
-const LemburPage = lazy(() => import("../pages/LemburPage"));
-const AbsenLemburPage = lazy(() => import("../pages/AbsenLemburPage"));
-const PersetujuanLembur = lazy(() => import("../pages/PersetujuanLembur"));
-const PerubahanJadwalPage = lazy(() => import("../pages/PerubahanJadwalPage"));
-const PersetujuanPerubahanJadwal = lazy(() => import("../pages/PersetujuanPerubahanJadwal"));
-const KelolaJadwalPage = lazy(() => import("../pages/KelolaJadwalPage"));
-const VerifikasiEmailPage = lazy(
-  () => import("../pages/VerifikasiEmailPage"),
-);
-const Rekap = lazy(() => import("../components/Rekap"));
-const ProfilPage = lazy(() => import("../pages/ProfilPage"));
+const PresentPage = lazy(routeLoaders.present);
+const IzinPage = lazy(routeLoaders.izin);
+const PendingLeave = lazy(routeLoaders.persetujuan);
+const LogbookPage = lazy(routeLoaders.logbook);
+const LemburPage = lazy(routeLoaders.lembur);
+const AbsenLemburPage = lazy(routeLoaders.absenLembur);
+const PersetujuanLembur = lazy(routeLoaders.persetujuanLembur);
+const PerubahanJadwalPage = lazy(routeLoaders.ubahJadwal);
+const PersetujuanPerubahanJadwal = lazy(routeLoaders.persetujuanJadwal);
+const KelolaJadwalPage = lazy(routeLoaders.kelolaJadwal);
+const VerifikasiEmailPage = lazy(routeLoaders.verifikasiEmail);
+const Rekap = lazy(routeLoaders.rekap);
+const ProfilPage = lazy(routeLoaders.profile);
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div className="p-6 text-gray-500">Memuat...</div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <Routes>
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
@@ -48,7 +48,10 @@ export default function AppRoutes() {
           </Route>
           <Route path="/ubah-jadwal" element={<PerubahanJadwalPage />} />
           <Route element={<RequirePermission permission="approve.jadwal" />}>
-            <Route path="/persetujuan-jadwal" element={<PersetujuanPerubahanJadwal />} />
+            <Route
+              path="/persetujuan-jadwal"
+              element={<PersetujuanPerubahanJadwal />}
+            />
           </Route>
           <Route element={<RequirePermission permission="jadwal.kelola" />}>
             <Route path="/kelola-jadwal" element={<KelolaJadwalPage />} />
