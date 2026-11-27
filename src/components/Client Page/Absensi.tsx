@@ -1,8 +1,10 @@
 import { CiLock, CiLogin, CiLogout } from "react-icons/ci";
 import { FaCalendarCheck } from "react-icons/fa6";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { IoDocumentTextOutline, IoMoonOutline } from "react-icons/io5";
 import { useNavigate } from "react-router";
 import Skeleton from "../Skeleton";
+import { prefetchRoute } from "../../routes/prefetchRoutes";
 
 type props = {
   hasMasuk: boolean;
@@ -19,6 +21,8 @@ type props = {
   sesiTerlupakan?: boolean;
   lintasHari?: boolean;
   loading?: boolean;
+  showLupaAbsen?: boolean;
+  jumlahAlpa?: number;
 };
 
 export default function Absensi({
@@ -31,6 +35,8 @@ export default function Absensi({
   sesiTerlupakan,
   lintasHari,
   loading,
+  showLupaAbsen,
+  jumlahAlpa = 0,
 }: props) {
   const navigate = useNavigate();
   const adaSesiTerbuka = !!openSession;
@@ -238,6 +244,31 @@ export default function Absensi({
             </>
           )}
         </div>
+        {!loading && showLupaAbsen && (
+          <button
+            type="button"
+            onClick={() => navigate("/lupa-absen")}
+            onPointerEnter={() => prefetchRoute("lupaAbsen")}
+            onTouchStart={() => prefetchRoute("lupaAbsen")}
+            className="group w-full rounded-xl border border-amber-300 bg-amber-50/80 p-3 sm:p-4 transition-colors duration-200 cursor-pointer hover:bg-amber-100 hover:border-amber-400">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-200/80 text-amber-700 transition-colors duration-200 group-hover:bg-amber-600 group-hover:text-white">
+                <HiOutlineExclamationCircle className="text-xl" />
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col text-left">
+                <span className="font-semibold text-amber-900 transition-colors duration-200 group-hover:text-amber-950">
+                  Ajukan lupa absen
+                </span>
+                <span className="text-xs text-amber-700 leading-snug">
+                  Terdapat {jumlahAlpa} hari tidak absen / alpa dalam 1 bulan terakhir
+                </span>
+              </div>
+              <span className="shrink-0 rounded-full bg-amber-500 px-2.5 py-0.5 text-xs font-semibold text-white">
+                {jumlahAlpa} hari
+              </span>
+            </div>
+          </button>
+        )}
       </section>
     </>
   );

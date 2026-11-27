@@ -7,8 +7,13 @@ export function mapNotifUrl(item: NotifikasiItem): string | null {
   if (!url || url.startsWith("admin/")) return null;
   if (url === "lembur") return "/lembur";
   if (url === "ubah-jadwal") return "/ubah-jadwal";
+  if (url === "lupa-absen") return "/lupa-absen";
+  if (url === "persetujuan-lupa-absen") return "/persetujuan-lupa-absen";
   if (url === "persetujuan") {
     const teks = item.isi.toLowerCase();
+    if (item.kategori === "lupa_absen" || teks.includes("lupa absen")) {
+      return "/persetujuan-lupa-absen";
+    }
     if (teks.includes("lembur")) return "/persetujuan-lembur";
     if (teks.includes("jadwal")) return "/persetujuan-jadwal";
     return "/persetujuan";

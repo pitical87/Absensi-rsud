@@ -15,6 +15,8 @@ import { IoIosStats } from "react-icons/io";
 import { MdWorkHistory } from "react-icons/md";
 import { getStatus } from "../utils/api/Attendence";
 import { getTodayLeave } from "../utils/api/Leave";
+import { cekLupaAbsen } from "../utils/api/LupaAbsen";
+import type { CekLupaAbsenResponse } from "../types/LupaAbsenType";
 import LogBookSection from "../components/Client Page/LogBookSection";
 import { useAuth } from "../context/AuthContext";
 import useTodaySession from "../hooks/useTodaySession";
@@ -37,6 +39,8 @@ type StatusRes = {
 export default function ClientPage() {
   const [hasLeave, setHasLeave] = useState(false);
   const [todayLeave, setTodayLeave] = useState(null);
+  const [lupaAbsenInfo, setLupaAbsenInfo] =
+    useState<CekLupaAbsenResponse | null>(null);
   const [activeBottomTab, setActiveBottomTab] = useState<
     "statistik" | "riwayat" | "teladan"
   >("statistik");
@@ -46,6 +50,7 @@ export default function ClientPage() {
   const canApproveIzin = can("approve.izin");
   const canApproveLembur = can("approve.lembur");
   const canApproveJadwal = can("approve.jadwal");
+  const canApproveLupaAbsen = can("approve.lupa_absen");
 
   // Prefetch chunk halaman menu utama saat idle agar perpindahan menu instan
   useEffect(() => {
@@ -55,6 +60,7 @@ export default function ClientPage() {
       canApproveIzin,
       canApproveLembur,
       canApproveJadwal,
+      canApproveLupaAbsen,
     });
   }, [
     lemburAktif,
@@ -62,6 +68,7 @@ export default function ClientPage() {
     canApproveIzin,
     canApproveLembur,
     canApproveJadwal,
+    canApproveLupaAbsen,
   ]);
 
   const todaySession = useTodaySession(isDokter);
@@ -93,6 +100,14 @@ export default function ClientPage() {
       setHasLeave(res.hasLeave);
       setTodayLeave(res.izin);
     });
+    cekLupaAbsen()
+      .then((res) => {
+        if (!aktif) return;
+        if (res.sukses) {
+          setLupaAbsenInfo(res);
+        }
+      })
+      .catch(() => {});
     return () => {
       aktif = false;
     };
@@ -159,6 +174,8 @@ export default function ClientPage() {
         sesiTerlupakan={sesiTerlupakan}
         lintasHari={sesiLintasHari}
         loading={loadingToday}
+        showLupaAbsen={lupaAbsenInfo?.tampil_tombol ?? false}
+        jumlahAlpa={lupaAbsenInfo?.total_alpa ?? 0}
       />
       {/* second top part */}
       <HeroCard

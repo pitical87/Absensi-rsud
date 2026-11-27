@@ -21,6 +21,7 @@ import { FaFileCircleCheck } from "react-icons/fa6";
 import { getPendingLeavesCount } from "../../utils/api/Leave";
 import { getLemburMenungguTotal } from "../../utils/api/Lembur";
 import { getPerubahanJadwalMenungguTotal } from "../../utils/api/PerubahanJadwal";
+import { getLupaAbsenMenungguTotal } from "../../utils/api/LupaAbsen";
 import Skeleton from "../Skeleton";
 import RekapBulananModal from "./RekapBulananModal";
 import RekapLogbookModal from "./RekapLogbookModal";
@@ -51,9 +52,11 @@ export default function SifSection() {
   const [totalPending, setTotalPending] = useState(0);
   const [totalLemburPending, setTotalLemburPending] = useState(0);
   const [totalJadwalPending, setTotalJadwalPending] = useState(0);
+  const [totalLupaAbsenPending, setTotalLupaAbsenPending] = useState(0);
   const [loadingIzin, setLoadingIzin] = useState(true);
   const [loadingLembur, setLoadingLembur] = useState(true);
   const [loadingJadwal, setLoadingJadwal] = useState(true);
+  const [loadingLupaAbsen, setLoadingLupaAbsen] = useState(true);
   const [showRekapBulanan, setShowRekapBulanan] = useState(false);
   const [showRekapLogbook, setShowRekapLogbook] = useState(false);
   const [showMappingSimrs, setShowMappingSimrs] = useState(false);
@@ -66,12 +69,14 @@ export default function SifSection() {
     can("approve.izin") ||
     can("approve.lembur") ||
     can("approve.jadwal") ||
+    can("approve.lupa_absen") ||
     punyaBawahanLain;
   const jumlahMenuPersetujuan = [
     can("jadwal.kelola"),
     can("approve.izin"),
     lemburAktif && can("approve.lembur"),
     can("approve.jadwal"),
+    can("approve.lupa_absen"),
     daftarBawahan.length > 0,
     punyaBawahanLain,
   ].filter(Boolean).length;
@@ -110,6 +115,18 @@ export default function SifSection() {
       })
       .catch(() => {})
       .finally(() => setLoadingJadwal(false));
+  }, [can]);
+
+  useEffect(() => {
+    if (!can("approve.lupa_absen")) return;
+    getLupaAbsenMenungguTotal()
+      .then((res) => {
+        if (res.sukses) {
+          setTotalLupaAbsenPending(res.total);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingLupaAbsen(false));
   }, [can]);
 
   useEffect(() => {
@@ -359,6 +376,23 @@ export default function SifSection() {
                 {!loadingJadwal && totalJadwalPending > 0 && (
                   <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
                     {totalJadwalPending}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {can("approve.lupa_absen") && (
+              <button
+                type="button"
+                onClick={() => navigate("/persetujuan-lupa-absen")}
+                onPointerEnter={() => prefetchRoute("persetujuanLupaAbsen")}
+                onTouchStart={() => prefetchRoute("persetujuanLupaAbsen")}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2 py-3 text-sm font-medium text-amber-700 transition hover:bg-amber-100">
+                <FaFileCircleCheck size={20} />
+                <span>Lupa absen</span>
+                {!loadingLupaAbsen && totalLupaAbsenPending > 0 && (
+                  <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                    {totalLupaAbsenPending}
                   </span>
                 )}
               </button>

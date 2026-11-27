@@ -19,6 +19,8 @@ const AbsenLemburPage = lazy(routeLoaders.absenLembur);
 const PersetujuanLembur = lazy(routeLoaders.persetujuanLembur);
 const PerubahanJadwalPage = lazy(routeLoaders.ubahJadwal);
 const PersetujuanPerubahanJadwal = lazy(routeLoaders.persetujuanJadwal);
+const LupaAbsenPage = lazy(routeLoaders.lupaAbsen);
+const PersetujuanLupaAbsen = lazy(routeLoaders.persetujuanLupaAbsen);
 const KelolaJadwalPage = lazy(routeLoaders.kelolaJadwal);
 const VerifikasiEmailPage = lazy(routeLoaders.verifikasiEmail);
 const Rekap = lazy(routeLoaders.rekap);
@@ -51,6 +53,13 @@ export default function AppRoutes() {
             <Route
               path="/persetujuan-jadwal"
               element={<PersetujuanPerubahanJadwal />}
+            />
+          </Route>
+          <Route path="/lupa-absen" element={<LupaAbsenPage />} />
+          <Route element={<RequirePermission permission="approve.lupa_absen" />}>
+            <Route
+              path="/persetujuan-lupa-absen"
+              element={<PersetujuanLupaAbsen />}
             />
           </Route>
           <Route element={<RequirePermission permission="jadwal.kelola" />}>

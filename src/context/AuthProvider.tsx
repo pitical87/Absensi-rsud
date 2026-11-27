@@ -64,6 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return hakAkses?.verifikasi_lembur ?? false;
         case "approve.jadwal":
           return hakAkses?.verifikasi_perubahan_jadwal ?? false;
+        case "approve.lupa_absen":
+          return (
+            hakAkses?.verifikasi_lupa_absen ??
+            hakAkses?.verifikasi_ijin ??
+            false
+          );
         default:
           return true;
       }

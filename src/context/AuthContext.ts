@@ -38,6 +38,7 @@ export type Permission =
   | "approve.izin"
   | "approve.lembur"
   | "approve.jadwal"
+  | "approve.lupa_absen"
   | "jadwal.kelola";
 
 export type Bawahan = {
@@ -52,6 +53,7 @@ export type HakAkses = {
   verifikasi_ijin: boolean;
   verifikasi_lembur: boolean;
   verifikasi_perubahan_jadwal: boolean;
+  verifikasi_lupa_absen?: boolean;
 };
 
 export type AuthContextType = {

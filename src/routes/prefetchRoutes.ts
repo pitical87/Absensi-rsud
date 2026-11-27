@@ -8,6 +8,8 @@ export const routeLoaders = {
   persetujuanLembur: () => import("../pages/PersetujuanLembur"),
   ubahJadwal: () => import("../pages/PerubahanJadwalPage"),
   persetujuanJadwal: () => import("../pages/PersetujuanPerubahanJadwal"),
+  lupaAbsen: () => import("../pages/LupaAbsenPage"),
+  persetujuanLupaAbsen: () => import("../pages/PersetujuanLupaAbsen"),
   kelolaJadwal: () => import("../pages/KelolaJadwalPage"),
   verifikasiEmail: () => import("../pages/VerifikasiEmailPage"),
   rekap: () => import("../components/Rekap"),
@@ -32,6 +34,7 @@ export function prefetchMainMenus(options: {
   canApproveIzin: boolean;
   canApproveLembur: boolean;
   canApproveJadwal: boolean;
+  canApproveLupaAbsen?: boolean;
 }): () => void {
   const keys: RouteKey[] = ["izin", "ubahJadwal", "logbook", "present", "profile"];
   if (options.lemburAktif) keys.push("lembur");
@@ -41,6 +44,7 @@ export function prefetchMainMenus(options: {
     keys.push("persetujuanLembur");
   }
   if (options.canApproveJadwal) keys.push("persetujuanJadwal");
+  if (options.canApproveLupaAbsen) keys.push("persetujuanLupaAbsen");
 
   const run = () => {
     for (const key of keys) {
